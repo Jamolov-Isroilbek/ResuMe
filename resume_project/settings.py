@@ -29,7 +29,7 @@ INSTALLED_APPS = [
     # Third-party apps
     'rest_framework',
     'rest_framework_simplejwt', # JWT Authentication
-    'rest_framework_simplejwt.token_blacklist',
+    'rest_framework_simplejwt.token_blacklist', # Required for token blacklisting
     'corsheaders',
     
     # Local apps

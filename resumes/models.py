@@ -11,7 +11,7 @@ class Resume(models.Model):
     created_at = models.DateTimeField(auto_now_add=True) # Auto-set when resume is created
     updated_at = models.DateTimeField(auto_now=True) # Auto-update when modified
     resume_status = models.CharField(max_length=20, choices=ResumeStatus.choices, default=ResumeStatus.DRAFT)
-    privacy_settings = models.CharField(max_length=10, choices=PrivacySettings.choices, default=PrivacySettings.PRIVATE)
+    privacy_setting = models.CharField(max_length=10, choices=PrivacySettings.choices, default=PrivacySettings.PRIVATE)
 
     def __str__(self):
         return self.title

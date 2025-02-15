@@ -1,7 +1,10 @@
 from rest_framework import generics, permissions
 from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from .models import Resume, Section
 from .serializers import ResumeSerializer, SectionSerializer
+from .utils import generate_resume_pdf
 
 class ResumeListCreateView(generics.ListCreateAPIView):
     """
@@ -61,3 +64,20 @@ class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         return Section.objects.filter(resume__user=self.request.user)
 
+class ResumePDFDownloadView(generics.GenericAPIView):
+    """
+    API to generate and download a resume as a PDF
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, pk):
+        """
+        Generates and returns a PDF for the given resume ID.
+        """
+        resume = get_object_or_404(Resume, pk=pk, user=request.user)
+        pdf_file = generate_resume_pdf(resume)
+
+        response = HttpResponse(pdf_file, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="{resume.title}.pdf'
+        return response
+    
