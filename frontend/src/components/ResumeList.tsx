@@ -1,67 +1,82 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import { Button, Typography, List, ListItem, ListItemText} from '@mui/material';
+import React, { useEffect, useState } from "react";
+import api from "../services/api";
+import ResumeOptions from "./ResumeOptions";
+import { useNavigate } from "react-router-dom";
 
-type Resume = {
-    id: number;
-    title: string;
-    resume_status: string;
-    privacy_setting: string;
-};
+interface Resume {
+  id: number;
+  title: string;
+}
 
 const ResumeList: React.FC = () => {
-    const [resumes, setResumes] = useState<Resume[]>([]);
+  const [resumes, setResumes] = useState<Resume[]>([]);
+  const navigate = useNavigate();
 
-    useEffect(() => {
-        const fetchResumes = async () => {
-            try {
-                const response = await api.get('/resumes/');
-                setResumes(response.data);
-            } catch (error) {
-                console.error('Failed to fetch resume: ', error);
-            }
-        };
-        fetchResumes();
-    }, []);
-
-    const handleDownload = async (id: number) => {
-        try {
-            const response = await api.get(`/resumes/${id}/download/`, {
-                responseType: 'blob',
-            });
-            const url = window.URL.createObjectURL(new Blob([response.data]));
-            const link = document.createElement('a');
-            link.href = url;
-            link.setAttribute('download', `Resume_${id}.pdf`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-        } catch (error) {
-            console.error('Failed to download resume:', error);
-        }
+  useEffect(() => {
+    const fetchResumes = async () => {
+      try {
+        const response = await api.get("/resumes/");
+        setResumes(response.data);
+      } catch (error) {
+        console.error("Failed to fetch resumes", error);
+      }
     };
 
-    return (
-        <div>
-            <Typography variant="h4" gutterBottom>
-                My Resumes
-            </Typography>
-            <List>
-                {resumes.map((resume) => (
-                    <ListItem key={resume.id}>
-                        <ListItemText primary={resume.title} secondary={`Status: ${resume.resume_status} | Privacy: ${resume.privacy_setting}`} />
-                        <Button
-                            variant="contained"
-                            color='primary'
-                            onClick={() => handleDownload(resume.id)}
-                        >
-                            Download PDF
-                        </Button>
-                    </ListItem>
-                ))}
-            </List>
-        </div>
-    );
+    fetchResumes();
+  }, []);
+
+  const handleEdit = (id: number) => {
+    navigate(`/resumes/${id}/edit`); // Future edit page
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this resume?")) return;
+
+    try {
+      await api.delete(`/resumes/${id}/`);
+      setResumes((prev) => prev.filter((resume) => resume.id !== id));
+      alert("Resume deleted successfully!");
+    } catch (error) {
+      console.error("Failed to delete resume", error);
+    }
+  };
+
+  const handleDownload = async (id: number) => {
+    try {
+      const response = await api.get(`/resumes/${id}/download/`, { responseType: "blob" });
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `resume_${id}.pdf`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Failed to download resume", error);
+    }
+  };
+
+  return (
+    <div className="p-4">
+      <h2 className="text-xl font-semibold mb-4">Your Resumes</h2>
+      {resumes.length === 0 ? (
+        <p>No resumes found.</p>
+      ) : (
+        <ul className="bg-white shadow-md rounded-lg divide-y">
+          {resumes.map((resume) => (
+            <li key={resume.id} className="p-4 flex justify-between items-center">
+              <span className="text-lg font-medium">{resume.title}</span>
+              <ResumeOptions
+                onEdit={() => handleEdit(resume.id)}
+                onDelete={() => handleDelete(resume.id)}
+                onDownload={() => handleDownload(resume.id)}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 };
 
 export default ResumeList;
