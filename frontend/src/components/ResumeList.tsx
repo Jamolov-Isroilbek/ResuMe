@@ -28,7 +28,7 @@ const ResumeList: React.FC = () => {
   }, []);
 
   const handleEdit = (id: number) => {
-    navigate(`/resumes/${id}/edit`);
+    navigate(`/edit-resume/${id}`);
   };
 
   const handleDelete = async (id: number) => {

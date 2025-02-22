@@ -4,6 +4,7 @@ import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import LogoutButton from "./components/LogoutButton";
+import EditResume from "./components/EditResume";  // Import the component
 import { useAuth, AuthProvider } from "./context/AuthContext";
 
 const NavigationBar = () => {
@@ -32,6 +33,7 @@ const App: React.FC = () => {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/edit-resume/:id" element={<EditResume />} />
         </Routes>
       </Router>
     </AuthProvider>
