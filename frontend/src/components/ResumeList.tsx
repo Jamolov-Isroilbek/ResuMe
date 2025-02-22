@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import ResumeOptions from "./ResumeOptions";
+import CreateResume from "./CreateResume";
 import { useNavigate } from "react-router-dom";
 
 interface Resume {
@@ -10,6 +11,7 @@ interface Resume {
 
 const ResumeList: React.FC = () => {
   const [resumes, setResumes] = useState<Resume[]>([]);
+  const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -26,7 +28,7 @@ const ResumeList: React.FC = () => {
   }, []);
 
   const handleEdit = (id: number) => {
-    navigate(`/resumes/${id}/edit`); // Future edit page
+    navigate(`/resumes/${id}/edit`);
   };
 
   const handleDelete = async (id: number) => {
@@ -43,22 +45,43 @@ const ResumeList: React.FC = () => {
 
   const handleDownload = async (id: number) => {
     try {
-      const response = await api.get(`/resumes/${id}/download/`, { responseType: "blob" });
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `resume_${id}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+        const response = await api.get(`/resumes/${id}/download/`, { responseType: "blob" });
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `resume_${id}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+
+        window.URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Failed to download resume", error);
+        console.error("Failed to download resume", error);
+        alert("Error downloading resume. Please try again.");
     }
+};
+
+
+  const handleResumeCreated = (newResume: Resume) => {
+    setResumes((prevResumes) => [...prevResumes, newResume]);
+    setShowForm(false); // Hide form after resume creation
   };
 
   return (
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Your Resumes</h2>
+      <button
+        onClick={() => setShowForm(!showForm)}
+        className="mb-4 px-4 py-2 bg-blue-500 text-white rounded"
+      >
+        {showForm ? "Cancel" : "Create Resume"}
+      </button>
+
+      {showForm && <CreateResume onResumeCreated={handleResumeCreated} />}
+
       {resumes.length === 0 ? (
         <p>No resumes found.</p>
       ) : (

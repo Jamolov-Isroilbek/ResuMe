@@ -1,4 +1,4 @@
-from rest_framework import generics, permissions
+from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
@@ -20,10 +20,21 @@ class ResumeListCreateView(generics.ListCreateAPIView):
         return Resume.objects.filter(user=self.request.user)
     
     def perform_create(self, serializer):
-        """
-        Ensures the user is assigned to the resume when creating it.
-        """
-        serializer.save(user=self.request.user)
+        """Creates a resume and its sections."""
+        sections_data = self.request.data.get("sections", [])
+        print("Received sections:", sections_data)  # Debug log
+
+        resume = serializer.save(user=self.request.user)  # Create resume
+
+        # Validate sections format before saving
+        if isinstance(sections_data, list):  
+            for section_data in sections_data:
+                Section.objects.create(resume=resume, **section_data)
+        else:
+            print("Invalid sections format:", sections_data)  # Log error
+
+        return Response(ResumeSerializer(resume).data, status=status.HTTP_201_CREATED)
+
 
 class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -65,19 +76,15 @@ class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Section.objects.filter(resume__user=self.request.user)
 
 class ResumePDFDownloadView(generics.GenericAPIView):
-    """
-    API to generate and download a resume as a PDF
-    """
+    """API to generate and download a resume as a PDF."""
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request, pk):
-        """
-        Generates and returns a PDF for the given resume ID.
-        """
+        """Generates and returns a PDF for the given resume."""
         resume = get_object_or_404(Resume, pk=pk, user=request.user)
         pdf_file = generate_resume_pdf(resume)
 
-        response = HttpResponse(pdf_file, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename="{resume.title}.pdf'
+        response = HttpResponse(pdf_file, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{resume.title}.pdf"'
         return response
     
