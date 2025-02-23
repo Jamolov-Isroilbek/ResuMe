@@ -1,32 +1,67 @@
-import React, { useState } from 'react';
-import api from '../services/api';
-import { useNavigate } from 'react-router-dom';
-import RegisterForm from '../components/RegisterForm';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../services/api"; // Ensure this handles API requests
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const [message, setMessage] = useState('');
+  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [error, setError] = useState("");
 
-  const handleRegister = async (formData: { username: string; email: string; password: string }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      console.log('📤 Sending registration request...', formData);
-      const response = await api.post('/auth/register/', formData);
-      if (response.status === 201) {
-        setMessage('✅ Registration successful! Redirecting to login...');
-        setTimeout(() => navigate('/login'), 2000);
-      }
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.error || '❌ Registration failed!';
-      setMessage(errorMsg);
-      console.error('⚠️ Failed to register:', errorMsg);
+      await api.post("/auth/register/", formData);
+      navigate("/login"); // Redirect after successful registration
+    } catch (err) {
+      setError("Failed to register. Try again.");
     }
   };
 
   return (
-    <div>
-      <h2>Register</h2>
-      {message && <p>{message}</p>}
-      <RegisterForm onRegister={handleRegister} />
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
+      <div className="bg-white shadow-md rounded-lg p-6 w-96">
+        <h2 className="text-2xl font-bold text-primary mb-4">Register</h2>
+        {error && <p className="text-red-500">{error}</p>}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            type="text"
+            name="username"
+            value={formData.username}
+            onChange={handleChange}
+            placeholder="Username"
+            required
+            className="w-full px-4 py-2 border rounded-md"
+          />
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            placeholder="Email"
+            required
+            className="w-full px-4 py-2 border rounded-md"
+          />
+          <input
+            type="password"
+            name="password"
+            value={formData.password}
+            onChange={handleChange}
+            placeholder="Password"
+            required
+            className="w-full px-4 py-2 border rounded-md"
+          />
+          <button type="submit" className="w-full bg-primary text-white py-2 rounded-md hover:bg-secondary">
+            Register
+          </button>
+        </form>
+        <p className="mt-4 text-textDark">
+          Already have an account? <a href="/login" className="text-primary">Login</a>
+        </p>
+      </div>
     </div>
   );
 };
