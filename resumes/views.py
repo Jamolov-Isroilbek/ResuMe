@@ -2,8 +2,8 @@ from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse, JsonResponse
-from .models import Resume, Section
-from .serializers import ResumeSerializer, SectionSerializer
+from .models import Resume
+from .serializers import ResumeSerializer
 from .utils import generate_resume_pdf
 
 class ResumeListCreateView(generics.ListCreateAPIView):
@@ -25,14 +25,14 @@ class ResumeListCreateView(generics.ListCreateAPIView):
         print("Received sections:", sections_data)  # Debug log
         resume = serializer.save(user=self.request.user)  # Create resume
 
-        # Validate sections format before saving
-        if isinstance(sections_data, list):  
-            for section_data in sections_data:
-                Section.objects.create(resume=resume, **section_data)
-        else:
-            print("Invalid sections format:", sections_data)  # Log error
+        # # Validate sections format before saving
+        # if isinstance(sections_data, list):  
+        #     for section_data in sections_data:
+        #         Section.objects.create(resume=resume, **section_data)
+        # else:
+        #     print("Invalid sections format:", sections_data)  # Log error
 
-        return Response(ResumeSerializer(resume).data, status=status.HTTP_201_CREATED)
+        # return Response(ResumeSerializer(resume).data, status=status.HTTP_201_CREATED)
 
 
 class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -72,37 +72,37 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
                 existing_section.title = section_data["title"]
                 existing_section.content = section_data["content"]
                 existing_section.save()
-            else:
-                # Create new section
-                Section.objects.create(resume=instance, **section_data)
+            # else:
+            #     # Create new section
+            #     Section.objects.create(resume=instance, **section_data)
 
         return JsonResponse(serializer.data, safe=False)
 
-class SectionListCreateView(generics.ListCreateAPIView):
-    """
-    API to list all sections and create a new section for a resume.
-    """
-    serializer_class = SectionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# class SectionListCreateView(generics.ListCreateAPIView):
+#     """
+#     API to list all sections and create a new section for a resume.
+#     """
+#     serializer_class = SectionSerializer
+#     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        """
-        Ensures users can only see sections from resumes they own.
-        """
-        return Section.objects.filter(resume__user=self.request.user)
+#     def get_queryset(self):
+#         """
+#         Ensures users can only see sections from resumes they own.
+#         """
+#         return Section.objects.filter(resume__user=self.request.user)
     
-class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    API to retrieve, update, or delete a single section.
-    """
-    serializer_class = SectionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+# class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
+#     """
+#     API to retrieve, update, or delete a single section.
+#     """
+#     serializer_class = SectionSerializer
+#     permission_classes = [permissions.IsAuthenticated]
 
-    def get_queryset(self):
-        """
-        Ensures users can only modify sections from resumes they own.
-        """
-        return Section.objects.filter(resume__user=self.request.user)
+#     def get_queryset(self):
+#         """
+#         Ensures users can only modify sections from resumes they own.
+#         """
+#         return Section.objects.filter(resume__user=self.request.user)
 
 class ResumePDFDownloadView(generics.GenericAPIView):
     """API to generate and download a resume as a PDF."""

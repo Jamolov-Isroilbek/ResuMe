@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import api from "../services/api";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 interface Section {
   title: string;
@@ -34,8 +34,10 @@ const years = Array.from(
   (_, i) => `${new Date().getFullYear() - i}`
 );
 
-const CreateResume: React.FC = () => {
+const CreateEditResume: React.FC = () => {
+  const { id } = useParams();
   const navigate = useNavigate();
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -104,7 +106,7 @@ const CreateResume: React.FC = () => {
 
   const isTokenExpired = (token: string | null) => {
     if (!token) return true; // ✅ If no token, assume expired
-  
+
     try {
       const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
       return payload.exp * 1000 < Date.now(); // ✅ Check if token is expired
@@ -113,20 +115,50 @@ const CreateResume: React.FC = () => {
       return true; // ✅ If decoding fails, assume expired
     }
   };
-  
+
   useEffect(() => {
-    const token = getToken();
-  
-    if (!token) {
-      alert("You must be logged in to create a resume.");
-      navigate("/login");
-    } else if (isTokenExpired(token)) {
-      alert("Your session has expired. Please log in again.");
-      localStorage.removeItem("token");
-      navigate("/login");
+    if (id) {
+      setIsEditing(true);
+      const fetchResume = async () => {
+        try {
+          const response = await api.get(`/resumes/${id}/`, {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          });
+
+          console.log("API Response:", response.data); // ✅ Log API response to debug
+
+          setFormData((prev) => ({
+            ...prev,
+            title: response.data.title || "",
+            personalDetails: {
+              ...prev.personalDetails,
+              ...(response.data.personalDetails || {}),
+            },
+            education: response.data.education?.length
+              ? response.data.education
+              : prev.education,
+            workExperience: response.data.workExperience?.length
+              ? response.data.workExperience
+              : prev.workExperience,
+            skills: {
+              ...prev.skills,
+              ...(response.data.skills || {}),
+            },
+            awards: response.data.awards?.length
+              ? response.data.awards
+              : prev.awards,
+          }));
+        } catch (error) {
+          console.error("Failed to fetch resume", error);
+        }
+      };
+      fetchResume();
+    } else {
+      setIsEditing(false);
     }
-  }, [navigate]);
-  
+  }, [id]);
 
   const toggleOptionalField = (field: keyof typeof showOptionalFields) => {
     setShowOptionalFields((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -172,22 +204,23 @@ const CreateResume: React.FC = () => {
       return;
     }
 
-    const payload = { ...formData, customSections };
-    console.log("Submitting resume:", JSON.stringify(payload, null, 2));
-
     try {
-      const response = await api.post("/resumes/", payload, {
-        headers: {
-          Authorization: `Bearer ${token}`, // ✅ Send the token in the headers
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.status === 201) {
+      if (isEditing) {
+        await api.put("/resumes/${id}/", formData, {
+          headers: {
+            Authorization: `Bearer ${token}`, // ✅ Send the token in the headers
+            "Content-Type": "application/json",
+          },
+        });
+        alert("Resume updated successfully");
+      } else {
+        // ✅ Create new resume
+        await api.post("/resumes/", formData, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
         alert("Resume created successfully!");
-        // onResumeCreated(response.data);
-        navigate("/my-resumes");
       }
+      navigate("/my-resumes");
     } catch (error: any) {
       console.error("Failed to create resume", error.response?.data || error);
       alert(
@@ -199,7 +232,7 @@ const CreateResume: React.FC = () => {
   return (
     <div className="min-h-screen p-6">
       <h2 className="text-3xl font-bold text-primary mb-4">
-        Create a New Resume
+        {isEditing ? "Edit Resume" : "Create a New Resume"}
       </h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Resume Title */}
@@ -1006,13 +1039,13 @@ const CreateResume: React.FC = () => {
         >
           Add Custom Section
         </button>
-        {/* Buttons at the bottom with spacing */}
+        {/* Submit Button */}
         <div className="flex flex-wrap gap-4 mt-6">
           <button
             type="submit"
             className="bg-green-500 text-white px-6 py-2 rounded-md"
           >
-            Create Resume
+            {isEditing ? "Update Resume" : "Create Resume"}
           </button>
         </div>
       </form>
@@ -1020,4 +1053,4 @@ const CreateResume: React.FC = () => {
   );
 };
 
-export default CreateResume;
+export default CreateEditResume;

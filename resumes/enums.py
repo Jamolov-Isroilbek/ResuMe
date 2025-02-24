@@ -15,4 +15,12 @@ class PrivacySettings(models.TextChoices):
     PUBLIC = "PUBLIC", "Public"
     PRIVATE = "PRIVATE", "Private"
 
+class SkillType(models.TextChoices):
+    """
+    Enumeration for skill types.
+    """
+    SOFT = "SOFT", "Soft"
+    OTHER = "OTHER", "Other"
+    LANGUAGE = "LANGUAGE", "Language"
+    TECHNICAL = "TECHNICAL", "Technical"
 

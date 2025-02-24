@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import ResumeOptions from "./ResumeOptions";
-import CreateResume from "../pages/CreateResume";
+import CreateResume from "../pages/CreateEditResume";
 import { useNavigate } from "react-router-dom";
 
 interface Resume {

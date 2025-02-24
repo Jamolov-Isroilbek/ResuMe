@@ -5,7 +5,7 @@ import Profile from "./pages/Profile";
 import MyResumes from "./pages/MyResumes";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import CreateResume from "./pages/CreateResume";
+import CreateEditResume from "./pages/CreateEditResume";
 import { AuthProvider } from "./context/AuthContext";
 
 function App() {
@@ -20,7 +20,8 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/my-resumes" element={<MyResumes />} />
-          <Route path="/create-resume" element={<CreateResume />} />
+          <Route path="/create-resume" element={<CreateEditResume />} />
+          <Route path="/edit-resume/:id" element={<CreateEditResume />} />
           </Routes>
       </Router>
     </AuthProvider>
