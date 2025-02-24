@@ -17,7 +17,9 @@ const Dashboard: React.FC = () => {
       <nav className="w-full flex justify-between items-center p-4 bg-white shadow-md">
         <img src="/logo.png" alt="ResuMe Logo" className="w-16" />
         <div className="space-x-6">
-          <Link to="/" className="text-primary hover:underline">Home</Link>
+          <Link to="/dashboard" className="text-primary hover:underline">Home</Link>
+          <Link to="/my-resumes" className="text-primary hover:underline">My Resumes</Link>
+          <Link to="/profile" className="text-primary hover:underline">Profile</Link>
           <Link to="/about" className="text-primary hover:underline">About</Link>
           <Link to="/features" className="text-primary hover:underline">Features</Link>
           <Link to="/contact" className="text-primary hover:underline">Contact</Link>

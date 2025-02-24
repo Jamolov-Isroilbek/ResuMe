@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
 import ResumeOptions from "./ResumeOptions";
-import CreateResume from "./CreateResume";
+import CreateResume from "../pages/CreateResume";
 import { useNavigate } from "react-router-dom";
 
 interface Resume {
@@ -80,7 +80,7 @@ const ResumeList: React.FC = () => {
         {showForm ? "Cancel" : "Create Resume"}
       </button>
 
-      {showForm && <CreateResume onResumeCreated={handleResumeCreated} />}
+      {showForm && <CreateResume />}
 
       {resumes.length === 0 ? (
         <p>No resumes found.</p>
