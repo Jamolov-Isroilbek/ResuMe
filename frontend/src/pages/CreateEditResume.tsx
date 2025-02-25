@@ -105,14 +105,14 @@ const CreateEditResume: React.FC = () => {
   const getToken = () => localStorage.getItem("token");
 
   const isTokenExpired = (token: string | null) => {
-    if (!token) return true; // ✅ If no token, assume expired
+    if (!token) return true;
 
     try {
-      const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
-      return payload.exp * 1000 < Date.now(); // ✅ Check if token is expired
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload.exp * 1000 < Date.now();
     } catch (error) {
       console.error("Invalid token format:", error);
-      return true; // ✅ If decoding fails, assume expired
+      return true;
     }
   };
 
@@ -124,34 +124,32 @@ const CreateEditResume: React.FC = () => {
           const response = await api.get(`/resumes/${id}/`, {
             headers: {
               Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
             },
           });
 
-          console.log("API Response:", response.data); // ✅ Log API response to debug
+          const data = response.data;
 
-          setFormData((prev) => ({
-            ...prev,
-            title: response.data.title || "",
-            personalDetails: {
-              ...prev.personalDetails,
-              ...(response.data.personalDetails || {}),
+          setFormData({
+            title: data.title || "",
+            personalDetails: data.personal_details || {
+              firstName: "",
+              lastName: "",
+              email: "",
+              phone: "",
+              website: "",
+              github: "",
+              linkedin: "",
             },
-            education: response.data.education?.length
-              ? response.data.education
-              : prev.education,
-            workExperience: response.data.workExperience?.length
-              ? response.data.workExperience
-              : prev.workExperience,
-            skills: {
-              ...prev.skills,
-              ...(response.data.skills || {}),
-            },
-            awards: response.data.awards?.length
-              ? response.data.awards
-              : prev.awards,
-          }));
-        } catch (error) {
-          console.error("Failed to fetch resume", error);
+            education: data.education || [],
+            workExperience: data.work_experience || [],
+            skills: data.skills || [],
+            awards: data.awards || [],
+          });
+          alert("Resume created successfully!");
+        } catch (error: any) {
+          console.error("Error Details:", error.response.data); // ✅ Log the full error message
+          alert("Error: " + JSON.stringify(error.response.data, null, 2)); // ✅ Show user-friendly error
         }
       };
       fetchResume();
@@ -198,25 +196,30 @@ const CreateEditResume: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const token = localStorage.getItem("token"); // ✅ Get token from local storage
+    const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to create a resume.");
       return;
     }
 
+    const payload = { ...formData };
+
     try {
       if (isEditing) {
-        await api.put("/resumes/${id}/", formData, {
+        await api.put("/resumes/${id}/", payload, {
           headers: {
-            Authorization: `Bearer ${token}`, // ✅ Send the token in the headers
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         });
         alert("Resume updated successfully");
       } else {
-        // ✅ Create new resume
-        await api.post("/resumes/", formData, {
-          headers: { Authorization: `Bearer ${token}` },
+        // Create new resume
+        await api.post("/resumes/", payload, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         });
         alert("Resume created successfully!");
       }

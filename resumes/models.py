@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.validators import URLValidator
 from users.models import User
 from .enums import ResumeStatus, PrivacySettings, SkillType
 
@@ -22,9 +23,9 @@ class PersonalDetails(models.Model):
     last_name = models.CharField(max_length=100)
     email = models.EmailField()
     phone = models.CharField(max_length=100)
-    website = models.URLField(blank=True, null=True)
-    github = models.URLField(blank=True, null=True)
-    linkedin = models.URLField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True, validators=[URLValidator()])
+    github = models.URLField(blank=True, null=True, validators=[URLValidator()])
+    linkedin = models.URLField(blank=True, null=True, validators=[URLValidator()])
 
 class Education(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="education")

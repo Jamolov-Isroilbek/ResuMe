@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, generics, permissions
 from django.contrib.auth import get_user_model, authenticate
 from .serializers import RegisterSerializer
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 
 User = get_user_model()
 
@@ -13,14 +13,19 @@ class RegisterView(generics.CreateAPIView):
     """
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+    permission_classes = [permissions.AllowAny]
 
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def login_view(request):
     """
     API for user login, Returns access & refresh tokens.
     """
     username = request.data.get("username")
     password = request.data.get("password")
+
+    if not username or not password:
+        return Response({"error": "Username and password are required"}, status=status.HTTP_400_BAD_REQUEST)
 
     print(f"Trying to authenticate: {username} with {password}")
 
