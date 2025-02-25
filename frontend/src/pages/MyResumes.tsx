@@ -51,23 +51,31 @@ const MyResumes: React.FC = () => {
 
   const handleDownload = async (id: number) => {
     try {
-      const response = await api.get(`/resumes/${id}/download/`, { responseType: "blob" });
-      const blob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `resume_${id}.pdf`;
-      a.click();
-      window.URL.revokeObjectURL(url);
+      const response = await api.get(`/resumes/${id}/download/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        responseType: "blob", // Ensures the response is treated as a file
+      });
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `resume_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error("Failed to download resume", error);
+      console.error("❌ Failed to download resume:", error);
+      alert("Could not download the resume.");
     }
   };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(null);
       }
     };
@@ -78,7 +86,10 @@ const MyResumes: React.FC = () => {
   return (
     <div className="min-h-screen bg-background text-center p-6">
       <h2 className="text-3xl font-bold text-primary mb-4">My Resumes</h2>
-      <Link to="/create-resume" className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary">
+      <Link
+        to="/create-resume"
+        className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-secondary"
+      >
         Create New Resume
       </Link>
 
@@ -87,20 +98,44 @@ const MyResumes: React.FC = () => {
       ) : (
         <ul className="mt-6">
           {resumes.map((resume) => (
-            <li key={resume.id} className="p-4 bg-white shadow-md rounded-lg mb-4 flex justify-between items-center">
+            <li
+              key={resume.id}
+              className="p-4 bg-white shadow-md rounded-lg mb-4 flex justify-between items-center"
+            >
               <span className="text-lg">{resume.title}</span>
 
               {/* Three-dot menu */}
               <div className="relative" ref={dropdownRef}>
-                <button onClick={() => setDropdownOpen(dropdownOpen === resume.id ? null : resume.id)}>
+                <button
+                  onClick={() =>
+                    setDropdownOpen(
+                      dropdownOpen === resume.id ? null : resume.id
+                    )
+                  }
+                >
                   ⋮
                 </button>
 
                 {dropdownOpen === resume.id && (
                   <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-md text-left">
-                    <Link to={`/edit-resume/${resume.id}`} className="block px-4 py-2 hover:bg-gray-200">Edit</Link>
-                    <button onClick={() => handleDownload(resume.id)} className="block w-full text-left px-4 py-2 hover:bg-gray-200">Download</button>
-                    <button onClick={() => handleDelete(resume.id)} className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200">Delete</button>
+                    <Link
+                      to={`/edit-resume/${resume.id}`}
+                      className="block px-4 py-2 hover:bg-gray-200"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDownload(resume.id)}
+                      className="block w-full text-left px-4 py-2 hover:bg-gray-200"
+                    >
+                      Download
+                    </button>
+                    <button
+                      onClick={() => handleDelete(resume.id)}
+                      className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200"
+                    >
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>

@@ -1,5 +1,3 @@
-import traceback
-
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
@@ -105,6 +103,9 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         """
         resume = get_object_or_404(Resume, pk=pk, user=request.user)
         pdf_file = generate_resume_pdf(resume)
+
+        if not pdf_file:
+            return Response({"error": "Failed to generate PDF"}, status=500)
 
         response = HttpResponse(pdf_file, content_type="application/pdf")
         response["Content-Disposition"] = f'attachment; filename="{resume.title}.pdf"'

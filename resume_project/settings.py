@@ -76,6 +76,7 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CORS_EXPOSE_HEADERS = ['Content-Type', 'Authorization']
 
 ROOT_URLCONF = 'resume_project.urls'
 

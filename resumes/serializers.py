@@ -53,6 +53,9 @@ class ResumeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resume
         fields = '__all__'
+        extra_kwargs = {
+            'user': {'read_only': True}
+        }
 
     def create(self, validated_data):
         """Handle nested creation properly"""

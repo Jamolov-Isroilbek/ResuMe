@@ -37,7 +37,8 @@ const years = Array.from(
 const CreateEditResume: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [isEditing, setIsEditing] = useState(false);
+  // const [isEditing, setIsEditing] = useState(false);
+  const [isEditing] = useState(!!id);
 
   const [formData, setFormData] = useState({
     title: "",
@@ -83,6 +84,7 @@ const CreateEditResume: React.FC = () => {
     skills: {
       technical: "",
       softSkills: "",
+      otherSkills: "",
       languages: "",
     },
     awards: [
@@ -117,46 +119,107 @@ const CreateEditResume: React.FC = () => {
   };
 
   useEffect(() => {
-    if (id) {
-      setIsEditing(true);
-      const fetchResume = async () => {
-        try {
-          const response = await api.get(`/resumes/${id}/`, {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
-            },
-          });
+    const fetchResumeData = async () => {
+      if (!id) return;
 
-          const data = response.data;
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("You need to login first");
+        navigate("/login");
+        return;
+      }
 
-          setFormData({
-            title: data.title || "",
-            personalDetails: data.personal_details || {
-              firstName: "",
-              lastName: "",
-              email: "",
-              phone: "",
-              website: "",
-              github: "",
-              linkedin: "",
-            },
-            education: data.education || [],
-            workExperience: data.work_experience || [],
-            skills: data.skills || [],
-            awards: data.awards || [],
-          });
-          alert("Resume created successfully!");
-        } catch (error: any) {
-          console.error("Error Details:", error.response.data); // ✅ Log the full error message
-          alert("Error: " + JSON.stringify(error.response.data, null, 2)); // ✅ Show user-friendly error
-        }
-      };
-      fetchResume();
-    } else {
-      setIsEditing(false);
-    }
-  }, [id]);
+      try {
+        const response = await api.get(`/resumes/${id}/`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        const data = response.data;
+
+        // Transform API data to match form structure
+        setFormData({
+          title: data.title || "",
+          personalDetails: {
+            firstName: data.personal_details?.first_name || "",
+            lastName: data.personal_details?.last_name || "",
+            email: data.personal_details?.email || "",
+            phone: data.personal_details?.phone || "",
+            website: data.personal_details?.website || "",
+            github: data.personal_details?.github || "",
+            linkedin: data.personal_details?.linkedin || "",
+          },
+          education: data.education.map((edu: any) => ({
+            institution: edu.institution,
+            major: edu.major,
+            startMonth: edu.start_date
+              ? months[new Date(edu.start_date).getMonth()]
+              : "",
+            startYear: edu.start_date
+              ? new Date(edu.start_date).getFullYear().toString()
+              : "",
+            endMonth: edu.end_date
+              ? months[new Date(edu.end_date).getMonth()]
+              : "",
+            endYear: edu.end_date
+              ? new Date(edu.end_date).getFullYear().toString()
+              : "",
+            cgpa: edu.cgpa,
+          })),
+          workExperience: data.work_experience.map((work: any) => ({
+            employer: work.employer,
+            role: work.role,
+            startMonth: work.start_date
+              ? months[new Date(work.start_date).getMonth()]
+              : "",
+            startYear: work.start_date
+              ? new Date(work.start_date).getFullYear().toString()
+              : "",
+            endMonth: work.end_date
+              ? months[new Date(work.end_date).getMonth()]
+              : "",
+            endYear: work.end_date
+              ? new Date(work.end_date).getFullYear().toString()
+              : "",
+            description: work.description,
+          })),
+          skills: {
+            technical: data.skills
+              ?.filter((s: any) => s.skill_type === "TECHNICAL")
+              .map((s: any) => s.skill_name)
+              .join(", "),
+            softSkills: data.skills
+              ?.filter((s: any) => s.skill_type === "SOFT")
+              .map((s: any) => s.skill_name)
+              .join(", "),
+            otherSkills: data.skills
+              ?.filter((s: any) => s.skill_type === "OTHER")
+              .map((s: any) => s.skill_name)
+              .join(", "),
+            languages: data.skills
+              ?.filter((s: any) => s.skill_type === "LANGUAGE")
+              .map((s: any) => s.skill_name)
+              .join(", "),
+          },
+          awards: data.awards || [],
+        });
+
+        // Handle optional fields visibility
+        setShowOptionalFields({
+          website: !!data.personal_details?.website,
+          github: !!data.personal_details?.github,
+          linkedin: !!data.personal_details?.linkedin,
+        });
+      } catch (error) {
+        console.error("Error fetching resume:", error);
+        alert("Failed to load resume data");
+      }
+    };
+
+    if (isEditing) fetchResumeData();
+  }, [id, isEditing]);
 
   const toggleOptionalField = (field: keyof typeof showOptionalFields) => {
     setShowOptionalFields((prev) => ({ ...prev, [field]: !prev[field] }));
@@ -198,37 +261,109 @@ const CreateEditResume: React.FC = () => {
 
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in to create a resume.");
+      alert("You must be logged in to perform this action.");
+      navigate("/login");
       return;
     }
 
-    const payload = { ...formData };
+    const formattedResume = {
+      title: formData.title || "Untitled Resume",
+      resume_status: "DRAFT",
+      privacy_setting: "PRIVATE",
+      personal_details: {
+        first_name: formData.personalDetails.firstName || "",
+        last_name: formData.personalDetails.lastName || "",
+        email: formData.personalDetails.email || "",
+        phone: formData.personalDetails.phone || "",
+        website: formData.personalDetails.website || null,
+        github: formData.personalDetails.github || null,
+        linkedin: formData.personalDetails.linkedin || null,
+      },
+      education: formData.education.map((edu) => ({
+        institution: edu.institution || "",
+        major: edu.major === "custom" ? edu.customMajor : edu.major || "",
+        start_date:
+          edu.startYear && edu.startMonth
+            ? `${edu.startYear}-${String(
+                months.indexOf(edu.startMonth) + 1
+              ).padStart(2, "0")}-01`
+            : null,
+        end_date:
+          edu.endYear && edu.endMonth
+            ? `${edu.endYear}-${String(
+                months.indexOf(edu.endMonth) + 1
+              ).padStart(2, "0")}-01`
+            : null,
+        cgpa: edu.cgpa || null,
+      })),
+      work_experience: formData.workExperience.map((work) => ({
+        employer: work.employer || "",
+        role: work.role || "",
+        start_date:
+          work.startYear && work.startMonth
+            ? `${work.startYear}-${String(
+                months.indexOf(work.startMonth) + 1
+              ).padStart(2, "0")}-01`
+            : null,
+        end_date: work.currentlyWorking
+          ? null
+          : work.endYear && work.endMonth
+          ? `${work.endYear}-${String(
+              months.indexOf(work.endMonth) + 1
+            ).padStart(2, "0")}-01`
+          : null,
+        location:
+          work.location === "custom"
+            ? work.customLocation
+            : work.location || "",
+        description: work.description || "",
+      })),
+      skills: [
+        ...formData.skills.technical
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s !== ""),
+        ...formData.skills.softSkills
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s !== ""),
+        ...formData.skills.languages
+          .split(",")
+          .map((s) => s.trim())
+          .filter((s) => s !== ""),
+      ].map((skill) => ({ skill_name: skill, skill_type: "OTHER" })), // ✅ Ensure correct format
+      awards: formData.awards.map((award) => ({
+        name: award.name || "",
+        description: award.description || "",
+        year: award.year || null,
+      })),
+    };
 
     try {
       if (isEditing) {
-        await api.put("/resumes/${id}/", payload, {
+        await api.put(`/resumes/${id}/`, formattedResume, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         });
-        alert("Resume updated successfully");
+        alert("Resume updated successfully!");
       } else {
-        // Create new resume
-        await api.post("/resumes/", payload, {
+        await api.post("/resumes/", formattedResume, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
+            "Content-Type": "application/json"
+          }
         });
         alert("Resume created successfully!");
       }
       navigate("/my-resumes");
     } catch (error: any) {
-      console.error("Failed to create resume", error.response?.data || error);
-      alert(
-        "Error: " + (error.response?.data?.detail || "Could not create resume")
+      console.error(
+        "❌ Failed to create resume:",
+        error.response?.data || error
       );
+      alert("Error: " + JSON.stringify(error.response?.data, null, 2)); // ✅ Show API errors
     }
   };
 
