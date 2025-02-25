@@ -16,11 +16,15 @@ const Login: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log("🔍 Sending login request:", formData);
       const response = await api.post("/auth/login/", formData);
+      console.log("✅ Login successful:", response.data);
+
       login(response.data.access);
-      // localStorage.setItem("token", response.data.access); // Store JWT Token
+      localStorage.setItem("token", response.data.access); // Store JWT token
       navigate("/dashboard"); // Redirect after login
-    } catch (err) {
+    } catch (err: any) {
+      console.error("❌ Login failed:", err.response?.data || err.message);
       setError("Invalid username or password.");
     }
   };
@@ -49,12 +53,18 @@ const Login: React.FC = () => {
             required
             className="w-full px-4 py-2 border rounded-md"
           />
-          <button type="submit" className="w-full bg-primary text-white py-2 rounded-md hover:bg-secondary">
+          <button
+            type="submit"
+            className="w-full bg-primary text-white py-2 rounded-md hover:bg-secondary"
+          >
             Login
           </button>
         </form>
         <p className="mt-4 text-textDark">
-          Don't have an account? <a href="/register" className="text-primary">Register</a>
+          Don't have an account?{" "}
+          <a href="/register" className="text-primary">
+            Register
+          </a>
         </p>
       </div>
     </div>

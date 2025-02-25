@@ -4,7 +4,11 @@ import api from "../services/api"; // Ensure this handles API requests
 
 const Register: React.FC = () => {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ username: "", email: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    password: "",
+  });
   const [error, setError] = useState("");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -14,9 +18,15 @@ const Register: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      console.log("🔍 Registering user:", formData);
       await api.post("/auth/register/", formData);
-      navigate("/login"); // Redirect after successful registration
-    } catch (err) {
+      console.log("✅ Registration successful");
+      navigate("/login");
+    } catch (err: any) {
+      console.error(
+        "❌ Registration failed:",
+        err.response?.data || err.message
+      );
       setError("Failed to register. Try again.");
     }
   };
@@ -54,12 +64,18 @@ const Register: React.FC = () => {
             required
             className="w-full px-4 py-2 border rounded-md"
           />
-          <button type="submit" className="w-full bg-primary text-white py-2 rounded-md hover:bg-secondary">
+          <button
+            type="submit"
+            className="w-full bg-primary text-white py-2 rounded-md hover:bg-secondary"
+          >
             Register
           </button>
         </form>
         <p className="mt-4 text-textDark">
-          Already have an account? <a href="/login" className="text-primary">Login</a>
+          Already have an account?{" "}
+          <a href="/login" className="text-primary">
+            Login
+          </a>
         </p>
       </div>
     </div>
