@@ -8,6 +8,14 @@ from .models import Resume, Education, WorkExperience, Skill, PersonalDetails, A
 from .serializers import ResumeSerializer, EducationSerializer, WorkExperienceSerializer, SkillSerializer, PersonalDetailsSerializer
 from .utils import generate_resume_pdf
 
+class PublicResumesView(generics.ListAPIView):
+    """
+    API to list public resumes only.
+    """
+    queryset = Resume.objects.filter(privacy_setting="PUBLIC").select_related
+    serializer_class = ResumeSerializer
+    permission_classes = [permissions.AllowAny]
+
 class ResumeListCreateView(generics.ListCreateAPIView):
     """
     API to list all resumes and create a new resume.
@@ -29,6 +37,7 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     API to retrieve, update, or delete a single resume.
     """
+    queryset = Resume.objects.all()
     serializer_class = ResumeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -95,14 +104,17 @@ class ResumePDFDownloadView(generics.GenericAPIView):
     """
     API to generate and download a resume as a PDF.
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def get(self, request, pk):
         """
         Generates and returns a PDF for the given resume.
         """
         resume = get_object_or_404(Resume, pk=pk, user=request.user)
+
+
         pdf_file = generate_resume_pdf(resume)
+
 
         if not pdf_file:
             return Response({"error": "Failed to generate PDF"}, status=500)

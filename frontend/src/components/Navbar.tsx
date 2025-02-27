@@ -17,6 +17,10 @@ const Navbar: React.FC = () => {
       />
 
       <div className="space-x-6">
+        <Link to="/public-resumes" className="text-white hover:underline">
+          Public Resumes
+        </Link>
+
         {isAuthenticated ? (
           <>
             <Link to="/my-resumes" className="text-white hover:underline">

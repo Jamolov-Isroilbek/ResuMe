@@ -1,18 +1,6 @@
 from rest_framework import serializers
 from .models import Resume, PersonalDetails, Education, WorkExperience, Skill, Award 
 
-
-# class ResumeSerializer(serializers.ModelSerializer):
-#     personal_details = serializers.JSONField()
-#     education = serializers.JSONField()
-#     work_experience = serializers.JSONField()
-#     skills = serializers.JSONField()
-#     awards = serializers.JSONField()
-
-#     class Meta:
-#         model = Resume
-#         fields = '__all__'
-
 class PersonalDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalDetails
@@ -44,6 +32,7 @@ class AwardSerializer(serializers.ModelSerializer):
         extra_kwargs = {'resume': {'required': False}}
 
 class ResumeSerializer(serializers.ModelSerializer):
+    user = serializers.SerializerMethodField()
     education = EducationSerializer(many=True)
     work_experience = WorkExperienceSerializer(many=True)
     skills = SkillSerializer(many=True)
@@ -56,6 +45,9 @@ class ResumeSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'user': {'read_only': True}
         }
+
+    def get_user(self, obj):
+        return obj.user.username
 
     def create(self, validated_data):
         """Handle nested creation properly"""

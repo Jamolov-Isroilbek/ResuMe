@@ -39,9 +39,12 @@ const CreateEditResume: React.FC = () => {
   const navigate = useNavigate();
   // const [isEditing, setIsEditing] = useState(false);
   const [isEditing] = useState(!!id);
+  const [resumeVisibility, setResumeVisibility] = useState("PRIVATE");
 
   const [formData, setFormData] = useState({
     title: "",
+    resume_status: "DRAFT",
+    privacy_setting: resumeVisibility,
     personalDetails: {
       firstName: "",
       lastName: "",
@@ -144,6 +147,8 @@ const CreateEditResume: React.FC = () => {
         // Transform API data to match form structure
         setFormData({
           title: data.title || "",
+          resume_status: data.resume_status || "",
+          privacy_setting: data.privacy_setting || "",
           personalDetails: {
             firstName: data.personal_details?.first_name || "",
             lastName: data.personal_details?.last_name || "",
@@ -208,6 +213,8 @@ const CreateEditResume: React.FC = () => {
           awards: data.awards || [],
         });
 
+        setResumeVisibility(data.privacy_setting || "PRIVATE")
+
         // Handle optional fields visibility
         setShowOptionalFields({
           website: !!data.personal_details?.website,
@@ -271,7 +278,7 @@ const CreateEditResume: React.FC = () => {
     const formattedResume = {
       title: formData.title || "Untitled Resume",
       resume_status: "DRAFT",
-      privacy_setting: "PRIVATE",
+      privacy_setting: resumeVisibility,
       personal_details: {
         first_name: formData.personalDetails.firstName || "",
         last_name: formData.personalDetails.lastName || "",
@@ -321,17 +328,27 @@ const CreateEditResume: React.FC = () => {
         description: work.description || "",
       })),
       skills: [
-        ...formData.skills.technical.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL" })),
-        ...formData.skills.softSkills.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "SOFT" })),
-        ...formData.skills.otherSkills.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "OTHER" })),
-        ...formData.skills.languages.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE" })),
-      ].filter(skill => skill.skill_name !== ""), // ✅ Remove empty skill values
+        ...formData.skills.technical
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL" })),
+        ...formData.skills.softSkills
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "SOFT" })),
+        ...formData.skills.otherSkills
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "OTHER" })),
+        ...formData.skills.languages
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE" })),
+      ].filter((skill) => skill.skill_name !== ""), // ✅ Remove empty skill values
       awards: formData.awards.map((award) => ({
         name: award.name || "",
         description: award.description || "",
         year: award.year || null,
       })),
     };
+
+    console.log("🛠 Submitting Resume Data:", formattedResume); // ✅ Debug log before submission
 
     try {
       if (isEditing) {
@@ -372,6 +389,7 @@ const CreateEditResume: React.FC = () => {
           Resume Title:
           <input
             type="text"
+            placeholder="Example: Software Engineer - Google"
             name="title"
             value={formData.title}
             onChange={(e) =>
@@ -380,6 +398,21 @@ const CreateEditResume: React.FC = () => {
             required
             className="w-full px-4 py-2 border rounded-md"
           />
+          <p className="text-gray-500 text-sm mt-1">
+            Suggested Format: <b>Job Title - Company Name</b>
+          </p>
+        </label>
+
+        <label className="block">
+          Resume Visibility:
+          <select
+            value={resumeVisibility || "PRIVATE"} // ✅ Prevents undefined value            
+            onChange={(e) => setResumeVisibility(e.target.value)}
+            className="w-full px-4 py-2 border rounded-md"
+          >
+            <option value="PRIVATE">Private</option>
+            <option value="PUBLIC">Public</option>
+          </select>
         </label>
         {/* Personal Details */}
         <h3 className="text-xl font-bold">Personal Details</h3>
