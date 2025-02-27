@@ -14,10 +14,9 @@ const Dashboard: React.FC = () => {
   return (
     <div className="min-h-screen bg-background text-center p-6">
       {/* Navigation Bar */}
-      <nav className="w-full flex justify-between items-center p-4 bg-white shadow-md">
+      {/* <nav className="w-full flex justify-between items-center p-4 bg-white shadow-md">
         <img src="/logo.png" alt="ResuMe Logo" className="w-16" />
         <div className="space-x-6">
-          <Link to="/dashboard" className="text-primary hover:underline">Home</Link>
           <Link to="/my-resumes" className="text-primary hover:underline">My Resumes</Link>
           <Link to="/profile" className="text-primary hover:underline">Profile</Link>
           <Link to="/about" className="text-primary hover:underline">About</Link>
@@ -27,7 +26,7 @@ const Dashboard: React.FC = () => {
         <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md">
           Logout
         </button>
-      </nav>
+      </nav> */}
 
       {/* Hero Section */}
       <div className="mt-12">

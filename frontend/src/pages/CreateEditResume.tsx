@@ -104,19 +104,19 @@ const CreateEditResume: React.FC = () => {
     linkedin: false,
   });
 
-  const getToken = () => localStorage.getItem("token");
+  // const getToken = () => localStorage.getItem("token");
 
-  const isTokenExpired = (token: string | null) => {
-    if (!token) return true;
+  // const isTokenExpired = (token: string | null) => {
+  //   if (!token) return true;
 
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]));
-      return payload.exp * 1000 < Date.now();
-    } catch (error) {
-      console.error("Invalid token format:", error);
-      return true;
-    }
-  };
+  //   try {
+  //     const payload = JSON.parse(atob(token.split(".")[1]));
+  //     return payload.exp * 1000 < Date.now();
+  //   } catch (error) {
+  //     console.error("Invalid token format:", error);
+  //     return true;
+  //   }
+  // };
 
   useEffect(() => {
     const fetchResumeData = async () => {
@@ -138,6 +138,8 @@ const CreateEditResume: React.FC = () => {
         });
 
         const data = response.data;
+        console.log("✅ Resume fetched:", data); // ✅ Debug log
+        console.log("🛠 Skills Data:", data.skills); // ✅ Log skills
 
         // Transform API data to match form structure
         setFormData({
@@ -319,19 +321,11 @@ const CreateEditResume: React.FC = () => {
         description: work.description || "",
       })),
       skills: [
-        ...formData.skills.technical
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s !== ""),
-        ...formData.skills.softSkills
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s !== ""),
-        ...formData.skills.languages
-          .split(",")
-          .map((s) => s.trim())
-          .filter((s) => s !== ""),
-      ].map((skill) => ({ skill_name: skill, skill_type: "OTHER" })), // ✅ Ensure correct format
+        ...formData.skills.technical.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL" })),
+        ...formData.skills.softSkills.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "SOFT" })),
+        ...formData.skills.otherSkills.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "OTHER" })),
+        ...formData.skills.languages.split(",").map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE" })),
+      ].filter(skill => skill.skill_name !== ""), // ✅ Remove empty skill values
       awards: formData.awards.map((award) => ({
         name: award.name || "",
         description: award.description || "",
@@ -344,16 +338,16 @@ const CreateEditResume: React.FC = () => {
         await api.put(`/resumes/${id}/`, formattedResume, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
         alert("Resume updated successfully!");
       } else {
         await api.post("/resumes/", formattedResume, {
           headers: {
             Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json"
-          }
+            "Content-Type": "application/json",
+          },
         });
         alert("Resume created successfully!");
       }
@@ -1040,6 +1034,7 @@ const CreateEditResume: React.FC = () => {
             }
             className="w-full px-4 py-2 border rounded-md mb-2"
           />
+
           <input
             type="text"
             placeholder="Soft Skills (Comma Separated)"
@@ -1052,6 +1047,20 @@ const CreateEditResume: React.FC = () => {
             }
             className="w-full px-4 py-2 border rounded-md mb-2"
           />
+
+          <input
+            type="text"
+            placeholder="Other Skills (Comma Separated)"
+            value={formData.skills.otherSkills}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                skills: { ...formData.skills, otherSkills: e.target.value },
+              })
+            }
+            className="w-full px-4 py-2 border rounded-md mb-2"
+          />
+
           <input
             type="text"
             placeholder="Languages (Comma Separated)"
