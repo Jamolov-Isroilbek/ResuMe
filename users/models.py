@@ -6,7 +6,7 @@ class User(AbstractUser):
     Custom user model that extends Django's default User model
     """
     is_public = models.BooleanField(default=True) # Defines if user profiles are public
-
+    profile_picture = models.ImageField(upload_to='profile_pics/', null=True, blank=True, default='profile_pics/default.png')
     # Fix reverse accessor conflicts
     groups = models.ManyToManyField(
         "auth.Group",

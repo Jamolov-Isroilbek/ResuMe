@@ -22,3 +22,21 @@ class RegisterSerializer(serializers.ModelSerializer):
             is_public=validated_data.get('is_public', True) # Default to True
         )
         return user
+    
+class UserProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "username", "email", "date_joined", "profile_picture"]
+        # extra_kwargs = {"email": {"required": False}}
+
+    def get_profile_picture(self, obj):
+        request = self.context.get('request')
+        if obj.profile_picture:
+            return request.build_absolute_uri(obj.profile_picture.url) if request else obj.profile_picture.url
+        return request.build_absolute_uri("/media/profile_pics/default.png")
+
+class ChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)

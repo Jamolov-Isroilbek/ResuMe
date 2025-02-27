@@ -1,9 +1,14 @@
-from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.response import Response
 from rest_framework import status, generics, permissions
-from django.contrib.auth import get_user_model, authenticate
-from .serializers import RegisterSerializer
+from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
+from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer
 
 User = get_user_model()
 
@@ -59,12 +64,66 @@ def logout_view(request):
     except Exception as e:
         return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
     
-class UserProfileView(generics.RetrieveAPIView):
+class UserProfileView(generics.RetrieveUpdateAPIView):
     """
-    API to fetch logged-in user details.
+    API for retrieving and updating user profile details.
     """
+    serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    serializer_class = RegisterSerializer
+    authentication_classes = [JWTAuthentication]
+    parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         return self.request.user
+        
+    def update(self, request, *args, **kwargs):
+        user = self.request.user
+        serializer = self.get_serializer(user, data=request.data, partial=True, context={'request': request})
+
+        print(f"🔍 Authenticated user: {request.user}")  # ✅ Log user
+        print(f"🖼 Profile Picture Path: {request.user.profile_picture}")  # ✅ Log profile picture 
+        
+        if serializer.is_valid():
+            if "profile_picture" in request.FILES:
+                user.profile_picture = request.FILES["profile_picture"]
+            if "username" in request.data:
+                user.username = request.data["username"]
+            if "email" in request.data:
+                user.email = request.data["email"]
+            
+            user.save()
+            return Response(self.get_serializer(user).data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ChangePasswordView(generics.UpdateAPIView):
+    """
+    API for changing user password.
+    """
+    serializer_class = ChangePasswordSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def update(self, request, *args, **kwargs):
+        user = request.user
+        serializer = self.get_serializer(data=request.data)
+
+        if serializer.is_valid():
+            old_password = serializer.validated_data["old_password"]
+            new_password = serializer.validated_data["new_password"]
+
+            if not user.check_password(old_password):
+                print("❌ Incorrect old password")
+                return Response({"old_password": "Incorrect password"}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                validate_password(new_password, user)
+            except ValidationError as e:
+                print("❌ Password validation failed:", e.messages)
+                return Response({"new_password": e.messages}, status=status.HTTP_400_BAD_REQUEST)
+
+            user.set_password(new_password)
+            user.save()
+            print("✅ Password updated successfully")
+            return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
+        
+        print("❌ Serializer validation failed:", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
