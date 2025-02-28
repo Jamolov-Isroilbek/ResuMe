@@ -7,7 +7,7 @@ class Resume(models.Model):
     """
     Represents a Resume linked to a User
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE) # User-Resume relationship (1-to many)
+    user = models.OneToOneField(User, on_delete=models.CASCADE) # User-Resume relationship (1-to many)
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True) # Auto-set when resume is created
     updated_at = models.DateTimeField(auto_now=True) # Auto-update when modified

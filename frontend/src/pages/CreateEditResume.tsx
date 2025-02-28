@@ -9,9 +9,12 @@ interface Section {
 
 const majors = [
   "Computer Science",
-  "Economics",
-  "Business",
-  "Engineering",
+  "Software Engineering",
+  "Data Science",
+  "Electrical Engineering",
+  "Mechanical Engineering",
+  "Civil Engineering",
+  "Business Administration",
   "Other",
 ];
 const locations = ["New York, USA", "London, UK", "Berlin, Germany", "Custom"];
@@ -37,7 +40,6 @@ const years = Array.from(
 const CreateEditResume: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  // const [isEditing, setIsEditing] = useState(false);
   const [isEditing] = useState(!!id);
   const [resumeVisibility, setResumeVisibility] = useState("PRIVATE");
 
@@ -107,20 +109,6 @@ const CreateEditResume: React.FC = () => {
     linkedin: false,
   });
 
-  // const getToken = () => localStorage.getItem("token");
-
-  // const isTokenExpired = (token: string | null) => {
-  //   if (!token) return true;
-
-  //   try {
-  //     const payload = JSON.parse(atob(token.split(".")[1]));
-  //     return payload.exp * 1000 < Date.now();
-  //   } catch (error) {
-  //     console.error("Invalid token format:", error);
-  //     return true;
-  //   }
-  // };
-
   useEffect(() => {
     const fetchResumeData = async () => {
       if (!id) return;
@@ -159,8 +147,8 @@ const CreateEditResume: React.FC = () => {
             linkedin: data.personal_details?.linkedin || "",
           },
           education: data.education.map((edu: any) => ({
-            institution: edu.institution,
-            major: edu.major,
+            institution: edu.institution || "",
+            major: edu.major === "custom" ? edu.customMajor : edu.major || "",
             startMonth: edu.start_date
               ? months[new Date(edu.start_date).getMonth()]
               : "",
@@ -213,7 +201,7 @@ const CreateEditResume: React.FC = () => {
           awards: data.awards || [],
         });
 
-        setResumeVisibility(data.privacy_setting || "PRIVATE")
+        setResumeVisibility(data.privacy_setting || "PRIVATE");
 
         // Handle optional fields visibility
         setShowOptionalFields({
@@ -268,6 +256,15 @@ const CreateEditResume: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const hasInvalidCustomMajors = formData.education.some(
+      (edu) => edu.major === "custom" && !edu.customMajor.trim()
+    );
+
+    if (hasInvalidCustomMajors) {
+      alert("Please fill in custom major fields");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       alert("You must be logged in to perform this action.");
@@ -288,64 +285,66 @@ const CreateEditResume: React.FC = () => {
         github: formData.personalDetails.github || null,
         linkedin: formData.personalDetails.linkedin || null,
       },
-      education: formData.education.map((edu) => ({
-        institution: edu.institution || "",
-        major: edu.major === "custom" ? edu.customMajor : edu.major || "",
-        start_date:
-          edu.startYear && edu.startMonth
-            ? `${edu.startYear}-${String(
-                months.indexOf(edu.startMonth) + 1
+      sections: {
+        education: formData.education.map((edu) => ({
+          institution: edu.institution || "",
+          major: edu.major === "Other" ? edu.customMajor : edu.major || "",
+          start_date:
+            edu.startYear && edu.startMonth
+              ? `${edu.startYear}-${String(
+                  months.indexOf(edu.startMonth) + 1
+                ).padStart(2, "0")}-01`
+              : null,
+          end_date:
+            edu.endYear && edu.endMonth
+              ? `${edu.endYear}-${String(
+                  months.indexOf(edu.endMonth) + 1
+                ).padStart(2, "0")}-01`
+              : null,
+          cgpa: edu.cgpa || null,
+        })),
+        work_experience: formData.workExperience.map((work) => ({
+          employer: work.employer || "",
+          role: work.role || "",
+          start_date:
+            work.startYear && work.startMonth
+              ? `${work.startYear}-${String(
+                  months.indexOf(work.startMonth) + 1
+                ).padStart(2, "0")}-01`
+              : null,
+          end_date: work.currentlyWorking
+            ? null
+            : work.endYear && work.endMonth
+            ? `${work.endYear}-${String(
+                months.indexOf(work.endMonth) + 1
               ).padStart(2, "0")}-01`
             : null,
-        end_date:
-          edu.endYear && edu.endMonth
-            ? `${edu.endYear}-${String(
-                months.indexOf(edu.endMonth) + 1
-              ).padStart(2, "0")}-01`
-            : null,
-        cgpa: edu.cgpa || null,
-      })),
-      work_experience: formData.workExperience.map((work) => ({
-        employer: work.employer || "",
-        role: work.role || "",
-        start_date:
-          work.startYear && work.startMonth
-            ? `${work.startYear}-${String(
-                months.indexOf(work.startMonth) + 1
-              ).padStart(2, "0")}-01`
-            : null,
-        end_date: work.currentlyWorking
-          ? null
-          : work.endYear && work.endMonth
-          ? `${work.endYear}-${String(
-              months.indexOf(work.endMonth) + 1
-            ).padStart(2, "0")}-01`
-          : null,
-        location:
-          work.location === "custom"
-            ? work.customLocation
-            : work.location || "",
-        description: work.description || "",
-      })),
-      skills: [
-        ...formData.skills.technical
-          .split(",")
-          .map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL" })),
-        ...formData.skills.softSkills
-          .split(",")
-          .map((s) => ({ skill_name: s.trim(), skill_type: "SOFT" })),
-        ...formData.skills.otherSkills
-          .split(",")
-          .map((s) => ({ skill_name: s.trim(), skill_type: "OTHER" })),
-        ...formData.skills.languages
-          .split(",")
-          .map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE" })),
-      ].filter((skill) => skill.skill_name !== ""), // ✅ Remove empty skill values
-      awards: formData.awards.map((award) => ({
-        name: award.name || "",
-        description: award.description || "",
-        year: award.year || null,
-      })),
+          location:
+            work.location === "custom"
+              ? work.customLocation
+              : work.location || "",
+          description: work.description || "",
+        })),
+        skills: [
+          ...formData.skills.technical
+            .split(",")
+            .map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL" })),
+          ...formData.skills.softSkills
+            .split(",")
+            .map((s) => ({ skill_name: s.trim(), skill_type: "SOFT" })),
+          ...formData.skills.otherSkills
+            .split(",")
+            .map((s) => ({ skill_name: s.trim(), skill_type: "OTHER" })),
+          ...formData.skills.languages
+            .split(",")
+            .map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE" })),
+        ].filter((skill) => skill.skill_name !== ""), // ✅ Remove empty skill values
+        awards: formData.awards.map((award) => ({
+          name: award.name || "",
+          description: award.description || "",
+          year: award.year || null,
+        })),
+      },
     };
 
     console.log("🛠 Submitting Resume Data:", formattedResume); // ✅ Debug log before submission
@@ -406,7 +405,7 @@ const CreateEditResume: React.FC = () => {
         <label className="block">
           Resume Visibility:
           <select
-            value={resumeVisibility || "PRIVATE"} // ✅ Prevents undefined value            
+            value={resumeVisibility || "PRIVATE"} // ✅ Prevents undefined value
             onChange={(e) => setResumeVisibility(e.target.value)}
             className="w-full px-4 py-2 border rounded-md"
           >

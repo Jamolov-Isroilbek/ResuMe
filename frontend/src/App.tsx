@@ -5,6 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import PublicResumes from "./pages/PublicResumes";
 import Profile from "./pages/Profile";
 import MyResumes from "./pages/MyResumes";
+import ResumeView from "./pages/ResumeView";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CreateEditResume from "./pages/CreateEditResume";
@@ -24,6 +25,7 @@ function App() {
           <Route path="/public-resumes" element={<PublicResumes />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/my-resumes" element={<MyResumes />} />
+          <Route path="/resume/:id" element={<ResumeView />} />
           <Route path="/create-resume" element={<CreateEditResume />} />
           <Route path="/edit-resume/:id" element={<CreateEditResume />} />
           </Routes>

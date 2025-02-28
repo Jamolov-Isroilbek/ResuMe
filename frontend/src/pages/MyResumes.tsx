@@ -100,18 +100,21 @@ const MyResumes: React.FC = () => {
           {resumes.map((resume) => (
             <li
               key={resume.id}
-              className="p-4 bg-white shadow-md rounded-lg mb-4 flex justify-between items-center"
-            >
-              <span className="text-lg">{resume.title}</span>
+              className="p-4 bg-white shadow-md rounded-lg mb-4 hover:bg-gray-100 transition cursor-pointer flex justify-between items-center"
+              onClick={() => navigate(`/resume/${resume.id}`)}
+              >
+              
+              <h3 className="text-xl font-semibold">{resume.title}</h3>
 
               {/* Three-dot menu */}
               <div className="relative" ref={dropdownRef}>
                 <button
-                  onClick={() =>
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setDropdownOpen(
                       dropdownOpen === resume.id ? null : resume.id
                     )
-                  }
+                  }}
                 >
                   ⋮
                 </button>
@@ -121,11 +124,15 @@ const MyResumes: React.FC = () => {
                     <Link
                       to={`/edit-resume/${resume.id}`}
                       className="block px-4 py-2 hover:bg-gray-200"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDownload(resume.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(resume.id);
+                      }}
                       className="block w-full text-left px-4 py-2 hover:bg-gray-200"
                     >
                       Download

@@ -1,7 +1,7 @@
 from rest_framework import generics, permissions, status
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, JsonResponse
 from django.db import transaction
 from .models import Resume, Education, WorkExperience, Skill, PersonalDetails, Award
@@ -12,9 +12,26 @@ class PublicResumesView(generics.ListAPIView):
     """
     API to list public resumes only.
     """
-    queryset = Resume.objects.filter(privacy_setting="PUBLIC").select_related
+    queryset = Resume.objects.filter(privacy_setting="PUBLIC")
     serializer_class = ResumeSerializer
     permission_classes = [permissions.AllowAny]
+
+class ResumeHTMLView(generics.GenericAPIView):
+    """Renders resume as HTML template"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        resume = get_object_or_404(Resume, pk=pk)
+        
+        # Authorization check
+        if resume.privacy_setting != "PUBLIC" and not request.user.is_authenticated:
+            return Response({"error": "Not authorized"}, status=403)
+        if resume.privacy_setting == "PRIVATE" and resume.user != request.user:
+            return Response({"error": "Not authorized"}, status=403)
+
+        print(f"✅ Rendering template for resume: {resume.title}")  # ✅ Debugging log
+
+        return render(request, "resumes/resume_template.html", {"resume": resume})
 
 class ResumeListCreateView(generics.ListCreateAPIView):
     """
@@ -39,10 +56,21 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
     queryset = Resume.objects.all()
     serializer_class = ResumeSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    # permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        obj = get_object_or_404(Resume, pk=self.kwargs['pk'])
+        if obj.privacy_setting == "PUBLIC" and self.request.method == "GET":
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_queryset(self):
         return Resume.objects.filter(user=self.request.user)
+    
+    def check_object_permissions(self, request, obj):
+        if obj.privacy_setting == "PRIVATE" and obj.user != request.user:
+            self.permission_denied(request)
+        super().check_object_permissions(request, obj)
 
     def retrieve(self, request, *args, **kwargs):
         """
@@ -55,9 +83,14 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
         """
         Handles updating a resume along with its related sections.
         """
+        print("✅ TEST PRINT: Entered ResumeDetailView.update method")
         instance = self.get_object()
+
+        print(f"✅ Request Data: {request.data}")  # 1. Log request.data
         data = request.data
         sections_data = data.pop("sections", {})
+        print(f"✅ Sections Data after pop: {sections_data}") # 2. Log sections_data
+
 
         # ✅ Update Resume details
         serializer = self.get_serializer(instance, data=data, partial=True)
@@ -73,9 +106,13 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
 
         # ✅ Update Education
         if "education" in sections_data:
+            print(f"✅ Education data received from frontend: {sections_data['education']}") # ADD THIS LOGGING
             Education.objects.filter(resume=instance).delete()  # Remove old
             education_objects = [Education(resume=instance, **edu) for edu in sections_data["education"]]
+            print(f"✅ Education objects to be created: {education_objects}") # ADD THIS LOGGING
             Education.objects.bulk_create(education_objects)
+        else:
+            print("❌ 'education' key NOT FOUND in sections_data") # ADD THIS - to confirm if condition is false
 
         # ✅ Update Work Experience
         if "work_experience" in sections_data:
@@ -112,6 +149,11 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         """
         resume = get_object_or_404(Resume, pk=pk, user=request.user)
 
+         # Authorization check
+        if resume.privacy_setting != "PUBLIC" and not request.user.is_authenticated:
+            return Response({"error": "Not authorized"}, status=403)
+        if resume.privacy_setting == "PRIVATE" and resume.user != request.user:
+            return Response({"error": "Not authorized"}, status=403)
 
         pdf_file = generate_resume_pdf(resume)
 

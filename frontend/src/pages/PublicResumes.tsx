@@ -1,25 +1,37 @@
 import React, { useEffect, useState } from "react";
 import api from "../services/api";
+import { Link, useNavigate } from "react-router-dom";
 
 const PublicResumes: React.FC = () => {
   const [publicResumes, setPublicResumes] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchPublicResumes = async () => {
       try {
+        console.log("👨‍💻 Starting to fetch public resumes..."); // ADD THIS LINE
         const response = await api.get("/public-resumes/");
+        console.log("✅ Public resumes fetched successfully:", response.data); // ADD THIS LINE
         setPublicResumes(response.data);
       } catch (error) {
         console.error("❌ Failed to fetch public resumes:", error);
+        console.error("Detailed error:", error); // ADD THIS LINE - to see more details about the error
       }
     };
     fetchPublicResumes();
   }, []);
 
-  const filteredResumes = publicResumes.filter((resume: any) =>
-    resume.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    resume.user.username.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredResumes = publicResumes.filter(
+    (resume: any) => {
+      const title = resume.title || "";
+      const username = resume.user?.username || "";
+      
+      return (
+        title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        username.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    }
   );
 
   return (
@@ -39,9 +51,13 @@ const PublicResumes: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredResumes.length > 0 ? (
           filteredResumes.map((resume: any) => (
-            <div key={resume.id} className="border p-4 rounded-md shadow-md">
-              <h3 className="text-xl font-semibold">{resume.title}</h3>
-              <p className="text-gray-600">By {resume.user.username}</p>
+            <div 
+                key={resume.id} 
+                className="p-4 bg-white shadow-md rounded-lg mb-4 hover:bg-gray-100 transition cursor-pointer"
+                onClick={() => navigate(`/resume/${resume.id}`)}
+            >
+                <h3 className="text-xl font-semibold">{resume.title}</h3>
+                <p className="text-gray-600">By {resume.user.username}</p>
             </div>
           ))
         ) : (

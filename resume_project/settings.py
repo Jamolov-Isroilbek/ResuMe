@@ -76,6 +76,7 @@ MIDDLEWARE = [
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CORS_ORIGIN_WHITELIST = [ 'http://localhost:3000', ]
 CORS_EXPOSE_HEADERS = ['Content-Type', 'Authorization']
 
 ROOT_URLCONF = 'resume_project.urls'
@@ -83,7 +84,7 @@ ROOT_URLCONF = 'resume_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
