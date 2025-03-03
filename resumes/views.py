@@ -4,9 +4,11 @@ from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404, render
 from django.http import HttpResponse, JsonResponse
 from django.db import transaction
+from weasyprint import HTML
 from .models import Resume, Education, WorkExperience, Skill, PersonalDetails, Award
 from .serializers import ResumeSerializer, EducationSerializer, WorkExperienceSerializer, SkillSerializer, PersonalDetailsSerializer
 from .utils import generate_resume_pdf
+from django.template.loader import render_to_string
 
 class PublicResumesView(generics.ListAPIView):
     """
@@ -155,7 +157,8 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         if resume.privacy_setting == "PRIVATE" and resume.user != request.user:
             return Response({"error": "Not authorized"}, status=403)
 
-        pdf_file = generate_resume_pdf(resume)
+        html_string = render_to_string("resumes/resume_template.html", {"resume": resume})
+        pdf_file = HTML(string=html_string).write_pdf()
 
 
         if not pdf_file:

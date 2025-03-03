@@ -7,6 +7,7 @@ const ResumeView: React.FC = () => {
   const [resume, setResume] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("clean_modern");
 
   useEffect(() => {
     const fetchResume = async () => {
@@ -23,6 +24,8 @@ const ResumeView: React.FC = () => {
       }
     };
     fetchResume();
+
+    window.location.href = `http://localhost:8000/api/resumes/${id}/view/`;
   }, [id]);
 
   if (loading) return <p className="text-center">Loading resume...</p>;
@@ -62,110 +65,20 @@ const ResumeView: React.FC = () => {
     } finally {
       setIsDownloading(false);
     }
+
+    // window.open(`/api/resumes/${id}/download/`, "_blank");
   };
 
   return (
     <div className="min-h-screen flex justify-center items-center bg-gray-100 p-6">
       <div className="bg-white shadow-lg rounded-lg p-6 max-w-3xl w-full">
-        <h2 className="text-3xl font-bold text-center mb-4">{resume.title}</h2>
+        {/* <iframe
+          src={`/api/resumes/${id}/view/`}
+          className="w-full max-w-4xl h-screen border-none"
+          title="Resume Preview"
+        /> */}
 
-        {/* Personal Details */}
-        <div className="border-b pb-4 mb-4">
-          <h3 className="text-xl font-semibold">Personal Details</h3>
-          <p>
-            <strong>Name:</strong> {resume.personal_details.first_name}{" "}
-            {resume.personal_details.last_name}
-          </p>
-          <p>
-            <strong>Email:</strong> {resume.personal_details.email}
-          </p>
-          <p>
-            <strong>Phone:</strong> {resume.personal_details.phone}
-          </p>
-          {resume.personal_details.website && (
-            <p>
-              <strong>Website:</strong> {resume.personal_details.website}
-            </p>
-          )}
-          {resume.personal_details.github && (
-            <p>
-              <strong>GitHub:</strong> {resume.personal_details.github}
-            </p>
-          )}
-          {resume.personal_details.linkedin && (
-            <p>
-              <strong>LinkedIn:</strong> {resume.personal_details.linkedin}
-            </p>
-          )}
-        </div>
-
-        {/* Education */}
-        <div className="border-b pb-4 mb-4">
-          <h3 className="text-xl font-semibold">Education</h3>
-          {resume.education.map((edu: any, index: number) => (
-            <div key={index} className="mb-2">
-              <p>
-                <strong>{edu.institution}</strong> ({formatDate(edu.start_date)}{" "}
-                - {formatDate(edu.end_date)})
-              </p>
-              <p>
-                Major: {edu.major}, CGPA: {edu.cgpa}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Work Experience */}
-        <div className="border-b pb-4 mb-4">
-          <h3 className="text-xl font-semibold">Work Experience</h3>
-          {resume.work_experience.map((work: any, index: number) => (
-            <div key={index} className="mb-2">
-              <p>
-                <strong>{work.role}</strong> at {work.employer}
-              </p>
-              <p>
-                {work.start_date} - {work.end_date}
-              </p>
-              <p>{work.description}</p>
-            </div>
-          ))}
-        </div>
-
-        {/* Skills */}
-        <div className="border-b pb-4 mb-4">
-          <h3 className="text-xl font-semibold">Skills</h3>
-          <p>
-            <strong>Technical:</strong>{" "}
-            {resume.skills
-              .filter((s: any) => s.skill_type === "TECHNICAL")
-              .map((s: any) => s.skill_name)
-              .join(", ")}
-          </p>
-          <p>
-            <strong>Soft Skills:</strong>{" "}
-            {resume.skills
-              .filter((s: any) => s.skill_type === "SOFT")
-              .map((s: any) => s.skill_name)
-              .join(", ")}
-          </p>
-          <p>
-            <strong>Languages:</strong>{" "}
-            {resume.skills
-              .filter((s: any) => s.skill_type === "LANGUAGE")
-              .map((s: any) => s.skill_name)
-              .join(", ")}
-          </p>
-        </div>
-
-        {/* Awards & Certificates */}
-        <div className="pb-4 mb-4">
-          <h3 className="text-xl font-semibold">Awards & Certificates</h3>
-          {resume.awards.map((award: any, index: number) => (
-            <p key={index}>
-              <strong>{award.name}</strong> - {award.description} ({award.year})
-            </p>
-          ))}
-        </div>
+        <p className="text-lg">Redirecting to resume view...</p>
 
         {/* Download Resume Button */}
         <div className="text-center mt-6 space-x-4">
