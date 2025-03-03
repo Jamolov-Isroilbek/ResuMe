@@ -75,7 +75,10 @@ MIDDLEWARE = [
 
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = ["http://localhost:3000",]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://localhost:8000",
+]
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
 CORS_ORIGIN_WHITELIST = [ 'http://localhost:3000', ]
 CORS_ALLOW_HEADERS = [
@@ -89,6 +92,8 @@ CORS_ALLOW_HEADERS = [
     'x-csrftoken',
     'x-requested-with',
 ]
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None 
 
 ROOT_URLCONF = 'resume_project.urls'
 

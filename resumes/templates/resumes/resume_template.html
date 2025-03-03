@@ -6,6 +6,17 @@
     <title>{{ resume.title }}</title>
     <link rel="stylesheet" href="http://localhost:8000{% static 'resumes/css/resume.css' %}">
 </head>
+
+<script>
+    // Send height to parent frame
+    window.addEventListener('load', () => {
+      const height = document.documentElement.scrollHeight;
+      window.parent.postMessage({
+        type: 'resumeHeight',
+        height: height
+      }, 'http://localhost:3000');
+    });
+    </script>
 <body>
     <header class="resume-header">
         <h1>{{ resume.personal_details.first_name }} {{ resume.personal_details.last_name }}</h1>

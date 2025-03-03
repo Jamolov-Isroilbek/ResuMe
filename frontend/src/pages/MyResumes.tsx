@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
+import ViewResumeButton from "../components/ViewResumeButton";
 
 interface Resume {
   id: number;
@@ -16,7 +17,6 @@ const MyResumes: React.FC = () => {
   const fetchResumes = async () => {
     const token = localStorage.getItem("token");
     if (!token) {
-      alert("You must be logged in to view resumes.");
       navigate("/login");
       return;
     }
@@ -43,7 +43,6 @@ const MyResumes: React.FC = () => {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
       });
       setResumes((prev) => prev.filter((resume) => resume.id !== id));
-      alert("Resume deleted successfully!");
     } catch (error) {
       console.error("Failed to delete resume", error);
     }
@@ -53,7 +52,7 @@ const MyResumes: React.FC = () => {
     try {
       const response = await api.get(`/resumes/${id}/download/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        responseType: "blob", // Ensures the response is treated as a file
+        responseType: "blob",
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -69,7 +68,27 @@ const MyResumes: React.FC = () => {
     }
   };
 
-  // Close dropdown when clicking outside
+  const handleViewResume = async (resumeId: number) => {
+    let newWindow: Window | null = null;
+    
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      newWindow = window.open("", "_blank");
+      if (!newWindow) {
+        alert("Please allow popups to view resumes");
+        return;
+      }
+
+      await api.get(`/resumes/${resumeId}/`, { headers });
+      newWindow.location.href = `http://localhost:8000/api/resumes/${resumeId}/view/`;
+    } catch (error: any) {
+      newWindow?.close();
+      alert("Error opening resume: " + (error.message || "Unknown error"));
+    }
+  };
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -100,21 +119,24 @@ const MyResumes: React.FC = () => {
           {resumes.map((resume) => (
             <li
               key={resume.id}
-              className="p-4 bg-white shadow-md rounded-lg mb-4 hover:bg-gray-100 transition cursor-pointer flex justify-between items-center"
-              onClick={() => navigate(`/resume/${resume.id}`)}
-              >
-              
+              className="p-4 bg-white shadow-md rounded-lg mb-4 hover:bg-gray-100 transition flex justify-between items-center"
+              onClick={() => handleViewResume(resume.id)}
+            >
               <h3 className="text-xl font-semibold">{resume.title}</h3>
 
-              {/* Three-dot menu */}
-              <div className="relative" ref={dropdownRef}>
+              <div 
+                className="relative"
+                ref={dropdownRef}
+                onClick={(e) => e.stopPropagation()} // Prevent row click from triggering
+              >
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setDropdownOpen(
                       dropdownOpen === resume.id ? null : resume.id
-                    )
+                    );
                   }}
+                  className="px-2 hover:bg-gray-200 rounded"
                 >
                   ⋮
                 </button>
@@ -138,7 +160,10 @@ const MyResumes: React.FC = () => {
                       Download
                     </button>
                     <button
-                      onClick={() => handleDelete(resume.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(resume.id);
+                      }}
                       className="block w-full text-left px-4 py-2 text-red-500 hover:bg-gray-200"
                     >
                       Delete
