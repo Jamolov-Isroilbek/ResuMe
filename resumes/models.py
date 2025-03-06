@@ -7,7 +7,7 @@ class Resume(models.Model):
     """
     Represents a Resume linked to a User
     """
-    user = models.OneToOneField(User, on_delete=models.CASCADE) # User-Resume relationship (1-to many)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resumes') # User-Resume relationship (1-to many)
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True) # Auto-set when resume is created
     updated_at = models.DateTimeField(auto_now=True) # Auto-update when modified
@@ -42,7 +42,7 @@ class WorkExperience(models.Model):
     location = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
-    # currently_working = models.BooleanField(default=False)
+    currently_working = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
     # more_info = models.TextField(blank=True, null=True)
 
@@ -50,6 +50,7 @@ class Skill(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="skills")
     skill_name = models.CharField(max_length=255)
     skill_type = models.CharField(max_length=50, choices=SkillType.choices, default=SkillType.OTHER)
+    proficiency = models.CharField(max_length=50, blank=True, null=True)
 
 class Award(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="awards")

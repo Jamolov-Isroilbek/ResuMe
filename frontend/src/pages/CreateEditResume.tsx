@@ -285,66 +285,64 @@ const CreateEditResume: React.FC = () => {
         github: formData.personalDetails.github || null,
         linkedin: formData.personalDetails.linkedin || null,
       },
-      sections: {
-        education: formData.education.map((edu) => ({
-          institution: edu.institution || "",
-          major: edu.major === "Other" ? edu.customMajor : edu.major || "",
-          start_date:
-            edu.startYear && edu.startMonth
-              ? `${edu.startYear}-${String(
-                  months.indexOf(edu.startMonth) + 1
-                ).padStart(2, "0")}-01`
-              : null,
-          end_date:
-            edu.endYear && edu.endMonth
-              ? `${edu.endYear}-${String(
-                  months.indexOf(edu.endMonth) + 1
-                ).padStart(2, "0")}-01`
-              : null,
-          cgpa: edu.cgpa || null,
-        })),
-        work_experience: formData.workExperience.map((work) => ({
-          employer: work.employer || "",
-          role: work.role || "",
-          start_date:
-            work.startYear && work.startMonth
-              ? `${work.startYear}-${String(
-                  months.indexOf(work.startMonth) + 1
-                ).padStart(2, "0")}-01`
-              : null,
-          end_date: work.currentlyWorking
-            ? null
-            : work.endYear && work.endMonth
-            ? `${work.endYear}-${String(
-                months.indexOf(work.endMonth) + 1
+      education: formData.education.map((edu) => ({
+        institution: edu.institution || "",
+        major: edu.major === "Other" ? edu.customMajor : edu.major || "",
+        start_date:
+          edu.startYear && edu.startMonth
+            ? `${edu.startYear}-${String(
+                months.indexOf(edu.startMonth) + 1
               ).padStart(2, "0")}-01`
             : null,
-          location:
-            work.location === "custom"
-              ? work.customLocation
-              : work.location || "",
-          description: work.description || "",
-        })),
-        skills: [
-          ...formData.skills.technical
-            .split(",")
-            .map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL" })),
-          ...formData.skills.softSkills
-            .split(",")
-            .map((s) => ({ skill_name: s.trim(), skill_type: "SOFT" })),
-          ...formData.skills.otherSkills
-            .split(",")
-            .map((s) => ({ skill_name: s.trim(), skill_type: "OTHER" })),
-          ...formData.skills.languages
-            .split(",")
-            .map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE" })),
-        ].filter((skill) => skill.skill_name !== ""), // ✅ Remove empty skill values
-        awards: formData.awards.map((award) => ({
-          name: award.name || "",
-          description: award.description || "",
-          year: award.year || null,
-        })),
-      },
+        end_date:
+          edu.endYear && edu.endMonth
+            ? `${edu.endYear}-${String(
+                months.indexOf(edu.endMonth) + 1
+              ).padStart(2, "0")}-01`
+            : null,
+        cgpa: edu.cgpa || null,
+      })),
+      work_experience: formData.workExperience.map((work) => ({
+        employer: work.employer || "",
+        role: work.role || "",
+        start_date:
+          work.startYear && work.startMonth
+            ? `${work.startYear}-${String(
+                months.indexOf(work.startMonth) + 1
+              ).padStart(2, "0")}-01`
+            : null,
+        end_date: work.currentlyWorking
+          ? null
+          : work.endYear && work.endMonth
+          ? `${work.endYear}-${String(
+              months.indexOf(work.endMonth) + 1
+            ).padStart(2, "0")}-01`
+          : null,
+        location:
+          work.location === "custom"
+            ? work.customLocation
+            : work.location || "",
+        description: work.description || "",
+      })),
+      skills: [
+        ...formData.skills.technical
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "TECHNICAL", proficiency: "Beginner" })),
+        ...formData.skills.softSkills
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "SOFT", proficiency: "Beginner" })),
+        ...formData.skills.otherSkills
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "OTHER", proficiency: "Beginner" })),
+        ...formData.skills.languages
+          .split(",")
+          .map((s) => ({ skill_name: s.trim(), skill_type: "LANGUAGE", proficiency: "Beginner" })),
+      ].filter((skill) => skill.skill_name !== ""), // Remove empty skill values
+      awards: formData.awards.map((award) => ({
+        name: award.name || "",
+        description: award.description || "",
+        year: award.year || null,
+      })),
     };
 
     console.log("🛠 Submitting Resume Data:", formattedResume); // ✅ Debug log before submission

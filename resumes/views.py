@@ -1,4 +1,5 @@
 from rest_framework import generics, permissions, status
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.shortcuts import get_object_or_404, render
@@ -47,7 +48,39 @@ class ResumeListCreateView(generics.ListCreateAPIView):
         return Resume.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        user = self.request.user
+        resume = serializer.save(user=user)
+
+        # Handle PersonalDetails
+        personal_details_data = self.request.data.get('personal_details', {})
+        PersonalDetails.objects.create(resume=resume, **personal_details_data)
+
+        # Handle Education
+        Education.objects.bulk_create([
+            Education(resume=resume, **edu) 
+            for edu in self.request.data.get('education', [])
+        ])
+
+        # Handle Work Experience
+        WorkExperience.objects.bulk_create([
+            WorkExperience(resume=resume, **work_exp)
+            for work_exp in self.request.data.get('work_experience', [])
+        ])
+
+        # Handle Skills
+        Skill.objects.bulk_create([
+            Skill(resume=resume, **skill)
+            for skill in self.request.data.get('skills', [])
+        ])
+
+        # Handle Awards
+        Award.objects.bulk_create([
+            Award(resume=resume, **award)
+            for award in self.request.data.get('awards', [])
+        ])
+
+        print("✅ All Sections Saved for Resume ID:", resume.id)
+  
     
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)

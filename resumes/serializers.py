@@ -32,12 +32,12 @@ class AwardSerializer(serializers.ModelSerializer):
         extra_kwargs = {'resume': {'required': False}}
     
 class ResumeSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()  # ✅ Prevents infinite recursion
-    personal_details = serializers.SerializerMethodField()
-    education = serializers.SerializerMethodField()
-    work_experience = serializers.SerializerMethodField()
-    skills = serializers.SerializerMethodField()
-    awards = serializers.SerializerMethodField()
+    user = serializers.StringRelatedField()  # Prevents infinite recursion
+    personal_details = PersonalDetailsSerializer(read_only=True)
+    education = EducationSerializer(many=True, read_only=True)
+    work_experience = WorkExperienceSerializer(many=True, read_only=True)
+    skills = SkillSerializer(many=True, read_only=True)
+    awards = AwardSerializer(many=True, read_only=True)
 
     class Meta:
         model = Resume

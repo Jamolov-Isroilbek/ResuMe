@@ -36,20 +36,26 @@ const MyResumes: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this resume?")) return;
+    setTimeout(async () => {
+      // Add a small delay
+      if (!window.confirm("Are you sure you want to delete this resume?"))
+        return;
 
-    try {
-      await api.delete(`/resumes/${id}/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      setResumes((prev) => prev.filter((resume) => resume.id !== id));
-    } catch (error) {
-      console.error("Failed to delete resume", error);
-    }
+      try {
+        console.log("Deleting resume with ID:", id); // Debug log
+        await api.delete(`/resumes/${id}/`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setResumes((prev) => prev.filter((resume) => resume.id !== id));
+      } catch (error) {
+        console.error("Failed to delete resume", error);
+      }
+    }, 100);
   };
 
   const handleDownload = async (id: number) => {
     try {
+      console.log("Downloading resume with ID:", id); // Debug log
       const response = await api.get(`/resumes/${id}/download/`, {
         headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         responseType: "blob",
@@ -70,7 +76,7 @@ const MyResumes: React.FC = () => {
 
   const handleViewResume = async (resumeId: number) => {
     let newWindow: Window | null = null;
-    
+
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -124,10 +130,10 @@ const MyResumes: React.FC = () => {
             >
               <h3 className="text-xl font-semibold">{resume.title}</h3>
 
-              <div 
+              <div
                 className="relative"
                 ref={dropdownRef}
-                onClick={(e) => e.stopPropagation()} // Prevent row click from triggering
+                onClick={(e) => e.stopPropagation()} // Prevent event bubbling
               >
                 <button
                   onClick={(e) => {
@@ -142,11 +148,18 @@ const MyResumes: React.FC = () => {
                 </button>
 
                 {dropdownOpen === resume.id && (
-                  <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-md text-left">
+                  <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-md text-left z-50">
                     <Link
-                      to={`/edit-resume/${resume.id}`}
+                      to={`/resumes/${resume.id}/edit`}
                       className="block px-4 py-2 hover:bg-gray-200"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log(
+                          "Edit button clicked for resume ID:",
+                          resume.id
+                        ); // Debug log
+                        setDropdownOpen(null);
+                      }}
                     >
                       Edit
                     </Link>
