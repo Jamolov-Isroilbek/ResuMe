@@ -25,7 +25,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/my-resumes" element={<MyResumes />} />
           <Route path="/create-resume" element={<CreateEditResume />} />
-          <Route path="/edit-resume/:id" element={<CreateEditResume />} />
+          <Route path="/:id/edit" element={<CreateEditResume />} />
           </Routes>
       </Router>
     </AuthProvider>

@@ -13,21 +13,6 @@ const Dashboard: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-background text-center p-6">
-      {/* Navigation Bar */}
-      {/* <nav className="w-full flex justify-between items-center p-4 bg-white shadow-md">
-        <img src="/logo.png" alt="ResuMe Logo" className="w-16" />
-        <div className="space-x-6">
-          <Link to="/my-resumes" className="text-primary hover:underline">My Resumes</Link>
-          <Link to="/profile" className="text-primary hover:underline">Profile</Link>
-          <Link to="/about" className="text-primary hover:underline">About</Link>
-          <Link to="/features" className="text-primary hover:underline">Features</Link>
-          <Link to="/contact" className="text-primary hover:underline">Contact</Link>
-        </div>
-        <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md">
-          Logout
-        </button>
-      </nav> */}
-
       {/* Hero Section */}
       <div className="mt-12">
         <h1 className="text-4xl font-bold text-primary">Your Resumes in One Place</h1>

@@ -24,6 +24,10 @@ class ResumeHTMLView(generics.GenericAPIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request, pk):
+        print(f"🔍 Request Headers: {request.headers}")  # ✅ Debugging log
+        print(f"🔍 User: {request.user}")  # ✅ Debugging log
+        print(f"🔍 Is Authenticated: {request.user.is_authenticated}")  # ✅ Debugging log
+
         resume = get_object_or_404(Resume, pk=pk)
         
         # Authorization check

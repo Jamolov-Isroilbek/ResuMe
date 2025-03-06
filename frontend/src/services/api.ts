@@ -7,20 +7,6 @@ const api = axios.create({
   },
 });
 
-// export const loginUser = async (username: string, password: string) => {
-//   return api.post("/auth/login/", { username, password });
-// };
-
-// export const registerUser = async (username: string, email: string, password: string) => {
-//   return api.post("/auth/register/", { username, email, password });
-// };
-
-// export const getProfile = async (token: string) => {
-//   return api.get("/me/", {
-//     headers: { Authorization: `Bearer ${token}` },
-//   });
-// };
-
 // ✅ Refresh token logic
 api.interceptors.response.use(
   (response) => response,
@@ -44,6 +30,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
 
 export default api;

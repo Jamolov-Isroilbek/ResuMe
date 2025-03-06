@@ -349,6 +349,7 @@ const CreateEditResume: React.FC = () => {
 
     try {
       if (isEditing) {
+        console.log(`🛠 Sending PUT request to /resumes/${id}/`);
         await api.put(`/resumes/${id}/`, formattedResume, {
           headers: {
             Authorization: `Bearer ${token}`,

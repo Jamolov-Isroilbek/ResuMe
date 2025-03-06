@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../services/api";
-import ViewResumeButton from "../components/ViewResumeButton";
 
 interface Resume {
   id: number;
@@ -36,11 +35,9 @@ const MyResumes: React.FC = () => {
   }, []);
 
   const handleDelete = async (id: number) => {
-    setTimeout(async () => {
-      // Add a small delay
-      if (!window.confirm("Are you sure you want to delete this resume?"))
-        return;
-
+    setTimeout(async () => { // Add a small delay
+      if (!window.confirm("Are you sure you want to delete this resume?")) return;
+  
       try {
         console.log("Deleting resume with ID:", id); // Debug log
         await api.delete(`/resumes/${id}/`, {
@@ -74,27 +71,73 @@ const MyResumes: React.FC = () => {
     }
   };
 
-  const handleViewResume = async (resumeId: number) => {
-    let newWindow: Window | null = null;
+  // const handleViewResume = async (resumeId: number) => {
+  //   let newWindow: Window | null = null;
+    
+  //   try {
+  //     const token = localStorage.getItem("token");
+  //     console.log(`🔍 Token from LocalStrorage:`, token)
+  //     const headers = token ? { Authorization: `Bearer ${token}`, "Content-Type": "application/json" } : {};
 
+  //     console.log(`🔍 sending headers:`, headers);
+
+  //     newWindow = window.open("", "_blank");
+  //     if (!newWindow) {
+  //       alert("Please allow popups to view resumes");
+  //       return;
+  //     }
+
+  //     await api.get(`/resumes/${resumeId}/view/`, { headers });
+  //     newWindow.location.href = `http://localhost:8000/api/resumes/${resumeId}/view/`;
+  //   } catch (error: any) {
+  //     newWindow?.close();
+  //     alert("Error opening resume: " + (error.message || "Unknown error"));
+  //   }
+  // };
+
+  const handleViewResume = async (resumeId: number) => {
     try {
       const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-
-      newWindow = window.open("", "_blank");
-      if (!newWindow) {
-        alert("Please allow popups to view resumes");
+      if (!token) {
+        alert("❌ You need to log in first.");
         return;
       }
-
-      await api.get(`/resumes/${resumeId}/`, { headers });
-      newWindow.location.href = `http://localhost:8000/api/resumes/${resumeId}/view/`;
-    } catch (error: any) {
-      newWindow?.close();
-      alert("Error opening resume: " + (error.message || "Unknown error"));
+  
+      console.log(`🔍 Fetching resume preview for ID: ${resumeId}`);
+  
+      const response = await fetch(`/api/resumes/${resumeId}/view/`, { // Corrected URL - no token in URL
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`, // Correctly send token in header
+          'Content-Type': 'application/json' // Or 'text/html' if your backend explicitly sends that
+        }
+      });
+  
+      if (!response.ok) {
+        if (response.status === 403) {
+          alert("❌ Authorization failed. Please ensure you are logged in and have permission to view this resume.");
+        } else {
+          alert(`❌ Failed to load resume preview. HTTP error! status: ${response.status}`);
+        }
+        return;
+      }
+  
+      const htmlContent = await response.text(); // Get HTML content from response
+  
+      const newWindow = window.open('', '_blank');
+      if (!newWindow) {
+        alert("❌ Please allow popups to view resumes.");
+        return;
+      }
+  
+      newWindow.document.body.innerHTML = htmlContent; // Set HTML content to new window's body
+  
+    } catch (error:any) {
+      console.error("❌ Error opening resume:", error);
+      alert("Error: " + error.message);
     }
   };
-
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
@@ -130,7 +173,7 @@ const MyResumes: React.FC = () => {
             >
               <h3 className="text-xl font-semibold">{resume.title}</h3>
 
-              <div
+              <div 
                 className="relative"
                 ref={dropdownRef}
                 onClick={(e) => e.stopPropagation()} // Prevent event bubbling
@@ -150,16 +193,8 @@ const MyResumes: React.FC = () => {
                 {dropdownOpen === resume.id && (
                   <div className="absolute right-0 mt-2 w-36 bg-white shadow-md rounded-md text-left z-50">
                     <Link
-                      to={`/resumes/${resume.id}/edit`}
+                      to={`/${resume.id}/edit`}
                       className="block px-4 py-2 hover:bg-gray-200"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log(
-                          "Edit button clicked for resume ID:",
-                          resume.id
-                        ); // Debug log
-                        setDropdownOpen(null);
-                      }}
                     >
                       Edit
                     </Link>
@@ -193,3 +228,4 @@ const MyResumes: React.FC = () => {
 };
 
 export default MyResumes;
+
