@@ -119,17 +119,8 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
         return Response(ResumeSerializer(instance).data)
 
     def update(self, request, *args, **kwargs):
-        """
-        Handles updating a resume along with its related sections.
-        """
-        print("✅ TEST PRINT: Entered ResumeDetailView.update method")
         instance = self.get_object()
-
-        print(f"✅ Request Data: {request.data}")  # 1. Log request.data
-        data = request.data
-        sections_data = data.pop("sections", {})
-        print(f"✅ Sections Data after pop: {sections_data}") # 2. Log sections_data
-
+        data = request.data.copy()  # Use copy to avoid mutating original data
 
         # ✅ Update Resume details
         serializer = self.get_serializer(instance, data=data, partial=True)
@@ -137,33 +128,33 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
         serializer.save()
 
         # ✅ Update Personal Details
-        if "personal_details" in sections_data:
+        if "personal_details" in data:
             personal_details, _ = PersonalDetails.objects.get_or_create(resume=instance)
-            for key, value in sections_data["personal_details"].items():
-                setattr(personal_details, key, value)
-            personal_details.save()
+            personal_details_serializer = PersonalDetailsSerializer(personal_details, data=data["personal_details"], partial=True)
+            personal_details_serializer.is_valid(raise_exception=True)
+            personal_details_serializer.save()
 
-        # ✅ Update Education
-        if "education" in sections_data:
-            print(f"✅ Education data received from frontend: {sections_data['education']}") # ADD THIS LOGGING
-            Education.objects.filter(resume=instance).delete()  # Remove old
-            education_objects = [Education(resume=instance, **edu) for edu in sections_data["education"]]
-            print(f"✅ Education objects to be created: {education_objects}") # ADD THIS LOGGING
+        # ✅ Update Education (Delete old entries and create new ones)
+        if "education" in data:
+            Education.objects.filter(resume=instance).delete()
+            education_objects = [Education(resume=instance, **edu) for edu in data["education"]]
             Education.objects.bulk_create(education_objects)
-        else:
-            print("❌ 'education' key NOT FOUND in sections_data") # ADD THIS - to confirm if condition is false
 
-        # ✅ Update Work Experience
-        if "work_experience" in sections_data:
-            WorkExperience.objects.filter(resume=instance).delete()  # Remove old
-            work_experience_objects = [WorkExperience(resume=instance, **work) for work in sections_data["work_experience"]]
+        # ✅ Repeat for Work Experience, Skills, Awards
+        if "work_experience" in data:
+            WorkExperience.objects.filter(resume=instance).delete()
+            work_experience_objects = [WorkExperience(resume=instance, **work) for work in data["work_experience"]]
             WorkExperience.objects.bulk_create(work_experience_objects)
 
-        # ✅ Update Skills
-        if "skills" in sections_data:
-            Skill.objects.filter(resume=instance).delete()  # Remove old
-            skill_objects = [Skill(resume=instance, **skill) for skill in sections_data["skills"]]
+        if "skills" in data:
+            Skill.objects.filter(resume=instance).delete()
+            skill_objects = [Skill(resume=instance, **skill) for skill in data["skills"]]
             Skill.objects.bulk_create(skill_objects)
+
+        if "awards" in data:
+            Award.objects.filter(resume=instance).delete()
+            award_objects = [Award(resume=instance, **award) for award in data["awards"]]
+            Award.objects.bulk_create(award_objects)
 
         return Response(ResumeSerializer(instance).data)
 
