@@ -1,236 +1,163 @@
-import React, { useEffect, useState } from "react";
-import api from "../services/api";
+import React, { useState } from "react";
+import api from "@/services/api";
+import { useAsync } from "@/hooks/useAsync";
+import { Button } from "@/components/ui/Button";
+import { Loader } from "@/components/ui/Loader";
+
+interface UserProfile {
+  username: string;
+  email: string;
+  profile_picture: string;
+  date_joined: string;
+}
 
 const Profile: React.FC = () => {
-  const [user, setUser] = useState({
+  const { data: user, loading, error, refresh } = useAsync(() => 
+    api.get<UserProfile>("/me/")
+  );
+  
+  const [formState, setFormState] = useState({
     username: "",
     email: "",
-    profile_picture: "/media/profile_pics/default.png", // ✅ Default profile image
-    date_joined: "",
-  });
-
-  const [newUsername, setNewUsername] = useState("");
-  const [newEmail, setNewEmail] = useState("");
-  const [passwords, setPasswords] = useState({
     oldPassword: "",
-    newPassword: "",
+    newPassword: ""
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [showFileInput, setShowFileInput] = useState(false);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const token = localStorage.getItem("token");
-
-      if (!token) {
-        console.error("❌ No authentication token found.");
-        alert("You need to log in again.");
-        return;
-      }
-
-      console.log("🔍 Using token for request:", token); // ✅ Log the token for debugging
-
-      try {
-        const response = await api.get("/me/", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        console.log("✅ Profile fetched successfully:", response.data);
-        setUser({
-          ...response.data,
-          profile_picture:
-            response.data.profile_picture || "/media/profile_pics/default.png", // ✅ Use default if missing
-        });
-        setNewUsername(response.data.username);
-        setNewEmail(response.data.email);
-      } catch (error: any) {
-        console.error(
-          "❌ Failed to fetch profile:",
-          error.response?.data || error
-        );
-        alert("Session expired. Please log in again.");
-        localStorage.removeItem("token");
-      }
-    };
-    fetchProfile();
-  }, []);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setSelectedFile(e.target.files[0]);
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const selected = Array.from(files).find((_, index) => index === 0);
+      if (selected) {
+        setSelectedFile(selected);
+      }
     }
   };
 
-  const handleUpdateProfilePicture = async () => {
-    if (!selectedFile) {
-      alert("Please select a file first.");
-      return;
-    }
+  // const handleMultipleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const files = e.target.files;
+  //   if (files) {
+  //     const selectedFiles = Array.from(files).filter(file => 
+  //       file.type.startsWith('image/')
+  //     );
+  //     setSelectedFiles(selectedFiles);
+  //   }
+  // };
 
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
     const formData = new FormData();
-    formData.append("profile_picture", selectedFile);
+    formData.append("username", formState.username);
+    formData.append("email", formState.email);
+    selectedFile && formData.append("profile_picture", selectedFile);
 
-    try {
-      const response = await api.put("/me/", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-
-      alert("✅ Profile picture updated successfully!");
-      setUser({ ...user, profile_picture: response.data.profile_picture }); // Update UI
-      setShowFileInput(false); // ✅ Hide file input after upload
-    } catch (error) {
-      console.error("❌ Failed to update profile picture", error);
-    }
-  };
-
-  const handleUpdateProfile = async () => {
-    const formData = new FormData();
-    formData.append("username", newUsername);
-    formData.append("email", newEmail);
-    if (selectedFile) {
-      formData.append("profile_picture", selectedFile);
-    }
-
-    try {
-      const response = await api.put("/me/", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-          "Content-Type": "multipart/form-data",
-        },
-      });
-      alert("Profile updated successfully");
-      setUser(response.data);
-    } catch (error) {
-      console.error("Failed to update profile", error);
-    }
-  };
-
-  const handleUpdateUsername = async () => {
-    try {
-      await api.put(
-        "/me/",
-        { username: newUsername },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-        }
-      );
-      alert("Username updated successfully!");
-    } catch (error) {
-      console.error("Failed to update username", error);
-    }
+    await api.put("/me/", formData);
+    refresh();
   };
 
   const handleChangePassword = async () => {
-    if (!passwords.oldPassword || !passwords.newPassword) {
-      alert("❌ Both fields are required.");
-      return;
-    }
-    try {
-      await api.put("/change-password/", {
-          old_password: passwords.oldPassword,
-          new_password: passwords.newPassword
-        }, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-      });
-      alert("Password updated successfully!");
-      setPasswords({ oldPassword: "", newPassword: "" }); // ✅ Clear fields after success
-    } catch (error: any) {
-      console.error("Failed to change password", error);
-      alert("❌ " + (error.response?.data?.old_password || error.response?.data?.new_password || "Password change failed"));
-    }
+    await api.put("/change-password/", {
+      old_password: formState.oldPassword,
+      new_password: formState.newPassword
+    });
+    setFormState(prev => ({ ...prev, oldPassword: "", newPassword: "" }));
   };
 
+  if (loading) return <Loader />;
+  if (error) return <div>Error loading profile</div>;
+
   return (
-    <div className="min-h-screen flex justify-center items-center bg-gray-100">
-      <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md text-center">
-        {/* Profile Picture */}
-        <img
-          src={user.profile_picture}
-          alt="Profile"
-          className="w-32 h-32 rounded-full mx-auto border-4 border-gray-300 shadow-md"
-          onError={(e) =>
-            (e.currentTarget.src =
-              "http://localhost:8000/media/profile_pics/default.png")
-          }
-        />
-
-        {/* Upload Profile Picture */}
-        <button
-          onClick={() => setShowFileInput(!showFileInput)}
-          className="mt-4 bg-gray-500 text-white px-6 py-2 rounded-md shadow hover:bg-gray-600 transition"
-        >
-          Update Profile Picture
-        </button>
-
-        {/* File Upload (Only Shows When Button is Clicked) */}
-        {showFileInput && (
-          <div className="mt-2">
-            <input
-              type="file"
-              onChange={handleFileChange}
-              className="border p-2 w-full"
+    <div className="min-h-screen bg-gray-50 py-12">
+      <div className="max-w-md mx-auto bg-white rounded-xl shadow-md p-6">
+        <form onSubmit={handleUpdateProfile} className="space-y-6">
+          {/* Profile Picture */}
+          <div className="text-center">
+            <img
+              src={user?.data.profile_picture || "/default-avatar.png"}
+              alt="Profile"
+              className="w-32 h-32 rounded-full mx-auto border-4 border-white shadow-lg"
+              onError={(e) => {
+                e.currentTarget.src = "/default-avatar.png";
+              }}
             />
-            <button
-              onClick={handleUpdateProfilePicture}
-              className="mt-2 bg-blue-500 text-white px-6 py-2 rounded-md shadow hover:bg-blue-600 transition"
-            >
-              Upload
-            </button>
+            
+            <div className="mt-4">
+              <label className="cursor-pointer inline-block">
+                <span className="text-blue-600 hover:text-blue-700">
+                  Change Photo
+                </span>
+                <input
+                  type="file"
+                  onChange={handleFileChange}
+                  className="hidden"
+                  accept="image/*"
+                />
+              </label>
+            </div>
           </div>
-        )}
 
-        {/* Profile Info */}
-        <h2 className="text-2xl font-bold mt-4">{user.username}</h2>
-        <input
-          type="text"
-          value={newUsername}
-          onChange={(e) => setNewUsername(e.target.value)}
-          className="w-full px-4 py-2 border rounded-md mt-2"
-        />
+          {/* Profile Info */}
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <input
+                value={formState.username}
+                onChange={(e) => setFormState(prev => ({ ...prev, username: e.target.value }))}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
 
-        <input
-          type="text"
-          value={newEmail}
-          onChange={(e) => setNewEmail(e.target.value)}
-          className="w-full px-4 py-2 border rounded-md mt-2"
-        />
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Email
+              </label>
+              <input
+                type="email"
+                value={formState.email}
+                onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
 
-        <button
-          onClick={handleUpdateProfile}
-          className="mt-4 bg-blue-500 text-white px-6 py-2 rounded-md shadow hover:bg-blue-600 transition"
-        >
-          Update Profile
-        </button>
+          {/* Password Change */}
+          <div className="pt-4 border-t border-gray-200">
+            <h3 className="text-lg font-medium mb-4">Change Password</h3>
+            <div className="space-y-4">
+              <input
+                type="password"
+                placeholder="Current Password"
+                value={formState.oldPassword}
+                onChange={(e) => setFormState(prev => ({ ...prev, oldPassword: e.target.value }))}
+                className="w-full rounded-md border-gray-300 shadow-sm"
+              />
+              <input
+                type="password"
+                placeholder="New Password"
+                value={formState.newPassword}
+                onChange={(e) => setFormState(prev => ({ ...prev, newPassword: e.target.value }))}
+                className="w-full rounded-md border-gray-300 shadow-sm"
+              />
+              <Button
+                variant="secondary"
+                onClick={handleChangePassword}
+                className="w-full"
+              >
+                Update Password
+              </Button>
+            </div>
+          </div>
 
-        {/* Change Password */}
-        <input
-          type="password"
-          placeholder="Old Password"
-          onChange={(e) =>
-            setPasswords({ ...passwords, oldPassword: e.target.value })
-          }
-          className="w-full px-4 py-2 border rounded-md mt-2"
-        />
-        <input
-          type="password"
-          placeholder="New Password"
-          onChange={(e) =>
-            setPasswords({ ...passwords, newPassword: e.target.value })
-          }
-          className="w-full px-4 py-2 border rounded-md mt-2"
-        />
-        <button
-          onClick={handleChangePassword}
-          className="bg-red-500 text-white px-6 py-2 rounded-md mt-2"
-        >
-          Change Password
-        </button>
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full mt-6"
+          >
+            Save Changes
+          </Button>
+        </form>
       </div>
     </div>
   );

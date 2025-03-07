@@ -1,34 +1,48 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext({
-  isAuthenticated: false,
-  login: (token: string) => {},
-  logout: () => {},
-});
+interface AuthContextType {
+  user: null | { username: string };
+  isAuthenticated: boolean;
+  login: (token: string) => void;
+  logout: () => void;
+  loading: boolean;
+}
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!localStorage.getItem("token"));
+const AuthContext = createContext<AuthContextType>({} as AuthContextType);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<null | { username: string }>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
-    setIsAuthenticated(!!token);
-  }, []); 
+    const token = localStorage.getItem('token');
+    if (token) {
+      // Add token validation logic here
+      setUser({ username: 'demoUser' }); // Replace with actual user data
+    }
+    setLoading(false);
+  }, []);
 
   const login = (token: string) => {
-    console.log("🔍 Storing token:", token);
-    localStorage.setItem("token", token);
-    setIsAuthenticated(true);
+    localStorage.setItem('token', token);
+    setUser({ username: 'demoUser' }); // Replace with actual user data from API
   };
 
   const logout = () => {
-    console.log("🔍 Logging out");
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh_token");
-    setIsAuthenticated(false);
+    localStorage.removeItem('token');
+    setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated: !!user,
+        login,
+        logout,
+        loading
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
