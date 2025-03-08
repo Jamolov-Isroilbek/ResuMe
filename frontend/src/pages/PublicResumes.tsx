@@ -1,74 +1,64 @@
-import React, { useEffect, useState } from "react";
+// src/pages/PublicResumes.tsx
+import React, { useState } from "react";
 import { useAsync } from "@/hooks/useAsync";
 import api from "@/services/api";
-import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
-
-interface PublicResume {
-  id: number;
-  title: string;
-  user: {
-    username: string;
-  };
-}
+import { ResumeCard } from "@/components/resume/ResumeCard";
+import { Resume } from "@/services/types";
 
 interface PublicResumeResponse {
   count: number;
-  results: PublicResume[];
+  results: Resume[];
 }
 
 const PublicResumes: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { data: response, loading, error } = useAsync(() => 
+  const { data: response, loading, error } = useAsync(() =>
     api.get<PublicResumeResponse>("/public-resumes/")
   );
 
   const publicResumes = response?.data.results || [];
 
-  const filteredResumes = publicResumes?.filter((resume) => {
+  const filteredResumes = publicResumes.filter((resume) => {
     const searchLower = searchQuery.toLowerCase();
     return (
-      resume.title.toLowerCase().includes(searchLower) ||
-      resume.user.username.toLowerCase().includes(searchLower)
+      resume.title.toLowerCase().includes(searchLower)
     );
-  }) || [];
+  });
 
   return (
     <div className="min-h-screen p-6 max-w-7xl mx-auto">
       <h2 className="text-3xl font-bold text-center mb-6">Public Resumes</h2>
-
       <div className="mb-8">
         <input
           type="text"
-          placeholder="Search by title or username..."
+          placeholder="Search by title..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           className="w-full px-4 py-2 border rounded-md shadow-sm focus:ring-2 focus:ring-blue-500"
         />
       </div>
-
-      {/* {loading ? (
+      {loading ? (
         <Loader />
       ) : error ? (
         <div className="text-center text-red-500">{error.message}</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredResumes.map((resume) => (
-            <ViewResumeButton
+      ) : filteredResumes.length > 0 ? (
+        <div className="space-y-4">
+          {filteredResumes.map((resume: Resume) => (
+            <ResumeCard
               key={resume.id}
-              resumeId={resume.id}
-              className="group p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
-            >
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">
-                {resume.title}
-              </h3>
-              <p className="text-gray-600">By {resume.user.username}</p>
-            </ViewResumeButton>
+              resume={resume}
+              onView={() => {
+                const url = `${process.env.REACT_APP_API_URL}/resumes/${resume.id}/view/`;
+                window.open(url, "_blank");
+              }}
+              // For public resumes, disable edit, delete, archive, publish actions.
+              onEdit={() => {}}
+              onDelete={() => {}}
+            />
           ))}
         </div>
-      )} */}
-
-      {!loading && filteredResumes.length === 0 && (
+      ) : (
         <p className="text-center text-gray-500 mt-8">
           No public resumes found matching your search.
         </p>

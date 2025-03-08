@@ -1,20 +1,11 @@
 // src/pages/MyResumes.tsx
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "@/services/api";
-import { ResumeOptionsMenu } from "@/components/resume/ResumeOptionsMenu";
-import { useResumes } from "@/hooks/useResumes";
 import { ResumeCard } from "@/components/resume/ResumeCard";
 import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
-import { ResumeStatus } from "@/services/types";
-
-interface Resume {
-  id: number;
-  title: string;
-  resume_status: string;
-  privacy_setting: string;
-}
+import { Resume, ResumeStatus } from "@/services/types";
 
 interface ResumeResponse {
   count?: number;
@@ -23,21 +14,16 @@ interface ResumeResponse {
   results?: Resume[];
 }
 
-const MyResumes = () => {
+const MyResumes: React.FC = () => {
+  // Use the enum type for activeTab:
+  const [activeTab, setActiveTab] = useState<ResumeStatus>(ResumeStatus.PUBLISHED);
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  // const { resumes, loading, deleteResume } = useResumes();
 
   const fetchResumes = async () => {
     try {
-      console.log("Starting fetch...");
       const response = await api.get<ResumeResponse>("/resumes/");
-      console.log("API Response:", response);
-      console.log("Response data type:", typeof response.data);
-      console.log("Is array?", Array.isArray(response.data));
-      // const data = response.data.results || response.data;
-      // console.log("Processed data:", data);
       setResumes(response.data.results ?? []);
     } catch (error) {
       console.error("Failed to fetch resumes:", error);
@@ -51,106 +37,117 @@ const MyResumes = () => {
     fetchResumes();
   }, []);
 
+  // Group resumes using the enum values
+  const drafts = resumes.filter((r) => r.resume_status === ResumeStatus.DRAFT);
+  const archives = resumes.filter((r) => r.resume_status === ResumeStatus.ARCHIVED);
+  const published = resumes.filter(
+    (r) => r.resume_status !== ResumeStatus.DRAFT && r.resume_status !== ResumeStatus.ARCHIVED
+  );
+
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this resume?")) {
       try {
         await api.delete(`/resumes/${id}/`);
-        setResumes((prev) => prev.filter((resume) => resume.id !== id));
+        setResumes((prev) => prev.filter((r) => r.id !== id));
       } catch (error) {
         console.error("Failed to delete resume:", error);
       }
     }
   };
 
+  const handleArchive = async (id: number) => {
+    try {
+      await api.put(`/resumes/${id}/`, { resume_status: ResumeStatus.ARCHIVED });
+      setResumes((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, resume_status: ResumeStatus.ARCHIVED } : r
+        )
+      );
+    } catch (error) {
+      console.error("Failed to archive resume:", error);
+      alert("Error archiving resume. Check console for details.");
+    }
+  };
+
+  const handlePublish = async (id: number) => {
+    try {
+      await api.put(`/resumes/${id}/`, { resume_status: ResumeStatus.PUBLISHED });
+      setResumes((prev) =>
+        prev.map((r) =>
+          r.id === id ? { ...r, resume_status: ResumeStatus.PUBLISHED } : r
+        )
+      );
+    } catch (error) {
+      console.error("Failed to publish resume:", error);
+      alert("Error publishing resume. Check console for details.");
+    }
+  };
+
+  // Render tab navigation using the enum
+  const renderTabs = () => (
+    <div className="mb-4 flex space-x-4 border-b">
+      <button
+        className={`py-2 px-4 ${
+          activeTab === ResumeStatus.PUBLISHED ? "border-b-2 border-blue-500 font-bold" : ""
+        }`}
+        onClick={() => setActiveTab(ResumeStatus.PUBLISHED)}
+      >
+        Published
+      </button>
+      <button
+        className={`py-2 px-4 ${
+          activeTab === ResumeStatus.DRAFT ? "border-b-2 border-blue-500 font-bold" : ""
+        }`}
+        onClick={() => setActiveTab(ResumeStatus.DRAFT)}
+      >
+        Drafts
+      </button>
+      <button
+        className={`py-2 px-4 ${
+          activeTab === ResumeStatus.ARCHIVED ? "border-b-2 border-blue-500 font-bold" : ""
+        }`}
+        onClick={() => setActiveTab(ResumeStatus.ARCHIVED)}
+      >
+        Archived
+      </button>
+    </div>
+  );
+
+  // Filter resumes based on activeTab
+  let filteredResumes: Resume[] = [];
+  if (activeTab === ResumeStatus.DRAFT) {
+    filteredResumes = drafts;
+  } else if (activeTab === ResumeStatus.ARCHIVED) {
+    filteredResumes = archives;
+  } else {
+    filteredResumes = published;
+  }
+
   if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">My Resumes</h2>
+        <h1 className="text-3xl font-bold">My Resumes</h1>
         <Button variant="primary" onClick={() => navigate("/create-resume")}>
           Create New
         </Button>
       </div>
-
+      {renderTabs()}
       <div className="space-y-4">
-        {resumes.map((resume) => (
-          <div
+        {filteredResumes.map((resume) => (
+          <ResumeCard
             key={resume.id}
-            className="bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition flex items-center justify-between"
-          >
-            <div
-              className="flex-1 cursor-pointer"
-              onClick={() => {
-                const baseUrl = process.env.REACT_APP_API_URL;
-                if (!baseUrl) {
-                  console.error(
-                    "API URL is not defined in environment variables."
-                  );
-                  return;
-                }
-                const url = `${baseUrl}/resumes/${resume.id}/view/`;
-                window.open(url, "_blank");
-              }}
-            >
-              <h3 className="text-xl font-semibold">{resume.title}</h3>
-              <div className="flex gap-2 mt-2">
-                <span
-                  className={`px-2 py-1 rounded-full text-sm ${
-                    resume.privacy_setting === "PRIVATE"
-                      ? "bg-red-200 text-red-900"
-                      : "bg-green-200 text-green-900"
-                  }`}
-                >
-                  {resume.privacy_setting}
-                </span>
-              </div>
-            </div>
-            <div className="ml-4">
-              <ResumeOptionsMenu
-                onView={() => {
-                  // Use the CRA environment variable:
-                  const baseUrl = process.env.REACT_APP_API_URL;
-                  if (!baseUrl) {
-                    console.error(
-                      "API URL is not defined in environment variables."
-                    );
-                    return;
-                  }
-                  const url = `${baseUrl}/resumes/${resume.id}/view/`;
-                  window.open(url, "_blank");
-                }}
-                onEdit={() => navigate(`/resumes/${resume.id}/edit`)}
-                onDownload={async () => {
-                  try {
-                    const response = await api.get(
-                      `/resumes/${resume.id}/download/`,
-                      {
-                        responseType: "blob",
-                      }
-                    );
-                    const fileBlob = new Blob([response.data], {
-                      type: "application/pdf",
-                    });
-                    const fileURL = URL.createObjectURL(fileBlob);
-                    const link = document.createElement("a");
-                    link.href = fileURL;
-                    link.setAttribute("download", `${resume.title}.pdf`);
-                    document.body.appendChild(link);
-                    link.click();
-                    link.remove();
-                    URL.revokeObjectURL(fileURL);
-                  } catch (error) {
-                    console.error("Failed to download resume:", error);
-                    alert(
-                      "Error downloading resume. Check console for details."
-                    );
-                  }
-                }}
-                onDelete={() => handleDelete(resume.id)}
-              />
-            </div>
-          </div>
+            resume={resume}
+            onView={() => {
+              const url = `${process.env.REACT_APP_API_URL}/resumes/${resume.id}/view/`;
+              window.open(url, "_blank");
+            }}
+            onEdit={() => navigate(`/resumes/${resume.id}/edit`)}
+            onDelete={() => handleDelete(resume.id)}
+            onArchive={activeTab === ResumeStatus.PUBLISHED ? () => handleArchive(resume.id) : undefined}
+            onPublish={activeTab === ResumeStatus.ARCHIVED ? () => handlePublish(resume.id) : undefined}
+          />
         ))}
       </div>
     </div>
