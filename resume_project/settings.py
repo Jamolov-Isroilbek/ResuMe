@@ -48,6 +48,8 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
     ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 10
 }
 
 SIMPLE_JWT = {
@@ -73,14 +75,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "http://localhost:8000",
+    # "http://localhost:8000",
 ]
 CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
-CORS_ORIGIN_WHITELIST = [ 'http://localhost:3000', ]
+CORS_ORIGIN_WHITELIST = CORS_ALLOWED_ORIGINS
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',

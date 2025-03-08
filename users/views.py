@@ -47,6 +47,7 @@ def login_view(request):
     return Response({"error": "Invalid credentials"}, status=status.HTTP_401_UNAUTHORIZED)
 
 @api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
 def logout_view(request):
     """
     API for user logout (Blacklist JWT token)
@@ -70,30 +71,18 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     """
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
     parser_classes = [MultiPartParser, FormParser]
 
     def get_object(self):
         return self.request.user
         
     def update(self, request, *args, **kwargs):
-        user = self.request.user
-        serializer = self.get_serializer(user, data=request.data, partial=True, context={'request': request})
+        user = self.get_object()
+        serializer = self.get_serializer(user, data=request.data, partial=True)
 
-        print(f"🔍 Authenticated user: {request.user}")  # ✅ Log user
-        print(f"🖼 Profile Picture Path: {request.user.profile_picture}")  # ✅ Log profile picture 
-        
-        if serializer.is_valid():
-            if "profile_picture" in request.FILES:
-                user.profile_picture = request.FILES["profile_picture"]
-            if "username" in request.data:
-                user.username = request.data["username"]
-            if "email" in request.data:
-                user.email = request.data["email"]
-            
-            user.save()
-            return Response(self.get_serializer(user).data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()  
+        return Response(serializer.data)
 
 class ChangePasswordView(generics.UpdateAPIView):
     """

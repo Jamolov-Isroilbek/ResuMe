@@ -21,6 +21,7 @@ export const useAsync = <T,>(asyncFunction: () => Promise<T>, dependencies: Depe
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
     let isMounted = true;
     
     const execute = async () => {
@@ -34,7 +35,7 @@ export const useAsync = <T,>(asyncFunction: () => Promise<T>, dependencies: Depe
           });
         }
       } catch (error) {
-        if (isMounted) {
+        if (error instanceof Error && error.name !== 'AbortError' && isMounted) {
           setState({
             data: null,
             loading: false,
@@ -48,8 +49,9 @@ export const useAsync = <T,>(asyncFunction: () => Promise<T>, dependencies: Depe
 
     return () => {
       isMounted = false;
+      controller.abort();
     };
-  }, [asyncFunction, refreshCount, ...dependencies]);
+  }, [...dependencies]);
 
-  return { ...state, refresh };
+  return { ...state, refresh: () => {} };
 };

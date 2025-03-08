@@ -1,11 +1,17 @@
 export const parseDateToMonthYear = (isoDate: string | null) => {
     if (!isoDate) return { month: '', year: '' };
-    const date = new Date(isoDate);
-    return {
+    try {
+      const date = new Date(isoDate);
+      if (isNaN(date.getTime())) throw new Error('Invalid date');
+      return {
       month: months[date.getMonth()],
       year: date.getFullYear().toString()
     };
-  };
+  } catch (error) {
+    console.error('Invalid date:', isoDate);
+    return { month: '', year: '' };
+  }
+};
   
   export const monthYearToISO = (month: string, year: string): string => {
     const monthIndex = months.indexOf(month);

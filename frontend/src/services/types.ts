@@ -128,3 +128,12 @@ export interface ResumeListResponse {
   previous: string | null;
   results: Resume[];
 }
+
+export interface TokenResponse {
+  access: string;
+  refresh: string;
+}
+
+export interface RefreshTokenPayload {
+  refresh: string;
+}

@@ -1,8 +1,10 @@
 import React from 'react';
+import { ResumeStatus } from '@/services/types'; 
 import { Button } from '@/components/ui/Button';
 
 interface ResumeCardProps {
   title: string;
+  status: ResumeStatus;
   onEdit: () => void;
   onDelete: () => void;
 }

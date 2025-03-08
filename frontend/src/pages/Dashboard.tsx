@@ -34,16 +34,16 @@ const Dashboard: React.FC = () => {
         {[
           {
             title: "AI-Powered Suggestions",
-            content: "Get intelligent recommendations for your resume."
+            content: "Get intelligent recommendations for your resume.",
           },
           {
             title: "Pre-Made Templates",
-            content: "Choose from professional resume layouts."
+            content: "Choose from professional resume layouts.",
           },
           {
             title: "Export to PDF",
-            content: "Download in professional format."
-          }
+            content: "Download in professional format.",
+          },
         ].map((feature, index) => (
           <div key={index} className="p-6 bg-white shadow-md rounded-lg">
             <h3 className="text-xl font-bold text-primary">{feature.title}</h3>
@@ -55,7 +55,9 @@ const Dashboard: React.FC = () => {
       {/* User's Resumes */}
       <div className="mt-12">
         <h2 className="text-3xl font-bold text-primary">Your Resumes</h2>
-        <p className="text-textDark mt-2">Manage your existing resumes below.</p>
+        <p className="text-textDark mt-2">
+          Manage your existing resumes below.
+        </p>
 
         {loading ? (
           <Loader />
@@ -72,7 +74,34 @@ const Dashboard: React.FC = () => {
                 key={resume.id}
                 className="bg-white shadow-md p-4 rounded-lg hover:shadow-lg transition"
               >
-                <h3 className="text-xl font-semibold">{resume.title}</h3>
+                {/* Add this div for header section */}
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold">{resume.title}</h3>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="secondary"
+                      onClick={() => navigate(`/resumes/${resume.id}/view`)}
+                    >
+                      View
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate(`/resumes/${resume.id}/edit`)}
+                    >
+                      Edit
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Add this status section */}
+                <div className="mt-2 flex gap-2">
+                  <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    {resume.resume_status}
+                  </span>
+                  <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                    {resume.privacy_setting}
+                  </span>
+                </div>
               </div>
             ))}
           </div>
@@ -81,7 +110,9 @@ const Dashboard: React.FC = () => {
 
       {/* Footer */}
       <footer className="mt-12 p-4 bg-gray-100 rounded-lg">
-        <p className="text-textDark">&copy; 2025 ResuMe. All Rights Reserved.</p>
+        <p className="text-textDark">
+          &copy; 2025 ResuMe. All Rights Reserved.
+        </p>
       </footer>
     </div>
   );

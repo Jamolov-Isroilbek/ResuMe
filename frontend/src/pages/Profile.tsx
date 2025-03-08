@@ -12,15 +12,18 @@ interface UserProfile {
 }
 
 const Profile: React.FC = () => {
-  const { data: user, loading, error, refresh } = useAsync(() => 
-    api.get<UserProfile>("/me/")
-  );
-  
+  const {
+    data: user,
+    loading,
+    error,
+    refresh,
+  } = useAsync(() => api.get<UserProfile>("/me/"));
+  const [passwordError, setPasswordError] = useState("");
   const [formState, setFormState] = useState({
     username: "",
     email: "",
     oldPassword: "",
-    newPassword: ""
+    newPassword: "",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
@@ -37,7 +40,7 @@ const Profile: React.FC = () => {
   // const handleMultipleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const files = e.target.files;
   //   if (files) {
-  //     const selectedFiles = Array.from(files).filter(file => 
+  //     const selectedFiles = Array.from(files).filter(file =>
   //       file.type.startsWith('image/')
   //     );
   //     setSelectedFiles(selectedFiles);
@@ -56,11 +59,21 @@ const Profile: React.FC = () => {
   };
 
   const handleChangePassword = async () => {
-    await api.put("/change-password/", {
-      old_password: formState.oldPassword,
-      new_password: formState.newPassword
-    });
-    setFormState(prev => ({ ...prev, oldPassword: "", newPassword: "" }));
+    try {
+      if (!formState.oldPassword || !formState.newPassword) {
+        setPasswordError("Both fields are required");
+        return;
+      }
+
+      await api.put("/change-password/", {
+        old_password: formState.oldPassword,
+        new_password: formState.newPassword,
+      });
+      setFormState((prev) => ({ ...prev, oldPassword: "", newPassword: "" }));
+      setPasswordError("");
+    } catch (err: any) {
+      setPasswordError(err.response?.data?.detail || "Password update failed");
+    }
   };
 
   if (loading) return <Loader />;
@@ -80,7 +93,7 @@ const Profile: React.FC = () => {
                 e.currentTarget.src = "/default-avatar.png";
               }}
             />
-            
+
             <div className="mt-4">
               <label className="cursor-pointer inline-block">
                 <span className="text-blue-600 hover:text-blue-700">
@@ -104,7 +117,12 @@ const Profile: React.FC = () => {
               </label>
               <input
                 value={formState.username}
-                onChange={(e) => setFormState(prev => ({ ...prev, username: e.target.value }))}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    username: e.target.value,
+                  }))
+                }
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
@@ -116,7 +134,9 @@ const Profile: React.FC = () => {
               <input
                 type="email"
                 value={formState.email}
-                onChange={(e) => setFormState(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setFormState((prev) => ({ ...prev, email: e.target.value }))
+                }
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
               />
             </div>
@@ -130,16 +150,30 @@ const Profile: React.FC = () => {
                 type="password"
                 placeholder="Current Password"
                 value={formState.oldPassword}
-                onChange={(e) => setFormState(prev => ({ ...prev, oldPassword: e.target.value }))}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    oldPassword: e.target.value,
+                  }))
+                }
                 className="w-full rounded-md border-gray-300 shadow-sm"
               />
               <input
                 type="password"
                 placeholder="New Password"
                 value={formState.newPassword}
-                onChange={(e) => setFormState(prev => ({ ...prev, newPassword: e.target.value }))}
+                onChange={(e) =>
+                  setFormState((prev) => ({
+                    ...prev,
+                    newPassword: e.target.value,
+                  }))
+                }
                 className="w-full rounded-md border-gray-300 shadow-sm"
               />
+
+              {passwordError && (
+                <p className="text-red-500 text-sm">{passwordError}</p>
+              )}
               <Button
                 variant="secondary"
                 onClick={handleChangePassword}
@@ -150,11 +184,7 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full mt-6"
-          >
+          <Button type="submit" variant="primary" className="w-full mt-6">
             Save Changes
           </Button>
         </form>

@@ -9,9 +9,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import CreateEditResume from "./pages/CreateEditResume";
 import { AuthProvider } from "./context/AuthContext";
+import { ErrorBoundary } from "react-error-boundary";
 
 function App() {
-
   return (
     <AuthProvider>
       <Router>
@@ -23,10 +23,17 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/public-resumes" element={<PublicResumes />} />
           <Route path="/profile" element={<Profile />} />
-          <Route path="/my-resumes" element={<MyResumes />} />
+          <Route
+            path="/my-resumes"
+            element={
+              <ErrorBoundary fallback={<div>Error loading resumes</div>}>
+                <MyResumes />
+              </ErrorBoundary>
+            }
+          />
           <Route path="/create-resume" element={<CreateEditResume />} />
-          <Route path="/:id/edit" element={<CreateEditResume />} />
-          </Routes>
+          <Route path="/resumes/:id/edit" element={<CreateEditResume />} />
+        </Routes>
       </Router>
     </AuthProvider>
   );

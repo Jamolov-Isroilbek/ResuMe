@@ -12,11 +12,7 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="mb-6">
-        <img
-          src="/logo.png"
-          alt="ResuMe Logo"
-          className="w-24 h-24 mx-auto"
-        />
+        <img src="/logo.png" alt="ResuMe Logo" className="w-24 h-24 mx-auto" />
       </div>
 
       <h1 className="text-4xl font-bold text-primary mb-4 text-center">
@@ -27,20 +23,28 @@ const Home: React.FC = () => {
       </p>
 
       <div className="flex gap-4">
-        <Button
-          variant="secondary"
-          className="px-6 py-2"
-          onClick={() => navigate("/login")}
-        >
-          Login
-        </Button>
-        <Button
-          variant="primary"
-          className="px-6 py-2"
-          onClick={() => navigate("/register")}
-        >
-          Register
-        </Button>
+        {isAuthenticated ? (
+          <Button variant="primary" onClick={() => navigate("/dashboard")}>
+            Go to Dashboard
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="secondary"
+              className="px-6 py-2"
+              onClick={() => navigate("/login")}
+            >
+              Login
+            </Button>
+            <Button
+              variant="primary"
+              className="px-6 py-2"
+              onClick={() => navigate("/register")}
+            >
+              Register
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );

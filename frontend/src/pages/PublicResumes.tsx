@@ -3,7 +3,6 @@ import { useAsync } from "@/hooks/useAsync";
 import api from "@/services/api";
 import { Button } from "@/components/ui/Button";
 import { Loader } from "@/components/ui/Loader";
-import { ViewResumeButton } from "@/components/resume/ViewResumeButton";
 
 interface PublicResume {
   id: number;
@@ -13,13 +12,18 @@ interface PublicResume {
   };
 }
 
+interface PublicResumeResponse {
+  count: number;
+  results: PublicResume[];
+}
+
 const PublicResumes: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const { data: response, loading, error } = useAsync(() => 
-    api.get<PublicResume[]>("/public-resumes/")
+    api.get<PublicResumeResponse>("/public-resumes/")
   );
 
-  const publicResumes = response?.data;
+  const publicResumes = response?.data.results || [];
 
   const filteredResumes = publicResumes?.filter((resume) => {
     const searchLower = searchQuery.toLowerCase();
@@ -43,7 +47,7 @@ const PublicResumes: React.FC = () => {
         />
       </div>
 
-      {loading ? (
+      {/* {loading ? (
         <Loader />
       ) : error ? (
         <div className="text-center text-red-500">{error.message}</div>
@@ -62,7 +66,7 @@ const PublicResumes: React.FC = () => {
             </ViewResumeButton>
           ))}
         </div>
-      )}
+      )} */}
 
       {!loading && filteredResumes.length === 0 && (
         <p className="text-center text-gray-500 mt-8">

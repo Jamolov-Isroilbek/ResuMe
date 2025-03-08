@@ -14,6 +14,9 @@ class Resume(models.Model):
     resume_status = models.CharField(max_length=20, choices=ResumeStatus.choices, default=ResumeStatus.DRAFT)
     privacy_setting = models.CharField(max_length=10, choices=PrivacySettings.choices, default=PrivacySettings.PRIVATE)
 
+    class Meta:
+        ordering = ['-created_at']
+        
     def __str__(self):
         return self.title
 
