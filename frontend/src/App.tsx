@@ -1,15 +1,14 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import Navbar from "./components/layout/Navbar";
-import Home from "./pages/Home";
-import Dashboard from "./pages/Dashboard";
-import PublicResumes from "./pages/PublicResumes";
-import Profile from "./pages/Profile";
-import MyResumes from "./pages/MyResumes";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import CreateEditResume from "./pages/CreateEditResume";
-import { AuthProvider } from "./context/AuthContext";
-import { ErrorBoundary } from "react-error-boundary";
+import Navbar from "@/app/layouts/MainLayout/Navbar";
+import Home from "@/app/pages/Home";
+import Dashboard from "@/app/pages/dashboard/Dashboard";
+import PublicResumes from "@/app/pages/resume/PublicResumes";
+import Profile from "@/app/pages/profile/Profile";
+import MyResumes from "@/app/pages/resume/MyResumes";
+import Login from "@/app/pages/auth/Login";
+import Register from "@/app/pages/auth/Register";
+import CreateEditResume from "@/app/pages/resume/CreateEditResume";
+import { AuthProvider } from "@/providers/AuthProvider";
 
 function App() {
   return (
@@ -23,14 +22,7 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/public-resumes" element={<PublicResumes />} />
           <Route path="/profile" element={<Profile />} />
-          <Route
-            path="/my-resumes"
-            element={
-              <ErrorBoundary fallback={<div>Error loading resumes</div>}>
-                <MyResumes />
-              </ErrorBoundary>
-            }
-          />
+          <Route path="/my-resumes" element={<MyResumes />} />
           <Route path="/create-resume" element={<CreateEditResume />} />
           <Route path="/resumes/:id/edit" element={<CreateEditResume />} />
         </Routes>

@@ -1,16 +1,18 @@
 from django.db import models
 from django.core.validators import URLValidator
+from django.contrib.auth import get_user_model
 from users.models import User
 from .enums import ResumeStatus, PrivacySettings, SkillType
 
+User = get_user_model()
 class Resume(models.Model):
     """
     Represents a Resume linked to a User
     """
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resumes') # User-Resume relationship (1-to many)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resumes')
     title = models.CharField(max_length=255)
-    created_at = models.DateTimeField(auto_now_add=True) # Auto-set when resume is created
-    updated_at = models.DateTimeField(auto_now=True) # Auto-update when modified
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     resume_status = models.CharField(max_length=20, choices=ResumeStatus.choices, default=ResumeStatus.DRAFT)
     privacy_setting = models.CharField(max_length=10, choices=PrivacySettings.choices, default=PrivacySettings.PRIVATE)
 
@@ -21,7 +23,7 @@ class Resume(models.Model):
         return self.title
 
 class PersonalDetails(models.Model):
-    resume = models.OneToOneField(Resume, on_delete=models.CASCADE, related_name="personal_details")
+    resume = models.OneToOneField(Resume, on_delete=models.CASCADE, related_name="personal_details", primary_key=True)
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField()
@@ -47,7 +49,6 @@ class WorkExperience(models.Model):
     end_date = models.DateField(null=True, blank=True)
     currently_working = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
-    # more_info = models.TextField(blank=True, null=True)
 
 class Skill(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="skills")
@@ -60,3 +61,16 @@ class Award(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     year = models.IntegerField()
+
+class Favorite(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorites")
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="favorited_by")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("user", "resume")
+        verbose_name = "Favorite"
+        verbose_name_plural = "Favorites"
+
+    def __str__(self):
+        return f"{self.user.username} favorited {self.resume.title}"

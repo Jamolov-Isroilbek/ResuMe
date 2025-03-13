@@ -1,7 +1,5 @@
 from django.template.loader import render_to_string
-from django.http import HttpResponse
 from weasyprint import HTML
-from .models import Resume
 
 def generate_resume_pdf(resume):
     """

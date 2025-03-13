@@ -1,5 +1,5 @@
 {
-  "name": "fronend",
+  "name": "frontend",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -12,8 +12,6 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
     "@testing-library/user-event": "^13.5.0",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.126",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "axios": "^1.7.9",
@@ -53,6 +51,11 @@
   "proxy": "http://127.0.0.1:8000",
   "devDependencies": {
     "@craco/craco": "^7.1.0",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.13.10",
+    "@types/parse-json": "^4.0.2",
+    "@types/prop-types": "^15.7.14",
+    "@types/use-sync-external-store": "^0.0.6",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.3",
     "tailwindcss": "^3.4.17"

@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import Resume, PersonalDetails, Education, WorkExperience, Skill, Award 
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
 class PersonalDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = PersonalDetails
@@ -32,20 +34,41 @@ class AwardSerializer(serializers.ModelSerializer):
         extra_kwargs = {'resume': {'required': False}}
     
 class ResumeSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()  # Prevents infinite recursion
+    user = serializers.SerializerMethodField()
     personal_details = PersonalDetailsSerializer(read_only=True)
     education = EducationSerializer(many=True, read_only=True)
     work_experience = WorkExperienceSerializer(many=True, read_only=True)
     skills = SkillSerializer(many=True, read_only=True)
     awards = AwardSerializer(many=True, read_only=True)
+    favorite_count = serializers.SerializerMethodField()
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Resume
-        fields = ["id", "title", "privacy_setting", "user", "personal_details", "education", "work_experience", "skills", "awards"]
+        fields = [
+            "id", 
+            "title", 
+            "resume_status",
+            "privacy_setting", 
+            "user", 
+            "personal_details", 
+            "education", 
+            "work_experience", 
+            "skills", 
+            "awards",
+            "favorite_count",
+            "is_favorited",
+        ]
+
+    def get_user(self, obj):
+        return {
+            "id": obj.user.id,
+            "username": obj.user.username
+        }
 
     def get_personal_details(self, obj):
         try:
-            pd = obj.personal_details  # Get the single related object
+            pd = obj.personal_details
             return {
                 "first_name": pd.first_name,
                 "last_name": pd.last_name,
@@ -100,3 +123,12 @@ class ResumeSerializer(serializers.ModelSerializer):
             }
             for award in obj.awards.all()
         ]
+    
+    def get_favorite_count(self, obj):
+        return obj.favorited_by.count()
+    
+    def get_is_favorited(self, obj):
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            return obj.favorited_by.filter(user=request.user).exists()
+        return False
