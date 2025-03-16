@@ -11,3 +11,19 @@ body {
 .container {
     margin: 20px;
 }
+
+@keyframes pulse-favorite {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+  100% { transform: scale(1); }
+}
+
+.border-yellow-400 {
+  animation: pulse-favorite 0.5s ease-in-out;
+  border-color: #facc15;
+}
+
+.group:hover {
+  transform: translateY(-2px);
+  transition: all 0.2s ease-in-out;
+}

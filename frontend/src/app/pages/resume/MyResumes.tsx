@@ -45,7 +45,7 @@ const MyResumes: React.FC = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen p-6 max-w-7xl mx-auto">
       <ResumesHeader 
         sortOption={sortOption} 
         setSortOption={setSortOption} 
@@ -55,11 +55,19 @@ const MyResumes: React.FC = () => {
         activeTab={activeTab} 
         setActiveTab={setActiveTab} 
       />
-      
-      <ResumeList 
-        resumes={filteredResumes} 
-        activeTab={activeTab} 
-      />
+
+      {filteredResumes.length > 0 ? (
+        <div className="spacy-4">
+          <ResumeList 
+            resumes={filteredResumes} 
+            activeTab={activeTab} 
+          />
+        </div>
+      ) : (
+        <p className="text-center text-gray-500 mt-8">
+          No resumes found in this category.
+        </p>
+      )}
     </div>
   );
 };

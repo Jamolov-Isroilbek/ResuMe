@@ -8,3 +8,4 @@ export * from './useResumes';
 export * from './useSectionHandlers';
 export * from './useSkillHandlers';
 export * from './useWorkExperienceHandlers';
+export * from './useResumeFavorites';

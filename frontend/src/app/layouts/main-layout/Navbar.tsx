@@ -100,16 +100,16 @@ const Navbar = () => {
 
       {/* Desktop Menu (existing code) */}
       <div className="hidden md:flex space-x-4">
-        <Link to="/public-resumes" className="hover:text-gray-300">
+        <Link to="/public-resumes" className="hover:text-gray-300 flex items-center">
           Public Resumes
         </Link>
 
         {isAuthenticated ? (
           <>
-            <Link to="/my-resumes" className="hover:text-gray-300">
+            <Link to="/my-resumes" className="hover:text-gray-300 flex items-center">
               My Resumes
             </Link>
-            <Link to="/profile" className="hover:text-gray-300">
+            <Link to="/profile" className="hover:text-gray-300 flex items-center">
               Profile
             </Link>
             <Button

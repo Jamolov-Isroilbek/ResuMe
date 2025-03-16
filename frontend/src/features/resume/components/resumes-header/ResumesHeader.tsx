@@ -15,14 +15,18 @@ export const ResumesHeader: React.FC<ResumesHeaderProps> = ({
   const navigate = useNavigate();
 
   return (
-    <div className="flex justify-between items-center mb-6">
-      <h1 className="text-3xl font-bold">My Resumes</h1>
-      <div className="flex items-center gap-4">
+    <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <h2 className="text-3xl font-bold text-center mb-6">My Resumes</h2>
+      <div className="flex items-center gap-4 w-full sm:w-auto">
         <SortingDropdown
           sortOption={sortOption}
           setSortOption={setSortOption}
         />
-        <Button variant="primary" onClick={() => navigate("/create-resume")}>
+        <Button 
+          variant="primary" 
+          onClick={() => navigate("/create-resume")}
+          className="w-full sm:w-auto"
+        >
           Create New
         </Button>
       </div>

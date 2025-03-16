@@ -1,20 +1,39 @@
+from django.db.models import Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
 from rest_framework import generics, permissions, status, filters
 from rest_framework.response import Response
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from django.shortcuts import get_object_or_404, render
-from django.http import HttpResponse
 from weasyprint import HTML
-from .models import Resume, Education, WorkExperience, Skill, PersonalDetails, Award, Favorite
+
+from .models import Resume, Education, ResumeAnalytics, WorkExperience, Skill, PersonalDetails, Award, Favorite
 from .serializers import ResumeSerializer, PersonalDetailsSerializer
-from django.template.loader import render_to_string
-from .enums import PrivacySettings
+from .enums import PrivacySettings, ResumeStatus
 from users.authentication import CookieJWTAuthentication
+
+
+class ResumeStatsView(generics.RetrieveAPIView):
+    """
+    API endpoint to retrieve detailed stats for a resume.
+    Only the owner may view stats for a resume if its status is PUBLISHED.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = ResumeSerializer
+
+    def get_object(self):
+        resume = get_object_or_404(Resume, pk=self.kwargs['pk'])
+        # Only allow access if the resume is published and the user is the owner.
+        if resume.resume_status == ResumeStatus.PUBLISHED and resume.user != self.request.user:
+            self.permission_denied(self.request, message="Not authorized to view these stats.")
+        return resume
 
 class PublicResumesView(generics.ListAPIView):
     """
     API to list public resumes only.
     """
-    queryset = Resume.objects.filter(privacy_setting=PrivacySettings.PUBLIC)
+    queryset = Resume.objects.filter(
+        privacy_setting=PrivacySettings.PUBLIC
+    ).select_related('analytics')
     serializer_class = ResumeSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.OrderingFilter]
@@ -31,6 +50,10 @@ class ResumeHTMLView(generics.GenericAPIView):
 
     def get(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
+
+        analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
+        analytics.views += 1
+        analytics.save()
         
         if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
             return Response({"error": "Not authorized"}, status=status.HTTP_403_FORBIDDEN)
@@ -43,7 +66,7 @@ class ResumeListCreateView(generics.ListCreateAPIView):
     """
     serializer_class = ResumeSerializer
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [CookieJWTAuthentication]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at', 'updated_at', 'title', 'user__username']
     ordering = ['-created_at']
@@ -158,19 +181,30 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class ToggleFavoriteResumeView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [JWTAuthentication]
+    authentication_classes = [CookieJWTAuthentication]
 
     def post(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
-        # Prevent users from favoriting their own resume
         if resume.user == request.user:
             return Response({"error": "Cannot favorite your own resume."}, status=status.HTTP_400_BAD_REQUEST)
-        favorite, created = Favorite.objects.get_or_create(user=request.user, resume=resume)
-        if not created:
-            # Already favorited; remove favorite
-            favorite.delete()
-            return Response({"is_favorited": False})
-        return Response({"is_favorited": True})
+        was_favorited = resume.favorited_by.filter(user=request.user).exists()
+        
+        if was_favorited:
+            Favorite.objects.filter(user=request.user, resume=resume).delete()
+        else:
+            Favorite.objects.create(user=request.user, resume=resume)
+        
+        # Force refresh from database
+        resume.refresh_from_db()
+        
+        serializer = ResumeSerializer(resume, context={
+            'request': request  # Crucial for is_favorited calculation
+        })
+        
+        return Response({
+            "is_favorited": not was_favorited,
+            "resume": serializer.data
+        })
 
 class ResumePDFDownloadView(generics.GenericAPIView):
     """
@@ -183,6 +217,10 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         Generates and returns a PDF for the given resume.
         """
         resume = get_object_or_404(Resume, pk=pk, user=request.user)
+
+        analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
+        analytics.downloads += 1
+        analytics.save()
 
          # Authorization check
         if resume.privacy_setting != PrivacySettings.PUBLIC and not request.user.is_authenticated:
@@ -200,3 +238,27 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         response = HttpResponse(pdf_file, content_type="application/pdf")
         response["Content-Disposition"] = f'attachment; filename="{resume.title}.pdf"'
         return response
+
+class UserStatsView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+    
+    def get(self, request):
+        user = request.user
+        total_views = ResumeAnalytics.objects.filter(
+            resume__user=user
+        ).aggregate(total=Sum('views'))['total'] or 0
+        
+        total_downloads = ResumeAnalytics.objects.filter(
+            resume__user=user
+        ).aggregate(total=Sum('downloads'))['total'] or 0
+        
+        total_favorites = Favorite.objects.filter(
+            resume__user=user
+        ).count()
+
+        return Response({
+            'views': total_views,
+            'downloads': total_downloads,
+            'favorites': total_favorites
+        })

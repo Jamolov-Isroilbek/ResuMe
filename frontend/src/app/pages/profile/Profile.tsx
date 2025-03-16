@@ -4,6 +4,7 @@ import { useAsync } from "@/lib/hooks/useAsync";
 import { Button } from "@/lib/ui/buttons/Button";
 import { Loader } from "@/lib/ui/common/Loader";
 import { APIResponse } from "@/types/shared/api";
+import { ProfileStats } from "@/features/profile/ProfileStats";
 
 interface UserProfile {
   username: string;
@@ -37,16 +38,6 @@ const Profile: React.FC = () => {
       }
     }
   };
-
-  // const handleMultipleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const files = e.target.files;
-  //   if (files) {
-  //     const selectedFiles = Array.from(files).filter(file =>
-  //       file.type.startsWith('image/')
-  //     );
-  //     setSelectedFiles(selectedFiles);
-  //   }
-  // };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,6 +99,11 @@ const Profile: React.FC = () => {
                 />
               </label>
             </div>
+          </div>
+
+          <div className="max-w-6xl mx-auto p-6">
+            <h2 className="text-3xl font-bold mb-8">Your Resume Statistics</h2>
+            <ProfileStats />
           </div>
 
           {/* Profile Info */}

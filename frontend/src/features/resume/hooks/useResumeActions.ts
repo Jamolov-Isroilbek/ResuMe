@@ -1,12 +1,19 @@
-// src/hooks/resume/useResumeActions.ts
-import api from "@/lib/api/axiosClient";
+import axiosClient from "@/lib/api/axiosClient";
 import { Resume, ResumeStatus } from "@/types/shared/resume";
 import { ENDPOINTS } from "@/lib/api/endpoints";
+import { useQueryClient } from "@tanstack/react-query";
 
 type ResumeUpdater = (update: (prev: Resume[]) => Resume[]) => void;
 
-export const useResumeActions = (updater?: ResumeUpdater) => {
-  const handleView = (resumeId: number) => {
+export const useResumeActions = (sortOption?: string, updater?: ResumeUpdater) => {
+  const queryClient = useQueryClient();
+
+  const handleView = async (resumeId: number) => {
+    try {
+      await axiosClient.post(`/resumes/${resumeId}/view`);
+    } catch (error) {
+      console.error("Failed to update view count:", error);
+    }
     window.open(
       `${process.env.REACT_APP_API_URL}/resumes/${resumeId}/view/`,
       "_blank"
@@ -16,7 +23,7 @@ export const useResumeActions = (updater?: ResumeUpdater) => {
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure you want to delete this resume?")) {
       try {
-        await api.delete(`/resumes/${id}/`);
+        await axiosClient.delete(`/resumes/${id}/`);
         updater?.(prev => prev.filter(r => r.id !== id));
       } catch (error) {
         console.error("Failed to delete resume:", error);
@@ -26,7 +33,7 @@ export const useResumeActions = (updater?: ResumeUpdater) => {
 
   const handleArchive = async (id: number) => {
     try {
-      await api.put(`/resumes/${id}/`, {
+      await axiosClient.put(`/resumes/${id}/`, {
         resume_status: ResumeStatus.ARCHIVED,
       });
       updater?.(prev =>
@@ -42,7 +49,7 @@ export const useResumeActions = (updater?: ResumeUpdater) => {
 
   const handlePublish = async (id: number) => {
     try {
-      await api.put(`/resumes/${id}/`, {
+      await axiosClient.put(`/resumes/${id}/`, {
         resume_status: ResumeStatus.PUBLISHED,
       });
       updater?.(prev =>
@@ -58,7 +65,7 @@ export const useResumeActions = (updater?: ResumeUpdater) => {
 
   const handleDownload = async (resumeId: number, resumeTitle: string) => {
     try {
-      const response = await api.get(ENDPOINTS.DOWNLOAD_RESUME(resumeId), {
+      const response = await axiosClient.get(ENDPOINTS.DOWNLOAD_RESUME(resumeId), {
         responseType: "blob",
       });
       const fileBlob = new Blob([response.data], { type: "application/pdf" });
@@ -87,23 +94,41 @@ export const useResumeActions = (updater?: ResumeUpdater) => {
     }
   };
 
-  const handleFavorite = async (
-    resumeId: number,
-    updater?: (updateFn: (prev: Resume[]) => Resume[]) => void
-  ) => {
+  const handleFavorite = async (resumeId: number) => {
+    const queryKey = ['public-resumes', sortOption]; // Use sortOption here
+
+    await queryClient.cancelQueries({ queryKey });
+
+    const previousResumes = queryClient.getQueryData<Resume[]>(queryKey);
+
+    // Optimistic update
+    queryClient.setQueryData(queryKey, (old: Resume[] | undefined) =>
+      old?.map(resume => ({
+        ...resume,
+        is_favorited: resume.id === resumeId ? !resume.is_favorited : resume.is_favorited
+      }))
+    );
+
     try {
-      const response = await api.post(ENDPOINTS.FAVORITE(resumeId));
-  
-      updater?.(prev => 
-        prev.map(resume => 
-          resume.id === resumeId
-            ? { ...resume, is_favorited: response.data.is_favorited }
-            : resume
-        )
+      const { data } = await axiosClient.post<{ resume: Resume }>(
+        `/resumes/${resumeId}/favorite/`
       );
-    } catch (error) {
-      console.error("Failed to toggle favorite:", error);
-      alert("Error toggling favorite.");
+
+      // Merge server response with existing cache
+      queryClient.setQueryData(queryKey, (old: Resume[] | undefined) =>
+        old?.map(r => r.id === resumeId ? {
+          ...r,
+          ...data.resume,
+          is_favorited: data.resume.is_favorited
+        } : r)
+      );
+
+      // Force a refresh of the public resumes query AFTER the API call and cache update
+      queryClient.invalidateQueries({ queryKey: ['public-resumes', sortOption] }); // <--- MOVED HERE
+
+    } catch (err) {
+      queryClient.setQueryData(queryKey, previousResumes);
+      throw err;
     }
   };
 

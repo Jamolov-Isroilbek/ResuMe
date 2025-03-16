@@ -1,10 +1,13 @@
-from django.db import models
+from django.db import models, migrations
 from django.core.validators import URLValidator
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.contrib.auth import get_user_model
 from users.models import User
 from .enums import ResumeStatus, PrivacySettings, SkillType
 
 User = get_user_model()
+
 class Resume(models.Model):
     """
     Represents a Resume linked to a User
@@ -74,3 +77,36 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f"{self.user.username} favorited {self.resume.title}"
+    
+class ResumeAnalytics(models.Model):
+    resume = models.OneToOneField(
+        Resume, 
+        on_delete=models.CASCADE, 
+        related_name='analytics'
+    )
+    views = models.PositiveIntegerField(default=0)
+    downloads = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return f"Analytics for {self.resume.title}"
+
+# Add signals to auto-create analytics
+@receiver(post_save, sender=Resume)
+def create_resume_analytics(sender, instance, **kwargs):
+    ResumeAnalytics.objects.get_or_create(resume=instance)
+
+def create_missing_analytics(apps, schema_editor):
+    Resume = apps.get_model('resumes', 'Resume')
+    ResumeAnalytics = apps.get_model('resumes', 'ResumeAnalytics')
+    
+    for resume in Resume.objects.all():
+        ResumeAnalytics.objects.get_or_create(resume=resume)
+
+class Migration(migrations.Migration):
+    dependencies = [
+        ('resumes', 'previous_migration'),
+    ]
+
+    operations = [
+        migrations.RunPython(create_missing_analytics),
+    ]

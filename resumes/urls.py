@@ -1,5 +1,14 @@
 from django.urls import path
-from .views import PublicResumesView, ResumeHTMLView, ResumeListCreateView, ResumeDetailView, ResumePDFDownloadView, ToggleFavoriteResumeView
+from .views import (
+    PublicResumesView, 
+    ResumeHTMLView, 
+    ResumeListCreateView, 
+    ResumeDetailView, 
+    ResumePDFDownloadView, 
+    ToggleFavoriteResumeView,
+    UserStatsView,
+    ResumeStatsView,
+)
 
 urlpatterns = [
     path('resumes/', ResumeListCreateView.as_view(), name='resume-list'),
@@ -9,5 +18,8 @@ urlpatterns = [
     path('public-resumes/', PublicResumesView.as_view(), name="public-resumes"),
     path('public-resumes/<int:pk>', ResumeDetailView.as_view(), name="public-resumes-detail"),
     path('resumes/<int:pk>/view/', ResumeHTMLView.as_view(), name='resume-view'),
-    path('resumes/<int:pk>/favorite/', ToggleFavoriteResumeView.as_view(), name='resume-favorite')
+    path('resumes/<int:pk>/favorite/', ToggleFavoriteResumeView.as_view(), name='resume-favorite'),
+    path('user/stats/', UserStatsView.as_view(), name='user-stats'),
+    path('resumes/<int:pk>/stats/', ResumeStatsView.as_view(), name='resume-stats'),
+
 ]

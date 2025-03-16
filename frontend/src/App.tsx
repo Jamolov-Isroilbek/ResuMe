@@ -9,9 +9,21 @@ import Login from "@/app/pages/auth/Login";
 import Register from "@/app/pages/auth/Register";
 import CreateEditResume from "@/app/pages/resume/CreateEditResume";
 import { AuthProvider } from "@/providers/AuthProvider";
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function App() {
   return (
+    <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <Router>
         <Navbar />
@@ -28,6 +40,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

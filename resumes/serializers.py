@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import Resume, PersonalDetails, Education, WorkExperience, Skill, Award 
 from django.contrib.auth import get_user_model
+from .enums import ResumeStatus
 
 User = get_user_model()
 class PersonalDetailsSerializer(serializers.ModelSerializer):
@@ -42,6 +43,8 @@ class ResumeSerializer(serializers.ModelSerializer):
     awards = AwardSerializer(many=True, read_only=True)
     favorite_count = serializers.SerializerMethodField()
     is_favorited = serializers.SerializerMethodField()
+    views_count = serializers.SerializerMethodField()
+    downloads_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Resume
@@ -58,6 +61,8 @@ class ResumeSerializer(serializers.ModelSerializer):
             "awards",
             "favorite_count",
             "is_favorited",
+            "views_count",
+            "downloads_count",
         ]
 
     def get_user(self, obj):
@@ -124,11 +129,26 @@ class ResumeSerializer(serializers.ModelSerializer):
             for award in obj.awards.all()
         ]
     
-    def get_favorite_count(self, obj):
-        return obj.favorited_by.count()
-    
     def get_is_favorited(self, obj):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             return obj.favorited_by.filter(user=request.user).exists()
         return False
+    
+    def get_favorite_count(self, obj):
+        request = self.context.get("request")
+        if obj.resume_status == ResumeStatus.PUBLISHED and (request and request.user == obj.user):
+            return obj.favorited_by.count()
+        return None
+    
+    def get_views_count(self, obj):
+        request = self.context.get("request")
+        if obj.resume_status == ResumeStatus.PUBLISHED and (request and request.user == obj.user):
+            return obj.analytics.views if hasattr(obj, 'analytics') else 0
+        return None
+
+    def get_downloads_count(self, obj):
+        request = self.context.get("request")
+        if obj.resume_status == ResumeStatus.PUBLISHED and (request and request.user == obj.user):
+            return obj.analytics.downloads if hasattr(obj, 'analytics') else 0
+        return None

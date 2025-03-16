@@ -75,6 +75,8 @@ export enum ResumeStatus {
     awards: Award[];
     favorite_count?: number;
     is_favorited?: boolean;
+    views_count?: number;
+    downloads_count?: number;
   }
   
   export interface ResumeFormData extends Omit<Resume, 'id' | 'created_at' | 'updated_at' | 'user'> {
