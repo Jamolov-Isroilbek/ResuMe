@@ -6,11 +6,12 @@ import { useNavigate } from "react-router-dom";
 interface ResumeListProps {
   resumes: Resume[];
   activeTab: ResumeStatus;
+  refetchResumes: () => void;
 }
 
-export const ResumeList: React.FC<ResumeListProps> = ({ resumes, activeTab }) => {
-  const { handleDelete, handleArchive, handlePublish, handleDownload, handleShare } = 
-    useResumeActions();
+export const ResumeList: React.FC<ResumeListProps> = ({ resumes, activeTab, refetchResumes, }) => {
+  const { handleView, handleDownload, handleDelete, handleArchive, handlePublish, handleShare, handleFavorite } = 
+    useResumeActions(refetchResumes);
 
   const navigate = useNavigate();
 

@@ -61,6 +61,7 @@ const MyResumes: React.FC = () => {
           <ResumeList 
             resumes={filteredResumes} 
             activeTab={activeTab} 
+            refetchResumes={fetchResumes}
           />
         </div>
       ) : (

@@ -32,6 +32,7 @@ export enum ResumeStatus {
     major?: string;
     start_date: string;
     end_date?: string;
+    currently_studying: boolean;
     cgpa?: number;
   }
   

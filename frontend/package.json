@@ -23,6 +23,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.5",
     "react-scripts": "^5.0.1",
+    "react-toastify": "^11.0.5",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
   },
@@ -57,6 +58,7 @@
     "@types/node": "^22.13.10",
     "@types/parse-json": "^4.0.2",
     "@types/prop-types": "^15.7.14",
+    "@types/react-toastify": "^4.0.2",
     "@types/use-sync-external-store": "^0.0.6",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.5.3",

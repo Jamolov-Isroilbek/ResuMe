@@ -26,6 +26,7 @@ export const useEducationHandlers = (setFormData: React.Dispatch<React.SetStateA
         major: "",
         start_date: new Date().toISOString(),
         end_date: undefined,
+        currently_studying: false,
         cgpa: undefined,
       }]
     }));

@@ -1,143 +1,85 @@
-import axiosClient from "@/lib/api/axiosClient";
-import { Resume, ResumeStatus } from "@/types/shared/resume";
-import { ENDPOINTS } from "@/lib/api/endpoints";
-import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import api from "@/lib/api/axiosClient";
+import { toast } from "react-toastify";
 
-type ResumeUpdater = (update: (prev: Resume[]) => Resume[]) => void;
+export const useResumeActions = (refetchResumes?: () => void) => {
+  const navigate = useNavigate();
 
-export const useResumeActions = (sortOption?: string, updater?: ResumeUpdater) => {
-  const queryClient = useQueryClient();
+  const handleView = (id: number) => {
+    navigate(`/resumes/${id}/view`);
+  };
 
-  const handleView = async (resumeId: number) => {
+  const handleDownload = async (id: number, title: string) => {
     try {
-      await axiosClient.post(`/resumes/${resumeId}/view`);
+      const response = await api.get(`/resumes/${id}/download/`, {
+        responseType: "blob",
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `${title}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } catch (error) {
-      console.error("Failed to update view count:", error);
+      toast.error("Failed to download resume.");
     }
-    window.open(
-      `${process.env.REACT_APP_API_URL}/resumes/${resumeId}/view/`,
-      "_blank"
-    );
   };
 
   const handleDelete = async (id: number) => {
-    if (window.confirm("Are you sure you want to delete this resume?")) {
-      try {
-        await axiosClient.delete(`/resumes/${id}/`);
-        updater?.(prev => prev.filter(r => r.id !== id));
-      } catch (error) {
-        console.error("Failed to delete resume:", error);
-      }
+    try {
+      await api.delete(`/resumes/${id}/`);
+      toast.success("Resume deleted successfully");
+      refetchResumes?.();
+    } catch (error) {
+      toast.error("Failed to delete resume");
     }
   };
 
   const handleArchive = async (id: number) => {
     try {
-      await axiosClient.put(`/resumes/${id}/`, {
-        resume_status: ResumeStatus.ARCHIVED,
-      });
-      updater?.(prev =>
-        prev.map(r =>
-          r.id === id ? { ...r, resume_status: ResumeStatus.ARCHIVED } : r
-        )
-      );
+      await api.patch(`/resumes/${id}/`, { resume_status: "ARCHIVED" });
+      toast.success("Resume archived");
+      refetchResumes?.();
     } catch (error) {
-      console.error("Failed to archive resume:", error);
-      alert("Error archiving resume. Check console for details.");
+      toast.error("Failed to archive resume");
     }
   };
 
   const handlePublish = async (id: number) => {
     try {
-      await axiosClient.put(`/resumes/${id}/`, {
-        resume_status: ResumeStatus.PUBLISHED,
-      });
-      updater?.(prev =>
-        prev.map(r =>
-          r.id === id ? { ...r, resume_status: ResumeStatus.PUBLISHED } : r
-        )
-      );
+      await api.patch(`/resumes/${id}/`, { resume_status: "PUBLISHED" });
+      toast.success("Resume published");
+      refetchResumes?.();
     } catch (error) {
-      console.error("Failed to publish resume:", error);
-      alert("Error publishing resume. Check console for details.");
+      toast.error("Failed to publish resume");
     }
   };
 
-  const handleDownload = async (resumeId: number, resumeTitle: string) => {
-    try {
-      const response = await axiosClient.get(ENDPOINTS.DOWNLOAD_RESUME(resumeId), {
-        responseType: "blob",
-      });
-      const fileBlob = new Blob([response.data], { type: "application/pdf" });
-      const fileURL = URL.createObjectURL(fileBlob);
-      const link = document.createElement("a");
-      link.href = fileURL;
-      link.setAttribute("download", `${resumeTitle}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(fileURL);
-    } catch (error) {
-      console.error("Failed to download resume:", error);
-      alert("Error downloading resume. Check console for details.");
-    }
-  };
-
-  const handleShare = async (resumeId: number) => {
-    const shareUrl = `${process.env.REACT_APP_API_URL}/resumes/${resumeId}/view/`;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      alert("Link copied to clipboard!");
-    } catch (err) {
-      console.error("Failed to copy link:", err);
-      alert("Error sharing resume.");
-    }
-  };
-
-  const handleFavorite = async (resumeId: number) => {
-    const queryKey = ['public-resumes', sortOption]; // Use sortOption here
-
-    await queryClient.cancelQueries({ queryKey });
-
-    const previousResumes = queryClient.getQueryData<Resume[]>(queryKey);
-
-    // Optimistic update
-    queryClient.setQueryData(queryKey, (old: Resume[] | undefined) =>
-      old?.map(resume => ({
-        ...resume,
-        is_favorited: resume.id === resumeId ? !resume.is_favorited : resume.is_favorited
-      }))
+  const handleShare = (id: number) => {
+    const shareUrl = `${process.env.REACT_APP_API_URL}/resumes/${id}/view/`;
+    navigator.clipboard.writeText(shareUrl).then(
+      () => toast.success("Link copied to clipboard"),
+      () => toast.error("Failed to copy link")
     );
+  };
 
+  const handleFavorite = async (id: number) => {
     try {
-      const { data } = await axiosClient.post<{ resume: Resume }>(
-        `/resumes/${resumeId}/favorite/`
-      );
-
-      // Merge server response with existing cache
-      queryClient.setQueryData(queryKey, (old: Resume[] | undefined) =>
-        old?.map(r => r.id === resumeId ? {
-          ...r,
-          ...data.resume,
-          is_favorited: data.resume.is_favorited
-        } : r)
-      );
-
-      // Force a refresh of the public resumes query AFTER the API call and cache update
-      queryClient.invalidateQueries({ queryKey: ['public-resumes', sortOption] }); // <--- MOVED HERE
-
-    } catch (err) {
-      queryClient.setQueryData(queryKey, previousResumes);
-      throw err;
+      await api.post(`/resumes/${id}/favorite/`);
+      toast.success("Resume favorite status toggled");
+      refetchResumes?.();
+    } catch (error) {
+      toast.error("Failed to toggle favorite");
     }
   };
 
   return {
     handleView,
+    handleDownload,
     handleDelete,
     handleArchive,
     handlePublish,
-    handleDownload,
     handleShare,
     handleFavorite,
   };

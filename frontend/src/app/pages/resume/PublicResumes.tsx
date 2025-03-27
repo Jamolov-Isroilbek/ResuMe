@@ -16,7 +16,7 @@ const PublicResumes: React.FC = () => {
 
   // Destructure the refresh function along with publicResumes, isLoading, and error.
   const { publicResumes, isLoading, error, refresh: refreshResumes } = usePublicResumes(sortOption);
-  const { handleView, handleDownload, handleShare, handleFavorite } = useResumeActions(sortOption);
+  const { handleView, handleDownload, handleShare, handleFavorite } = useResumeActions();
 
   const filteredResumes = publicResumes?.filter((resume: Resume) => {
     const searchLower = searchQuery.toLowerCase();

@@ -2,10 +2,7 @@ import React from "react";
 import { Education } from "@/types/shared/resume";
 import { Button } from "@/lib/ui/buttons/Button";
 import { InputField } from "@/features/resume/components/form/InputField";
-import {
-  parseDateToMonthYear,
-  monthYearToISO,
-} from "@/lib/utils/dateUtils";
+import { parseDateToMonthYear, monthYearToISO } from "@/lib/utils/dateUtils";
 import { DateSelect } from "@/features/resume/components/form/DateSelect";
 
 interface EducationSectionProps {
@@ -91,16 +88,33 @@ export const EducationSection: React.FC<EducationSectionProps> = React.memo(
 
                 <DateSelect
                   label="End Date"
-                  month={startDate.month}
-                  year={startDate.year}
+                  month={endDate.month}
+                  year={endDate.year}
                   onMonthChange={(m) =>
                     handleDateChange(index, "end_date", m, endDate.year)
                   }
                   onYearChange={(y) =>
                     handleDateChange(index, "end_date", endDate.month, y)
                   }
+                  disabled={!edu.end_date}
                 />
               </div>
+
+              <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={!edu.end_date}
+                    onChange={(e) => {
+                      onChange(
+                        index,
+                        "end_date",
+                        e.target.checked ? undefined : new Date().toISOString()
+                      );
+                    }}
+                    className="h-4 w-4"
+                  />
+                  <label className="text-sm">Currently Studying</label>
+                </div>
 
               {education.length > 1 && (
                 <Button
