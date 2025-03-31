@@ -1,154 +1,119 @@
 // src/features/resume/components/ai-suggestions/AISuggestions.tsx
-import React, { useState } from "react";
-import { Button } from "@/lib/ui/buttons/Button";
-import { Loader } from "@/lib/ui/common/Loader";
-import axiosClient from "@/lib/api/axiosClient";
+import React, { useEffect, useState } from "react";
+import axios from "@/lib/api/axiosClient";
+import { ResumeFormData } from "@/types/shared/resume";
 
-interface AISuggestionsResult {
-  summary_feedback?: string;
-  summary_modified?: string;
-  work_experience_feedback?: string;
-  work_experience_modified?: string;
-  education_feedback?: string;
-  education_modified?: string;
-  skills_feedback?: string;
-  skills_modified?: string;
-  awards_feedback?: string;
-  awards_modified?: string;
+interface SuggestionItem {
+  section: string;
+  original: any;
+  ai_feedback: string;
 }
 
 interface AISuggestionsProps {
-  resumeData: any; // You can replace 'any' with your specific ResumeFormData type
-  jobDescription: string;
-  className?: string;
+  resumeData: ResumeFormData;
+  jobDescription?: string;
 }
 
-export const AISuggestions: React.FC<AISuggestionsProps> = ({
-  resumeData,
-  jobDescription,
-}) => {
-  const resetSuggestions = () => {
-    setSuggestions(null);
-    setError("");
-  };
-  const [suggestions, setSuggestions] = useState<AISuggestionsResult | null>(
-    null
-  );
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  
+export const AISuggestions: React.FC<AISuggestionsProps> = ({ resumeData, jobDescription }) => {
+  const [suggestions, setSuggestions] = useState<SuggestionItem[] | Record<string, any>>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [expandedIndices, setExpandedIndices] = useState<Record<number, boolean>>({});
 
-  React.useEffect(() => {
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      try {
+        const response = await axios.post("/nlp/ai-suggestions/", {
+          resume: resumeData,
+          job_description: jobDescription || "",
+        });
+
+        setSuggestions(response.data);
+      } catch (err: any) {
+        console.error("❌ Failed to fetch suggestions", err);
+        setError("Failed to fetch AI suggestions.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchSuggestions();
-  }, []);
+  }, [resumeData, jobDescription]);
 
-
-  const fetchSuggestions = async () => {
-    setLoading(true);
-    setError("");
-    setSuggestions(null);
-    try {
-      // Send the full resume data along with the optional job description
-      const response = await axiosClient.post("/nlp/ai-suggestions/", {
-        ...resumeData,
-        job_description: jobDescription || undefined,
-      });
-      setSuggestions(response.data);
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Failed to fetch suggestions");
-    } finally {
-      setLoading(false);
-    }
+  const toggleExpand = (index: number) => {
+    setExpandedIndices((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
-  
+  if (loading) return <p className="text-blue-500">⏳ Generating suggestions...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="mt-4 border p-4 rounded-lg bg-gray-50">
-      {loading && <Loader />}
-      {error && <p className="text-red-500">{error}</p>}
-      {!loading && !error && suggestions && (
-        <div className="space-y-6">
-          {suggestions.summary_feedback && (
-            <div>
-              <h3 className="font-bold text-lg">Summary Feedback</h3>
-              <p>{suggestions.summary_feedback}</p>
-              {suggestions.summary_modified && (
-                <>
-                  <h4 className="font-semibold">Modified Summary</h4>
-                  <p>{suggestions.summary_modified}</p>
-                </>
-              )}
-            </div>
-          )}
-          {suggestions.work_experience_feedback && (
-            <div>
-              <h3 className="font-bold text-lg">Work Experience Feedback</h3>
-              <p>{suggestions.work_experience_feedback}</p>
-              {suggestions.work_experience_modified && (
-                <>
-                  <h4 className="font-semibold">Modified Work Experience</h4>
-                  <p>{suggestions.work_experience_modified}</p>
-                </>
-              )}
-            </div>
-          )}
-          {suggestions.education_feedback && (
-            <div>
-              <h3 className="font-bold text-lg">Education Feedback</h3>
-              <p>{suggestions.education_feedback}</p>
-              {suggestions.education_modified && (
-                <>
-                  <h4 className="font-semibold">Modified Education</h4>
-                  <p>{suggestions.education_modified}</p>
-                </>
-              )}
-            </div>
-          )}
-          {suggestions.skills_feedback && (
-            <div>
-              <h3 className="font-bold text-lg">Skills Feedback</h3>
-              <p>{suggestions.skills_feedback}</p>
-              {suggestions.skills_modified && (
-                <>
-                  <h4 className="font-semibold">Modified Skills</h4>
-                  <p>{suggestions.skills_modified}</p>
-                </>
-              )}
-            </div>
-          )}
-          {suggestions.awards_feedback && (
-            <div>
-              <h3 className="font-bold text-lg">Awards Feedback</h3>
-              <p>{suggestions.awards_feedback}</p>
-              {suggestions.awards_modified && (
-                <>
-                  <div>
-                    <h4 className="font-semibold">Modified Awards</h4>
-                    <p>{suggestions.awards_modified}</p>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-      <>
-        {!loading && !error && !suggestions && (
-          <Button variant="primary" onClick={fetchSuggestions}>
-            Get AI Suggestions
-          </Button>
-        )}
-        {suggestions && (
-          <Button
-            variant="secondary"
-            onClick={resetSuggestions}
-            className="mt-4"
+    <div className="space-y-4 mt-4">
+      {Array.isArray(suggestions) ? (
+        suggestions.map((item, idx) => (
+          <div
+            key={idx}
+            className="bg-white border-l-4 border-blue-500 p-4 rounded shadow-sm"
           >
-            New Suggestions
-          </Button>
-        )}
-      </>
+            <div
+              className="flex justify-between items-center cursor-pointer mb-2"
+              onClick={() => toggleExpand(idx)}
+            >
+              <h3 className="font-semibold text-blue-600 capitalize">
+                {item.section.replace(/_/g, " ")}
+              </h3>
+              <span className="text-gray-400 text-sm">
+                {expandedIndices[idx] ? "⬆" : "⬇"}
+              </span>
+            </div>
+
+            {expandedIndices[idx] && (
+              <div className="text-sm text-gray-800 space-y-2">
+                {item.original && (
+                  <div>
+                    <strong className="text-gray-700">📝 Original:</strong>
+                    <pre className="bg-gray-50 p-2 rounded text-xs whitespace-pre-wrap">
+                      {JSON.stringify(item.original, null, 2)}
+                    </pre>
+                  </div>
+                )}
+
+                {item.ai_feedback && (
+                  <div>
+                    <strong className="text-gray-700">💡 Feedback & Suggestion:</strong>
+                    <div className="bg-blue-50 p-2 rounded whitespace-pre-wrap">
+                      {item.ai_feedback.replace(/\n/g, "\n• ")}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))
+      ) : (
+        Object.entries(suggestions).map(([key, value], index) => (
+          <div
+            key={index}
+            className="bg-white p-4 shadow rounded border-l-4 border-blue-500"
+          >
+            <div className="flex justify-between items-center cursor-pointer mb-2" onClick={() => toggleExpand(index)}>
+              <h3 className="text-lg font-bold capitalize">
+                {key.replace(/_/g, " ")}
+              </h3>
+              <span className="text-gray-400 text-sm">
+                {expandedIndices[index] ? "⬆" : "⬇"}
+              </span>
+            </div>
+            {expandedIndices[index] && (
+              <p className="text-gray-700 whitespace-pre-line">
+                {typeof value === "string"
+                  ? value
+                  : JSON.stringify(value, null, 2)}
+              </p>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 };

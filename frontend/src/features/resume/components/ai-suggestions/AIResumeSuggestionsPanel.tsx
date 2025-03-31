@@ -26,6 +26,10 @@ const isResumeComplete = (resume: ResumeFormData): boolean => {
   return true;
 };
 
+
+
+
+
 export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> = ({ resumeData }) => {
   const [jobDescription, setJobDescription] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -33,11 +37,18 @@ export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> =
   const [isOpen, setIsOpen] = useState(false);
 
   const complete = isResumeComplete(resumeData);
+  console.log("🧠 Resume Complete?", complete);
+  console.log("🧾 Resume Data:", resumeData);
 
   const handleGetSuggestions = () => {
     setShowSuggestions(true);
     setSuggestionKey(prev => prev + 1);
   };
+
+  console.log("\uD83D\uDDFA Panel mounted.");
+  console.log("\uD83D\uDDFA Panel Debug: resumeData", resumeData);
+  console.log("\uD83D\uDDFA Panel Debug: jobDescription", jobDescription);
+  console.log("\u2705 Final render conditions:", { showSuggestions, complete });
 
   return (
     <div className={`ai-panel-container ${isOpen ? 'open' : ''}`}>
@@ -47,15 +58,16 @@ export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> =
       >
         {isOpen ? '◀' : '▶'}
       </div>
-      
+
       <div className="ai-panel-content">
         <h2 className="text-xl font-bold mb-4">AI Resume Suggestions</h2>
+
         {!complete && (
           <p className="text-red-500">
             Complete required fields to enable AI suggestions
           </p>
         )}
-        
+
         {complete && (
           <>
             <div className="mb-4">
@@ -69,13 +81,13 @@ export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> =
                 rows={4}
               />
             </div>
-            
+
             <Button variant="primary" onClick={handleGetSuggestions}>
               Generate Suggestions
             </Button>
           </>
         )}
-        
+
         {showSuggestions && complete && (
           <AISuggestions
             key={suggestionKey}
