@@ -54,12 +54,12 @@ export const ActionMenu = ({
       </Button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-48 bg-white shadow-lg border rounded-md z-10">
+        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 shadow-lg border border-gray-200 dark:border-gray-700 rounded-md z-10">
           <button
             onClick={actions.onView}
             className={cn(
               "w-full px-4 py-2 text-left hover:bg-gray-100",
-              "text-gray-700"
+              "text-gray-700 dark:text-gray-200"
             )}
           >
             View

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/providers/AuthProvider";
 import { Button } from "@/lib/ui/buttons/Button";
+import { ThemeToggle } from "@/context/ThemeToggle";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -11,13 +12,12 @@ const Navbar = () => {
 
   return (
     <nav className="bg-gray-900 text-white p-4 flex justify-between items-center">
-        <img
-          src="/logo.png"
-          alt="Logo"
-          className="w-16 cursor-pointer"
-          onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
-        />
-
+      <img
+        src="/logo.png"
+        alt="Logo"
+        className="w-16 cursor-pointer"
+        onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
+      />
 
       {/* Mobile Menu Toggle */}
       <div className="md:hidden">
@@ -33,6 +33,11 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isMenuOpen && (
         <div className="md:hidden absolute top-16 left-0 w-full bg-gray-900 p-4 z-50">
+          <div className="flex justify-between items-center mb-4">
+            <span className="text-sm text-gray-300">Dark Mode</span>
+            <ThemeToggle />
+          </div>
+
           <div className="flex flex-col space-y-4">
             <Link
               to="/"
@@ -99,17 +104,26 @@ const Navbar = () => {
       )}
 
       {/* Desktop Menu (existing code) */}
-      <div className="hidden md:flex space-x-4">
-        <Link to="/public-resumes" className="hover:text-gray-300 flex items-center">
+      <div className="hidden md:flex space-x-4 items-center">
+        <Link
+          to="/public-resumes"
+          className="hover:text-gray-300 flex items-center"
+        >
           Public Resumes
         </Link>
 
         {isAuthenticated ? (
           <>
-            <Link to="/my-resumes" className="hover:text-gray-300 flex items-center">
+            <Link
+              to="/my-resumes"
+              className="hover:text-gray-300 flex items-center"
+            >
               My Resumes
             </Link>
-            <Link to="/profile" className="hover:text-gray-300 flex items-center">
+            <Link
+              to="/profile"
+              className="hover:text-gray-300 flex items-center"
+            >
               Profile
             </Link>
             <Button
@@ -132,6 +146,7 @@ const Navbar = () => {
             </Button>
           </>
         )}
+        <ThemeToggle />
       </div>
     </nav>
   );

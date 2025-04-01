@@ -1,0 +1,25 @@
+.resume-container {
+  display: flex;
+  font-family: 'Arial', sans-serif;
+}
+.left-column {
+  width: 65%;
+  padding: 20px;
+  background: #f9f9f9;
+}
+.right-column {
+  width: 35%;
+  padding: 20px;
+  background: #eee;
+}
+.section {
+  margin-bottom: 20px;
+}
+.section h2 {
+  border-bottom: 1px solid #333;
+  margin-bottom: 10px;
+}
+.item h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}

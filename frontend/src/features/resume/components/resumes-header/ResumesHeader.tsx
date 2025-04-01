@@ -16,7 +16,7 @@ export const ResumesHeader: React.FC<ResumesHeaderProps> = ({
 
   return (
     <div className="mb-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <h2 className="text-3xl font-bold text-center mb-6">My Resumes</h2>
+      <h2 className="text-3xl font-bold text-center mb-6 text-black dark:text-white">My Resumes</h2>
       <div className="flex items-center gap-4 w-full sm:w-auto">
         <SortingDropdown
           sortOption={sortOption}

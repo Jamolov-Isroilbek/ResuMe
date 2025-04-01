@@ -19,8 +19,10 @@ export const ResumeTabs: React.FC<ResumeTabsProps> = ({ activeTab, setActiveTab 
         <button
           key={status}
           className={`py-2 px-4 ${
-            activeTab === status ? "border-b-2 border-blue-500 font-bold" : ""
-          }`}
+            activeTab === status
+              ? "border-b-2 border-blue-500 font-bold text-black dark:text-white"
+              : "text-gray-600 dark:text-gray-400"
+          }`}          
           onClick={() => setActiveTab(status)}
         >
           {status.charAt(0) + status.slice(1).toLowerCase()}

@@ -57,7 +57,7 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
 
   return (
     <div
-      className={`bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer flex flex-col w-full`}
+      className={`bg-white dark:bg-zinc-800 p-4 rounded-lg shadow-md hover:shadow-lg transition cursor-pointer flex flex-col w-full`}
       onClick={(e: React.MouseEvent<HTMLDivElement>) => {
         if (
           !(e.target as HTMLElement).closest(".action-menu, .stats-section")
@@ -68,7 +68,9 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
     >
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h3 className="text-xl font-semibold">{resume.title}</h3>
+          <h3 className="text-xl font-semibold text-black dark:text-white">
+            {resume.title}
+          </h3>
           <div className="flex gap-2 mt-2 items-center">
             {displayMode !== "public" && (
               <span
@@ -82,7 +84,7 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
             )}
             {displayMode === "public" && (
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">
+                <span className="text-sm text-gray-600 dark:text-gray-300">
                   By {resume.user?.username ?? "Anonymous"}
                 </span>
                 {resume.is_favorited && (
@@ -147,29 +149,29 @@ export const ResumeCard: React.FC<ResumeCardProps> = ({
         )}
       </div>
       {showStats && (
-        <div className="stats-section mt-4 border-t pt-4 flex flex-row gap-6 w-full">
+        <div className="stats-section mt-4 border-t pt-4 flex flex-row gap-6 w-full border-gray-200 dark:border-zinc-700">
           <div className="flex items-center gap-2">
-            <EyeIcon className="h-5 w-5 text-blue-600" />
+            <EyeIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {resume.views_count || 0}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <ArrowDownTrayIcon className="h-5 w-5 text-blue-600" />
+            <ArrowDownTrayIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {resume.downloads_count || 0}
               </span>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <HeartIcon className="h-5 w-5 text-blue-600" />
+            <HeartIcon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             <div className="flex flex-col">
-              <span className="text-sm font-semibold text-gray-900">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
                 {resume.favorite_count || 0}
               </span>
             </div>

@@ -4,6 +4,7 @@ import { useAsync } from "@/lib/hooks/useAsync";
 import { Loader, CustomErrorBoundary } from "@/lib/ui/common";
 import { FormSection } from "@/features/resume/components/form";
 import { AIResumeSuggestionsPanel } from "@/features/resume/components/ai-suggestions/AIResumeSuggestionsPanel";
+import { TemplateSelector } from "@/features/resume/components/templates/TemplateSelector";
 import {
   ResumeMetadataForm,
   PersonalDetailsForm,
@@ -47,6 +48,7 @@ const initialFormData: ResumeFormData = {
   work_experience: [],
   skills: [],
   awards: [],
+  template: "classic", // default template
 };
 
 const transformResumeData = (apiData: Resume): ResumeFormData => ({
@@ -54,6 +56,7 @@ const transformResumeData = (apiData: Resume): ResumeFormData => ({
   resume_status: apiData.resume_status,
   privacy_setting: apiData.privacy_setting,
   personal_details: { ...apiData.personal_details },
+  template: apiData.template ?? "template_classic",
   education: apiData.education.map((edu) => ({
     institution: edu.institution,
     major: edu.major || "",
@@ -156,7 +159,7 @@ const CreateEditResume: React.FC = () => {
   return (
     <div className="resume-builder-container">
       <div className="main-content">
-        <div className="relative max-w-7xl mx-auto p-6">
+        <div className="relative max-w-7xl mx-auto p-6 rounded-lg bg-white dark:bg-zinc-900 text-gray-900 dark:text-white shadow-md dark:shadow-lg transition-colors duration-300">
           <h1 className="text-3xl font-bold mb-6">
             {isEditing ? "Edit Resume" : "Create New Resume"}
           </h1>
@@ -166,6 +169,15 @@ const CreateEditResume: React.FC = () => {
                 <ResumeMetadataForm
                   formData={formData}
                   setFormData={setFormData}
+                />
+              </FormSection>
+
+              <FormSection title="Choose Resume Template">
+                <TemplateSelector
+                  selectedTemplate={formData.template}
+                  onChange={(template) =>
+                    setFormData((prev) => ({ ...prev, template }))
+                  }
                 />
               </FormSection>
 

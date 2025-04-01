@@ -12,12 +12,13 @@ export const ResumeMetadataForm = ({
     <InputField
       label="Resume Title"
       value={formData.title}
-      onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))
+      onChange={(e) =>
+        setFormData((prev) => ({ ...prev, title: e.target.value }))
       }
       required
     />
     <div>
-      <label className="block text-sm font-medium text-gray-700">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
         Privacy Setting
       </label>
       <div className="mt-1 flex items-center gap-4">
@@ -28,14 +29,14 @@ export const ResumeMetadataForm = ({
               name="privacy_setting"
               value={setting}
               checked={formData.privacy_setting === setting}
-              onChange={(e) => 
-                setFormData(prev => ({
+              onChange={(e) =>
+                setFormData((prev) => ({
                   ...prev,
                   privacy_setting: e.target.value as PrivacySettings,
                 }))
               }
             />
-            <span className="ml-2">{setting}</span>
+            <span className="ml-2 text-gray-800 dark:text-gray-200">{setting}</span>
           </FormCard>
         ))}
       </div>

@@ -18,6 +18,7 @@ class Resume(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     resume_status = models.CharField(max_length=20, choices=ResumeStatus.choices, default=ResumeStatus.DRAFT)
     privacy_setting = models.CharField(max_length=10, choices=PrivacySettings.choices, default=PrivacySettings.PRIVATE)
+    template = models.CharField(max_length=50, default="template_classic")  
 
     class Meta:
         ordering = ['-created_at']
@@ -41,6 +42,7 @@ class Education(models.Model):
     major = models.CharField(max_length=255, blank=True, null=True)
     start_date = models.DateField()
     end_date = models.DateField(null=True, blank=True)
+    currently_studying = models.BooleanField(default=False)
     cgpa = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
 
 class WorkExperience(models.Model):

@@ -32,7 +32,7 @@ export const ResumeActions = ({
         {isFavorited ? (
           <HeartSolidIcon className="w-5 h-5 text-red-500" />
         ) : (
-          <HeartIcon className="w-5 h-5 text-gray-600" />
+          <HeartIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
         )}
       </Button>
     )}

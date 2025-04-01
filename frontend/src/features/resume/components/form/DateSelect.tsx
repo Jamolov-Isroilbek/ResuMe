@@ -19,12 +19,12 @@ export const DateSelect = ({
   onYearChange,
 }: DateSelectProps) => (
   <div className="space-y-1">
-    <label className="text-sm font-medium">{label}</label>
+    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">{label}</label>
     <div className="flex gap-2">
       <select
         value={month}
         onChange={(e) => onMonthChange(e.target.value)}
-        className="w-full p-2 border rounded-md"
+        className="w-full p-2 border rounded-md bg-white dark:bg-zinc-700 text-black dark:text-white"
         disabled={disabled}
       >
         <option value="">Month</option>
@@ -35,7 +35,7 @@ export const DateSelect = ({
       <select
         value={year}
         onChange={(e) => onYearChange(e.target.value)}
-        className="w-full p-2 border rounded-md"
+        className="w-full p-2 border rounded-md bg-white dark:bg-zinc-700 text-black dark:text-white"
         disabled={disabled}
       >
         <option value="">Year</option>

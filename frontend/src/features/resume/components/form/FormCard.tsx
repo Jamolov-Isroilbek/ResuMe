@@ -12,9 +12,14 @@ interface FormCardProps {
 export const FormCard: React.FC<FormCardProps> = ({
   children,
   onRemove,
-  className = ""
+  className = "",
 }) => (
-  <div className={cn("relative border p-4 rounded-lg mb-4", className)}>
+  <div
+    className={cn(
+      "relative border p-4 rounded-lg mb-4 bg-white dark:bg-zinc-800 text-black dark:text-white transition-colors",
+      className
+    )}
+  >
     {children}
     {onRemove && (
       <Button

@@ -12,8 +12,11 @@ interface PublicResumesTabsProps {
         <button
           key={tab}
           className={`py-2 px-4 ${
-            activeTab === tab ? "border-b-2 border-blue-500 font-bold" : ""
+            activeTab === tab
+              ? "border-b-2 border-blue-500 font-bold text-black dark:text-white"
+              : "text-gray-600 dark:text-gray-400"
           }`}
+          
           onClick={() => setActiveTab(tab)}
         >
           {tab.charAt(0).toUpperCase() + tab.slice(1)}

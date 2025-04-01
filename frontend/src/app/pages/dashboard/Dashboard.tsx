@@ -25,8 +25,9 @@ const Dashboard: React.FC = () => {
   const fetchResumes = async (page: number) => {
     setLoading(true);
     try {
-      // Adjust the endpoint as needed; assuming pagination params: page and page_size
-      const response = await api.get<ResumeResponse>(`/resumes/?page=${page}&page_size=10`);
+      const response = await api.get<ResumeResponse>(
+        `/resumes/?page=${page}&page_size=10`
+      );
       setResumes(response.data.results);
       setTotalCount(response.data.count);
     } catch (error) {
@@ -42,13 +43,11 @@ const Dashboard: React.FC = () => {
   }, [currentPage]);
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 transition-colors duration-300 text-gray-900 dark:text-gray-100">
       {/* Hero Section */}
-      <div className="text-center mt-12">
-        <h1 className="text-4xl font-bold text-primary">
-          Your Resumes in One Place
-        </h1>
-        <p className="text-lg text-textDark mt-2">
+      <div className="text-center mt-12 px-4">
+        <h1 className="text-4xl font-bold">Your Resumes in One Place</h1>
+        <p className="text-lg text-gray-700 dark:text-gray-300 mt-2">
           Create, edit, and manage your professional resumes effortlessly.
         </p>
         <Button
@@ -61,7 +60,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Features Overview */}
-      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="mt-12 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
           {
             title: "AI-Powered Suggestions",
@@ -76,43 +75,49 @@ const Dashboard: React.FC = () => {
             content: "Download in professional format.",
           },
         ].map((feature, index) => (
-          <div key={index} className="p-6 bg-white shadow-md rounded-lg">
-            <h3 className="text-xl font-bold text-primary">{feature.title}</h3>
-            <p className="text-textDark mt-2">{feature.content}</p>
+          <div
+            key={index}
+            className="p-6 bg-white dark:bg-zinc-800 shadow-md rounded-lg transition-colors duration-300"
+          >
+            <h3 className="text-xl font-bold">{feature.title}</h3>
+            <p className="text-gray-600 dark:text-gray-300 mt-2">
+              {feature.content}
+            </p>
           </div>
         ))}
       </div>
 
-      <div className="min-h-screen bg-background p-6">
-      <h1 className="text-3xl font-bold mb-6">Recent Resumes</h1>
-      <div className="space-y-4">
-        {resumes.map((resume) => (
-          <ResumeCard
-            key={resume.id}
-            resume={resume}
-            onView={() => navigate(`/resumes/${resume.id}/view`)}
-            onEdit={() => navigate(`/resumes/${resume.id}/edit`)}
-            onDelete={() => handleDelete(resume.id)}
-            onDownload={() => handleDownload(resume.id, resume.title)}
-            displayMode="dashboard"
-          />
-        ))}
+      {/* Resume List */}
+      <div className="mt-16 px-4">
+        <h2 className="text-3xl font-bold mb-6">Recent Resumes</h2>
+        <div className="space-y-4">
+          {resumes.map((resume) => (
+            <ResumeCard
+              key={resume.id}
+              resume={resume}
+              onView={() => navigate(`/resumes/${resume.id}/view`)}
+              onEdit={() => navigate(`/resumes/${resume.id}/edit`)}
+              onDelete={() => handleDelete(resume.id)}
+              onDownload={() => handleDownload(resume.id, resume.title)}
+              displayMode="dashboard"
+            />
+          ))}
+        </div>
+        {totalCount > 10 && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalItems={totalCount}
+              pageSize={10}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        )}
       </div>
-      {totalCount > 10 && (
-        <Pagination
-          currentPage={currentPage}
-          totalItems={totalCount}
-          pageSize={10}
-          onPageChange={(page) => setCurrentPage(page)}
-        />
-      )}
-    </div>
 
       {/* Footer */}
-      <footer className="mt-12 p-4 bg-gray-100 rounded-lg">
-        <p className="text-textDark">
-          &copy; 2025 ResuMe. All Rights Reserved.
-        </p>
+      <footer className="mt-16 p-6 bg-gray-100 dark:bg-zinc-800 text-center text-sm text-gray-600 dark:text-gray-400 rounded-lg">
+        &copy; 2025 ResuMe. All Rights Reserved.
       </footer>
     </div>
   );

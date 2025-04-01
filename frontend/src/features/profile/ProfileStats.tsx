@@ -40,12 +40,12 @@ export const ProfileStats = () => {
 
 
 const StatCard = ({ icon: Icon, label, value }: StatCardProps) => (
-  <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+  <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-sm border border-gray-200 dark:border-zinc-700">
     <div className="flex items-center gap-4">
       <Icon className="h-8 w-8 text-blue-600" />
       <div>
-        <p className="text-sm font-medium text-gray-600">{label}</p>
-        <p className="text-3xl font-semibold text-gray-900">{value}</p>
+        <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</p>
+        <p className="text-3xl font-semibold text-gray-900 dark:text-white">{value}</p>
       </div>
     </div>
   </div>

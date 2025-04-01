@@ -1,4 +1,5 @@
 import os
+import openai
 from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
@@ -10,6 +11,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECRET_KEY = 'django-insecure-u^j+s*2dx)n*^77xptn03-h*^k-&rzfa=sza&ee_fc5jm#p9a3'
 SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key')
+
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -95,6 +98,23 @@ CORS_ALLOW_HEADERS = [
 ]
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None 
 

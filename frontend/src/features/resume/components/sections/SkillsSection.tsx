@@ -40,8 +40,8 @@ export const SkillsSection: React.FC<SkillsSectionProps> = React.memo(
                 onChange={(e) =>
                   onChange(index, "skill_type", e.target.value as SkillType)
                 }
-                className="p-2 border rounded-md"
-              >
+                className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white dark:border-zinc-600"
+                >
                 {Object.values(SkillType).map((type) => (
                   <option key={type} value={type}>
                     {skillTypeLabels[type]}

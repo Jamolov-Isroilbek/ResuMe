@@ -31,7 +31,7 @@ const PublicResumes: React.FC = () => {
   }) || [];
 
   return (
-    <div className="min-h-screen p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen p-6 max-w-7xl mx-auto bg-white dark:bg-zinc-900 text-black dark:text-white transition-colors duration-300">
       <h2 className="text-3xl font-bold text-center mb-6">Public Resumes</h2>
 
       <PublicResumesHeader
@@ -57,7 +57,7 @@ const PublicResumes: React.FC = () => {
           refreshResumes={refreshResumes}
         />
       ) : (
-        <p className="text-center text-gray-500 mt-8">
+        <p className="text-center text-gray-500 dark:text-gray-400 mt-8">
           No public resumes found matching your search.
         </p>
       )}

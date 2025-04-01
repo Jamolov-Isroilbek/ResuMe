@@ -10,7 +10,7 @@ const Home: React.FC = () => {
   if (loading) return null;
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <div className="min-h-screen bg-white dark:bg-zinc-900 text-black dark:text-white flex flex-col items-center justify-center p-6 transition-colors duration-300">
       <div className="mb-6">
         <img src="/logo.png" alt="ResuMe Logo" className="w-24 h-24 mx-auto" />
       </div>
@@ -18,7 +18,7 @@ const Home: React.FC = () => {
       <h1 className="text-4xl font-bold text-primary mb-4 text-center">
         Build Your Resume in Minutes
       </h1>
-      <p className="text-lg text-textDark mb-6 text-center">
+      <p className="text-lg text-textDark dark:text-gray-300 mb-6 text-center">
         Create a professional resume with AI-powered suggestions.
       </p>
 

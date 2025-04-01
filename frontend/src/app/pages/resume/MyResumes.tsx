@@ -45,7 +45,7 @@ const MyResumes: React.FC = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen p-6 max-w-7xl mx-auto">
+    <div className="min-h-screen p-6 max-w-7xl mx-auto bg-white dark:bg-zinc-900 text-black dark:text-white transition-colors duration-300">
       <ResumesHeader 
         sortOption={sortOption} 
         setSortOption={setSortOption} 
@@ -65,7 +65,7 @@ const MyResumes: React.FC = () => {
           />
         </div>
       ) : (
-        <p className="text-center text-gray-500 mt-8">
+        <p className="text-center text-gray-500 dark:text-gray-400 mt-8">
           No resumes found in this category.
         </p>
       )}

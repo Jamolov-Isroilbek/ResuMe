@@ -12,6 +12,7 @@ export const useResumeSubmission = (id?: string) => {
       title: data.title,
       resume_status: data.resume_status,
       privacy_setting: data.privacy_setting,
+      template: data.template,
       personal_details: {
         first_name: data.personal_details.first_name,
         last_name: data.personal_details.last_name,

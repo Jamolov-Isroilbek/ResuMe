@@ -2,7 +2,7 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
-from rest_framework import generics, permissions, status, filters
+from rest_framework import generics, permissions, status, filters, serializers
 from rest_framework.response import Response
 from weasyprint import HTML
 
@@ -58,7 +58,7 @@ class ResumeHTMLView(generics.GenericAPIView):
         if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
             return Response({"error": "Not authorized"}, status=status.HTTP_403_FORBIDDEN)
         
-        return render(request, "resumes/resume_template.html", {"resume": resume})
+        return render(request, f"resumes/{resume.template}.html", {"resume": resume})
 
 class ResumeListCreateView(generics.ListCreateAPIView):
     """
@@ -71,41 +71,28 @@ class ResumeListCreateView(generics.ListCreateAPIView):
     ordering_fields = ['created_at', 'updated_at', 'title', 'user__username']
     ordering = ['-created_at']
 
+    def create(self, request, *args, **kwargs):
+        print("Incoming data:", request.data)  # Add this line
+        return super().create(request, *args, **kwargs)
+
     def get_queryset(self):
         return Resume.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        user = self.request.user
-        resume = serializer.save(user=user)
-
-        personal_details_data = self.request.data.get('personal_details', {})
-        PersonalDetails.objects.create(resume=resume, **personal_details_data)
-
-        Education.objects.bulk_create([
-            Education(resume=resume, **edu) 
-            for edu in self.request.data.get('education', [])
-        ])
-
-        WorkExperience.objects.bulk_create([
-            WorkExperience(resume=resume, **work_exp)
-            for work_exp in self.request.data.get('work_experience', [])
-        ])
-
-        Skill.objects.bulk_create([
-            Skill(resume=resume, **skill)
-            for skill in self.request.data.get('skills', [])
-        ])
-
-        Award.objects.bulk_create([
-            Award(resume=resume, **award)
-            for award in self.request.data.get('awards', [])
-        ])
-
-        print("✅ All Sections Saved for Resume ID:", resume.id)
-  
-    
+        serializer.save(user=self.request.user)
+        
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
+
+    def handle_exception(self, exc):
+        if isinstance(exc, serializers.ValidationError):
+            print("Validation errors:", exc.detail)
+        return super().handle_exception(exc)
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
 
 class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
     """
@@ -140,36 +127,15 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
         data = request.data.copy() 
 
         serializer = self.get_serializer(instance, data=data, partial=True)
-        serializer.is_valid(raise_exception=True)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except serializers.ValidationError as exc:
+            print("❌ Resume Update Validation Error:", exc.detail)
+            raise
+
         serializer.save()
 
-        if "personal_details" in data:
-            personal_details, _ = PersonalDetails.objects.get_or_create(resume=instance)
-            personal_details_serializer = PersonalDetailsSerializer(personal_details, data=data["personal_details"], partial=True)
-            personal_details_serializer.is_valid(raise_exception=True)
-            personal_details_serializer.save()
-
-        if "education" in data:
-            Education.objects.filter(resume=instance).delete()
-            education_objects = [Education(resume=instance, **edu) for edu in data["education"]]
-            Education.objects.bulk_create(education_objects)
-
-        if "work_experience" in data:
-            WorkExperience.objects.filter(resume=instance).delete()
-            work_experience_objects = [WorkExperience(resume=instance, **work) for work in data["work_experience"]]
-            WorkExperience.objects.bulk_create(work_experience_objects)
-
-        if "skills" in data:
-            Skill.objects.filter(resume=instance).delete()
-            skill_objects = [Skill(resume=instance, **skill) for skill in data["skills"]]
-            Skill.objects.bulk_create(skill_objects)
-
-        if "awards" in data:
-            Award.objects.filter(resume=instance).delete()
-            award_objects = [Award(resume=instance, **award) for award in data["awards"]]
-            Award.objects.bulk_create(award_objects)
-
-        return Response(ResumeSerializer(instance).data)
+        return Response(ResumeSerializer(instance, context={"request": request}).data)
 
     def destroy(self, request, *args, **kwargs):
         """
@@ -228,8 +194,8 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
             return Response({"error": "Not authorized"}, status=403)
 
-        html_string = render_to_string("resumes/resume_template.html", {"resume": resume})
-        pdf_file = HTML(string=html_string).write_pdf()
+        template_name = render_to_string(f"resumes/{resume.template}.html", {"resume": resume})
+        pdf_file = HTML(string=template_name).write_pdf()
 
 
         if not pdf_file:

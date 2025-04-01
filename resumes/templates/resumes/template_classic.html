@@ -1,0 +1,52 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ resume.title }}</title>
+    <link rel="stylesheet" href="{% static 'resumes/css/template_classic.css' %}">
+</head>
+<body>
+    <header class="resume-header">
+        <h1>{{ resume.personal_details.first_name }} {{ resume.personal_details.last_name }}</h1>
+        <div class="contact-info">
+            <a href="mailto:{{ resume.personal_details.email }}">{{ resume.personal_details.email }}</a> |
+            {{ resume.personal_details.phone }} |
+            <a href="{{ resume.personal_details.github }}">{{ resume.personal_details.github }}</a> |
+            <a href="{{ resume.personal_details.linkedin }}">{{ resume.personal_details.linkedin }}</a>
+        </div>
+    </header>
+
+    <main>
+        <section>
+            <h2>Education</h2>
+            {% for edu in resume.education.all %}
+                <p><strong>{{ edu.institution }}</strong> ({{ edu.start_date|date:"Y" }} - {% if edu.end_date %}{{ edu.end_date|date:"Y" }}{% else %}Present{% endif %})</p>
+                <p>{{ edu.major }}{% if edu.cgpa %} - CGPA: {{ edu.cgpa }}{% endif %}</p>
+            {% endfor %}
+        </section>
+
+        <section>
+            <h2>Experience</h2>
+            {% for work in resume.work_experience.all %}
+                <p><strong>{{ work.employer }}</strong> - {{ work.role }} ({{ work.start_date|date:"Y" }} - {% if work.end_date %}{{ work.end_date|date:"Y" }}{% else %}Present{% endif %})</p>
+                <p>{{ work.description }}</p>
+            {% endfor %}
+        </section>
+
+        <section>
+            <h2>Skills</h2>
+            {% for skill in resume.skills.all %}
+                <span>{{ skill.skill_name }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+        </section>
+
+        <section>
+            <h2>Awards</h2>
+            {% for award in resume.awards.all %}
+                <p><strong>{{ award.name }}</strong> ({{ award.year }}) - {{ award.description }}</p>
+            {% endfor %}
+        </section>
+    </main>
+</body>
+</html>

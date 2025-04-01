@@ -21,6 +21,6 @@ export const privacyColors = {
 
 export const getPrivacyColor = (privacy: PrivacySettings) => {
   return privacy === PrivacySettings.PRIVATE
-    ? "bg-red-100 text-red-800"
-    : "bg-green-100 text-green-800";
+    ? "bg-red-100 text-red-800 dark:bg-red-800/20 dark:text-red-300"
+    : "bg-green-100 text-green-800 dark:bg-green-800/20 dark:text-green-300";
 };

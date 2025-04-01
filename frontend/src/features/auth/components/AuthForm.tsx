@@ -53,8 +53,8 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="bg-white shadow-md rounded-lg p-6 w-96">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white dark:bg-zinc-900 text-black dark:text-white transition-colors duration-300">
+      <div className="bg-white dark:bg-zinc-800 shadow-md rounded-lg p-6 w-96">
         <h2 className="text-2xl font-bold text-primary mb-4">
           {mode === "login" ? "Login" : "Register"}
         </h2>
