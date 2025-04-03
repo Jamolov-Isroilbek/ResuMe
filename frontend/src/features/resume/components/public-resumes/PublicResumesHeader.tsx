@@ -1,5 +1,6 @@
 import { SortingDropdown } from "@/lib/ui/buttons/SortingDropdown";
 import { SearchInput } from "@/lib/ui/forms/SearchInput";
+import { Tooltip } from "react-tooltip";
 
 interface PublicResumesHeaderProps {
   searchQuery: string;
@@ -20,9 +21,11 @@ export const PublicResumesHeader: React.FC<PublicResumesHeaderProps> = ({
       onChange={setSearchQuery}
       placeholder="Search by title..."
     />
+
     <SortingDropdown
       sortOption={sortOption}
       setSortOption={setSortOption}
+      data-tooltip-id="sort-tooltip"
     />
   </div>
 );

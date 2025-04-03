@@ -1,25 +1,113 @@
+/* template_deedy.css */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #ffffff;
+  color: #2c3e50;
+}
+
 .resume-container {
   display: flex;
-  font-family: 'Arial', sans-serif;
+  flex-direction: row-reverse;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: auto;
+  gap: 3rem;
 }
+
 .left-column {
-  width: 65%;
-  padding: 20px;
-  background: #f9f9f9;
+  flex: 2;
 }
+
 .right-column {
-  width: 35%;
-  padding: 20px;
-  background: #eee;
+  flex: 1;
+  background-color: #f9f9f9;
+  padding: 1.5rem;
+  border-left: 2px solid #ddd;
 }
-.section {
-  margin-bottom: 20px;
+
+.name {
+  font-size: 2rem;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
 }
-.section h2 {
-  border-bottom: 1px solid #333;
-  margin-bottom: 10px;
+
+.contact span {
+  display: inline-block;
+  margin-right: 1rem;
+  font-size: 0.95rem;
+  color: #555;
 }
-.item h3 {
-  margin: 0;
-  font-size: 1.1rem;
+
+.resume-section {
+  margin-bottom: 2rem;
+}
+
+.resume-section h2 {
+  font-size: 1.2rem;
+  color: #1a237e;
+  border-bottom: 1px solid #bbb;
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.8rem;
+}
+
+.entry {
+  margin-bottom: 1.2rem;
+}
+
+.entry-header {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.3rem;
+}
+
+.entry-header .date {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.2rem;
+}
+
+.entry-details {
+  font-size: 0.95rem;
+  line-height: 1.4;
+  color: #444;
+}
+
+.entry-details ul {
+  margin: 0.3rem 0 0 1.2rem;
+  padding: 0;
+  list-style-type: disc;
+}
+
+.skill-group ul,
+.entry-details ul {
+  margin-top: 0.3rem;
+}
+
+.skill-group ul li,
+.entry-details ul li {
+  font-size: 0.9rem;
+  margin-bottom: 0.2rem;
+}
+
+.skill-group strong {
+  color: #333;
+  display: inline-block;
+  margin-top: 0.6rem;
+}
+
+.tools {
+  font-size: 0.9rem;
+  color: #555;
+  font-style: italic;
+  margin-top: 0.3rem;
+}
+
+.location {
+  font-size: 0.85rem;
+  color: #666;
+  margin-bottom: 0.3rem;
 }

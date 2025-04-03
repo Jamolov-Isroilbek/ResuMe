@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Resume, PersonalDetails, Education, WorkExperience, Skill, Award 
 from django.contrib.auth import get_user_model
-from .enums import ResumeStatus
+from .enums import PrivacySettings, ResumeStatus
 
 User = get_user_model()
 class PersonalDetailsSerializer(serializers.ModelSerializer):
@@ -45,6 +45,7 @@ class ResumeSerializer(serializers.ModelSerializer):
     is_favorited = serializers.SerializerMethodField()
     views_count = serializers.SerializerMethodField()
     downloads_count = serializers.SerializerMethodField()
+    is_anonymized = serializers.BooleanField(required=False, default=False)
 
     class Meta:
         model = Resume
@@ -54,6 +55,7 @@ class ResumeSerializer(serializers.ModelSerializer):
             "resume_status",
             "privacy_setting", 
             "template",
+            "is_anonymized",
             "created_at",
             "updated_at",
             "user", 
@@ -69,12 +71,27 @@ class ResumeSerializer(serializers.ModelSerializer):
         ]
 
     def get_user(self, obj):
+        if obj.is_anonymized and obj.privacy_setting == PrivacySettings.PUBLIC:
+            return {
+                "id": None,
+                "username": "Anonymous"
+            }
         return {
             "id": obj.user.id,
             "username": obj.user.username
         }
 
     def get_personal_details(self, obj):
+        if obj.is_anonymized and obj.privacy_setting == PrivacySettings.PUBLIC:
+            return {
+                "first_name": "XXX",
+                "last_name": "XXX",
+                "email": "xxx@email.com",
+                "phone": "xxx-xxx-xxxx",
+                "website": None,
+                "github": None,
+                "linkedin": None
+            }
         try:
             pd = obj.personal_details
             return {
@@ -194,6 +211,16 @@ class ResumeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError(errors)
                 
         return data
+
+    def to_internal_value(self, data):
+        internal = super().to_internal_value(data)
+
+        # Force is_anonymized into validated_data
+        if "is_anonymized" in self.initial_data:
+            internal["is_anonymized"] = self.initial_data["is_anonymized"]
+
+        return internal
+
     
     def create(self, validated_data):
         # Mandatory fields
@@ -218,12 +245,20 @@ class ResumeSerializer(serializers.ModelSerializer):
         return resume
 
     def update(self, instance, validated_data):
+        print("VALIDATED DATA:", validated_data)
+        print("SETTING is_anonymized to:", validated_data.get("is_anonymized"))
+
+
         # Update simple fields
         instance.title = validated_data.get('title', instance.title)
         instance.resume_status = validated_data.get('resume_status', instance.resume_status)
         instance.privacy_setting = validated_data.get('privacy_setting', instance.privacy_setting)
         instance.template = validated_data.get('template', instance.template)
+        instance.is_anonymized = validated_data.get('is_anonymized', instance.is_anonymized)
         instance.save()
+
+        print("INSTANCE VALUE:", instance.is_anonymized)
+
 
         # Update personal details
         personal_details_data = validated_data.get('personal_details', {})
@@ -252,3 +287,25 @@ class ResumeSerializer(serializers.ModelSerializer):
         if items_data:
             objects = [model_class(resume=resume, **item_data) for item_data in items_data]
             model_class.objects.bulk_create(objects)
+
+def sanitize_resume_data(resume, is_anonymized=False):
+    return {
+        "title": resume.title,
+        "template": resume.template,
+        "resume_status": resume.resume_status,
+        "privacy_setting": resume.privacy_setting,
+        "is_anonymized": is_anonymized,
+        "personal_details": {
+            "first_name": "Anonymous" if is_anonymized else resume.personal_details.first_name,
+            "last_name": "" if is_anonymized else resume.personal_details.last_name,
+            "email": "xxx@example.com" if is_anonymized else resume.personal_details.email,
+            "phone": "xxx-xxx-xxxx" if is_anonymized else resume.personal_details.phone,
+            "website": "hidden.com" if is_anonymized else resume.personal_details.website,
+            "github": None if is_anonymized else resume.personal_details.github,
+            "linkedin": None if is_anonymized else resume.personal_details.linkedin,
+        },
+        "education": [edu.to_dict() for edu in resume.education.all()],
+        "work_experience": [exp.to_dict() for exp in resume.work_experience.all()],
+        "skills": [skill.to_dict() for skill in resume.skills.all()],
+        "awards": [award.to_dict() for award in resume.awards.all()],
+    }

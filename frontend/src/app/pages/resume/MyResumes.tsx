@@ -8,6 +8,7 @@ import { ResumeTabs } from "@/features/resume/components/resume-tabs/ResumeTabs"
 import { ResumesHeader } from "@/features/resume/components/resumes-header/ResumesHeader";
 import { ResumeList } from "@/features/resume/components/resume-list/ResumeList";
 import { useFilteredResumes } from "@/features/resume/hooks/useFilteredResumes";
+import { TooltipIcon } from "@/lib/ui/common/TooltipIcon";
 
 interface ResumeResponse {
   count?: number;
@@ -17,7 +18,9 @@ interface ResumeResponse {
 }
 
 const MyResumes: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<ResumeStatus>(ResumeStatus.PUBLISHED);
+  const [activeTab, setActiveTab] = useState<ResumeStatus>(
+    ResumeStatus.PUBLISHED
+  );
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortOption, setSortOption] = useState("Newest");
@@ -46,21 +49,18 @@ const MyResumes: React.FC = () => {
 
   return (
     <div className="min-h-screen p-6 max-w-7xl mx-auto bg-white dark:bg-zinc-900 text-black dark:text-white transition-colors duration-300">
-      <ResumesHeader 
-        sortOption={sortOption} 
-        setSortOption={setSortOption} 
-      />
-      
-      <ResumeTabs 
-        activeTab={activeTab} 
-        setActiveTab={setActiveTab} 
-      />
+      <ResumesHeader sortOption={sortOption} setSortOption={setSortOption} />
+
+      <div className="flex justify-between items-center mb-2">
+        <ResumeTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <TooltipIcon content="Tabs let you filter your resumes by status. Drafts are still in progress, Published resumes are active and visible, and Archived ones are hidden but not deleted. To view resume stats, visit the Profile section." />
+      </div>
 
       {filteredResumes.length > 0 ? (
         <div className="spacy-4">
-          <ResumeList 
-            resumes={filteredResumes} 
-            activeTab={activeTab} 
+          <ResumeList
+            resumes={filteredResumes}
+            activeTab={activeTab}
             refetchResumes={fetchResumes}
           />
         </div>

@@ -3,8 +3,9 @@ import React from "react";
 import { Skill, SkillType } from "@/types/shared/resume";
 import { Button } from "@/lib/ui/buttons/Button";
 import { InputField } from "@/features/resume/components/form/InputField";
+import { Tooltip } from "react-tooltip";
 interface SkillsSectionProps {
-  skills: Array<Omit<Skill, 'id' | 'resume'>>;
+  skills: Array<Omit<Skill, "id" | "resume">>;
   onAdd: () => void;
   onChange: (index: number, field: keyof Skill, value: string) => void;
   onRemove: (index: number) => void;
@@ -28,9 +29,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = React.memo(
             <InputField
               label="Skill Name"
               value={skill.skill_name}
-              onChange={(e) =>
-                onChange(index, "skill_name", e.target.value)
-              }
+              onChange={(e) => onChange(index, "skill_name", e.target.value)}
               required
             />
 
@@ -41,7 +40,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = React.memo(
                   onChange(index, "skill_type", e.target.value as SkillType)
                 }
                 className="p-2 border rounded-md dark:bg-zinc-800 dark:text-white dark:border-zinc-600"
-                >
+              >
                 {Object.values(SkillType).map((type) => (
                   <option key={type} value={type}>
                     {skillTypeLabels[type]}
@@ -49,19 +48,29 @@ export const SkillsSection: React.FC<SkillsSectionProps> = React.memo(
                 ))}
               </select>
 
-              <InputField
-                label="Proficiency"
-                value={skill.proficiency || ""}
-                onChange={(e) =>
-                  onChange(index, "proficiency", e.target.value)
-                }
-                type="text"
-                placeholder="e.g., Beginner, Intermediate, Expert"
-              />
+              <div
+                data-tooltip-id="proficiency-tooltip"
+                data-tooltip-content="Beginner = basic understanding, Intermediate = working knowledge, Expert = mastery."
+              >
+                <InputField
+                  label="Proficiency"
+                  value={skill.proficiency || ""}
+                  onChange={(e) =>
+                    onChange(index, "proficiency", e.target.value)
+                  }
+                  type="text"
+                  placeholder="e.g., Beginner, Intermediate, Expert"
+                />
+              </div>
+              <Tooltip id="proficiency-tooltip" place="top" />
             </div>
 
             {skills.length > 1 && (
-              <Button variant="danger" size="sm" onClick={() => onRemove(index)}>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => onRemove(index)}
+              >
                 Remove Skill
               </Button>
             )}

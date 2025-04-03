@@ -6,7 +6,8 @@ export const useResumeActions = (refetchResumes?: () => void) => {
   const navigate = useNavigate();
 
   const handleView = (id: number) => {
-    navigate(`/resumes/${id}/view`);
+    const url = `${process.env.REACT_APP_API_URL}/resumes/${id}/view/`;
+    window.open(url, "_blank");
   };
 
   const handleDownload = async (id: number, title: string) => {

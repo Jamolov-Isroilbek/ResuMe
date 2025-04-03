@@ -35,6 +35,8 @@ const initialFormData: ResumeFormData = {
   title: "",
   resume_status: ResumeStatus.DRAFT,
   privacy_setting: PrivacySettings.PRIVATE,
+  template: "template_classic",
+  is_anonymized: false,
   personal_details: {
     first_name: "",
     last_name: "",
@@ -48,7 +50,7 @@ const initialFormData: ResumeFormData = {
   work_experience: [],
   skills: [],
   awards: [],
-  template: "classic", // default template
+  
 };
 
 const transformResumeData = (apiData: Resume): ResumeFormData => ({
@@ -57,6 +59,7 @@ const transformResumeData = (apiData: Resume): ResumeFormData => ({
   privacy_setting: apiData.privacy_setting,
   personal_details: { ...apiData.personal_details },
   template: apiData.template ?? "template_classic",
+  is_anonymized: apiData.is_anonymized,
   education: apiData.education.map((edu) => ({
     institution: edu.institution,
     major: edu.major || "",
@@ -88,6 +91,7 @@ const transformResumeData = (apiData: Resume): ResumeFormData => ({
 
 const sanitizeResumeData = (data: ResumeFormData): ResumeFormData => ({
   ...data,
+  is_anonymized: data.is_anonymized,
   education: data.education.map((edu) => ({
     institution: edu.institution,
     major: edu.major,
@@ -143,6 +147,9 @@ const CreateEditResume: React.FC = () => {
       ...formData,
       resume_status: status,
     });
+
+    console.log("✅ FINAL SUBMISSION DATA:", cleanedData);
+
     handleSubmit(cleanedData);
   };
 
@@ -165,14 +172,39 @@ const CreateEditResume: React.FC = () => {
           </h1>
           <CustomErrorBoundary>
             <form>
-              <FormSection title="Resume Metadata">
+              <FormSection
+                title="Resume Metadata"
+                tooltip="Recommended title format: Job Title – Company. This is for your reference and won't appear in the final resume."
+              >
                 <ResumeMetadataForm
                   formData={formData}
                   setFormData={setFormData}
                 />
               </FormSection>
 
-              <FormSection title="Choose Resume Template">
+              <FormSection
+                title="Anonymization"
+                tooltip="If checked, personal details (like your name and contact info) will be hidden from public resumes. This applies only to resumes marked as 'Public'."
+              >
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.is_anonymized}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        is_anonymized: e.target.checked,
+                      }))
+                    }
+                  />
+                  Anonymize this resume in public
+                </label>
+              </FormSection>
+
+              <FormSection
+                title="Choose Resume Template"
+                tooltip="Choose a predefined design layout for your resume."
+              >
                 <TemplateSelector
                   selectedTemplate={formData.template}
                   onChange={(template) =>

@@ -1,55 +1,86 @@
-{% load static %}
 <!DOCTYPE html>
+{% load static %}
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>{{ resume.title }}</title>
-  <link rel="stylesheet" href="{% static 'resumes/css/template_deedy.css' %}" />
+  <link rel="stylesheet" href="{% static 'resumes/css/template_deedy.css' %}">
 </head>
 <body>
   <div class="resume-container">
+    <!-- LEFT COLUMN: Main Sections -->
     <div class="left-column">
-      <h1>{{ resume.personal_details.first_name }} {{ resume.personal_details.last_name }}</h1>
-      <div class="section">
+      <h1 class="name">{{ resume.personal_details.first_name }} {{ resume.personal_details.last_name }}</h1>
+      <div class="contact">
+        {% if resume.personal_details.email %}<span>{{ resume.personal_details.email }}</span>{% endif %}
+        {% if resume.personal_details.phone %}<span>{{ resume.personal_details.phone }}</span>{% endif %}
+      </div>
+
+      <!-- Experience Section -->
+      <section class="resume-section">
         <h2>Experience</h2>
-        {% for work in resume.work_experience.all %}
-        <div class="item">
-          <h3>{{ work.employer }} | {{ work.role }}</h3>
-          <p><em>{{ work.start_date|date:"M Y" }} - {% if work.end_date %}{{ work.end_date|date:"M Y" }}{% else %}Present{% endif %}</em></p>
-          <p>{{ work.description }}</p>
+        {% for work in resume.work_experience %}
+        <div class="entry">
+          <div class="entry-header">
+            <strong>{{ work.role }}</strong> - {{ work.employer }}
+            <span class="date">{{ work.start_date|date:"M Y" }} – {% if work.end_date %}{{ work.end_date|date:"M Y" }}{% else %}Present{% endif %}</span>
+          </div>
+          <div class="entry-details">
+            <div class="location">{{ work.location }}</div>
+            <ul>
+              {% for item in work.description_list %}<li>{{ item }}</li>{% endfor %}
+            </ul>
+          </div>
         </div>
         {% endfor %}
-      </div>
-      <div class="section">
-        <h2>Projects</h2>
-        <p>Sample project info here...</p>
-      </div>
+      </section>
     </div>
+
+    <!-- RIGHT COLUMN: Sidebar Sections -->
     <div class="right-column">
-      <div class="section">
+      <!-- Education Section -->
+      <section class="resume-section">
         <h2>Education</h2>
-        {% for edu in resume.education.all %}
-        <div class="item">
-          <strong>{{ edu.institution }}</strong><br />
-          {{ edu.major }}<br />
-          {% if edu.cgpa %}CGPA: {{ edu.cgpa }}<br />{% endif %}
-          <em>{{ edu.start_date|date:"Y" }} - {% if edu.end_date %}{{ edu.end_date|date:"Y" }}{% else %}Present{% endif %}</em>
+        {% for edu in resume.education %}
+        <div class="entry">
+          <div class="entry-header">
+            <strong>{{ edu.institution }}</strong>
+            <span class="date">{{ edu.start_date|date:"Y" }} – {% if edu.end_date %}{{ edu.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
+          </div>
+          <div class="entry-details">
+            <div>{{ edu.major }}</div>
+            {% if edu.cgpa %}<div>CGPA: {{ edu.cgpa }}</div>{% endif %}
+          </div>
         </div>
         {% endfor %}
-      </div>
-      <div class="section">
+      </section>
+
+      <!-- Skills Section -->
+      <section class="resume-section">
         <h2>Skills</h2>
-        {% for skill in resume.skills.all %}
-        <div>{{ skill.skill_type }}: {{ skill.skill_name }}</div>
+        {% regroup resume.skills by skill_type as skill_groups %}
+        {% for group in skill_groups %}
+        <div class="skill-group">
+          <strong>{{ group.grouper }}:</strong>
+          <ul>
+            {% for skill in group.list %}
+            <li>{{ skill.skill_name }}</li>
+            {% endfor %}
+          </ul>
+        </div>
         {% endfor %}
-      </div>
-      <div class="section">
-        <h2>Links</h2>
-        <div>Email: {{ resume.personal_details.email }}</div>
-        <div>Phone: {{ resume.personal_details.phone }}</div>
-        <div>GitHub: {{ resume.personal_details.github }}</div>
-        <div>LinkedIn: {{ resume.personal_details.linkedin }}</div>
-      </div>
+      </section>
+
+      <!-- Awards Section -->
+      <section class="resume-section">
+        <h2>Awards & Certificates</h2>
+        {% for award in resume.awards %}
+        <div class="entry">
+          <strong>{{ award.name }}</strong> - {{ award.year }}
+          <div>{{ award.description }}</div>
+        </div>
+        {% endfor %}
+      </section>
     </div>
   </div>
 </body>

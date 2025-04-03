@@ -7,28 +7,43 @@ import { PublicResumesTabs } from "@/features/resume/components/public-resumes/P
 import { PublicResumeList } from "@/features/resume/components/public-resumes/PublicResumesList";
 import { usePublicResumes } from "@/features/resume/hooks/usePublicResumes";
 import { useResumeActions } from "@/features/resume/hooks/useResumeActions";
+import { TooltipIcon } from "@/lib/ui/common/TooltipIcon";
 
 const PublicResumes: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState("Newest");
-  const [activeTab, setActiveTab] = useState<"published" | "favorites">("published");
+  const [activeTab, setActiveTab] = useState<"published" | "favorites">(
+    "published"
+  );
   const { user: currentUser } = useAuth();
 
   // Destructure the refresh function along with publicResumes, isLoading, and error.
-  const { publicResumes, isLoading, error, refresh: refreshResumes } = usePublicResumes(sortOption);
-  const { handleView, handleDownload, handleShare, handleFavorite } = useResumeActions();
+  const {
+    publicResumes,
+    isLoading,
+    error,
+    refresh: refreshResumes,
+  } = usePublicResumes(sortOption);
+  const { handleView, handleDownload, handleShare, handleFavorite } =
+    useResumeActions();
 
-  const filteredResumes = publicResumes?.filter((resume: Resume) => {
-    const searchLower = searchQuery.toLowerCase();
-    const matchesSearch = resume.title.toLowerCase().includes(searchLower);
-    const isPublished = resume.resume_status === ResumeStatus.PUBLISHED &&
-      resume.privacy_setting === PrivacySettings.PUBLIC;
+  const filteredResumes =
+    publicResumes?.filter((resume: Resume) => {
+      const searchLower = searchQuery.toLowerCase();
+      const matchesSearch = resume.title.toLowerCase().includes(searchLower);
+      const isPublished =
+        resume.resume_status === ResumeStatus.PUBLISHED &&
+        resume.privacy_setting === PrivacySettings.PUBLIC;
 
-    if (activeTab === "favorites") {
-      return matchesSearch && isPublished && resume.is_favorited;
-    }
-    return matchesSearch && isPublished && (!currentUser || resume.user?.id !== currentUser.id);
-  }) || [];
+      if (activeTab === "favorites") {
+        return matchesSearch && isPublished && resume.is_favorited;
+      }
+      return (
+        matchesSearch &&
+        isPublished &&
+        (!currentUser || resume.user?.id !== currentUser.id)
+      );
+    }) || [];
 
   return (
     <div className="min-h-screen p-6 max-w-7xl mx-auto bg-white dark:bg-zinc-900 text-black dark:text-white transition-colors duration-300">
@@ -41,10 +56,10 @@ const PublicResumes: React.FC = () => {
         setSortOption={setSortOption}
       />
 
-      <PublicResumesTabs
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      <div className="flex items-center justify-between">
+        <PublicResumesTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+        <TooltipIcon content="Only resumes marked as Public and Published are shown here. Some users may choose to hide personal details or appear as anonymous for privacy." />
+      </div>
 
       {isLoading ? (
         <Loader />

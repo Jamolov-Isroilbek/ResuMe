@@ -1,7 +1,12 @@
 // features/resume/components/resume-card/ResumeActions.tsx
 import { Button } from "@/lib/ui/buttons/Button";
-import { HeartIcon, ShareIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
+import {
+  HeartIcon,
+  ShareIcon,
+  ArrowDownTrayIcon,
+} from "@heroicons/react/24/outline";
 import { HeartIcon as HeartSolidIcon } from "@heroicons/react/24/solid";
+import { Tooltip } from "react-tooltip";
 
 interface ResumeActionsProps {
   isOwner: boolean;
@@ -16,7 +21,7 @@ export const ResumeActions = ({
   isFavorited,
   onDownload,
   onShare,
-  onFavorite
+  onFavorite,
 }: ResumeActionsProps) => (
   <div className="hidden md:flex items-center gap-3">
     {!isOwner && (
@@ -36,7 +41,7 @@ export const ResumeActions = ({
         )}
       </Button>
     )}
-    
+
     <Button
       variant="ghost"
       size="icon"
@@ -44,8 +49,12 @@ export const ResumeActions = ({
         e.stopPropagation();
         onDownload();
       }}
+      data-tooltip-id="download-tooltip"
+      data-tooltip-content="Download this resume"
       aria-label="Download"
     >
+      <Tooltip id="download-tooltip" />
+
       <ArrowDownTrayIcon className="w-5 h-5 text-gray-600" />
     </Button>
 
@@ -56,8 +65,11 @@ export const ResumeActions = ({
         e.stopPropagation();
         onShare();
       }}
+      data-tooltip-id="share-tooltip"
+      data-tooltip-content="Copy this resume URL to the clipboard"
       aria-label="Share"
     >
+      <Tooltip id="share-tooltip" />
       <ShareIcon className="w-5 h-5 text-gray-600" />
     </Button>
   </div>

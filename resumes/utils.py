@@ -6,7 +6,7 @@ def generate_resume_pdf(resume):
     Generates a PDF file from the resume data.
     """
     try:
-        html_string = render_to_string("resumes/resume_template.html", {"resume": resume})
+        html_string = render_to_string("resumes/{resume.template}.html", {"resume": resume})
         pdf_file = HTML(string=html_string).write_pdf()
         return pdf_file
     except Exception as e:

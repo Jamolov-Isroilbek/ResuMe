@@ -1,5 +1,6 @@
 import { InputField, FormCard } from "../form";
 import { PrivacySettings, ResumeFormData } from "@/types/shared/resume";
+import { TooltipIcon } from "@/lib/ui/common/TooltipIcon";
 
 export const ResumeMetadataForm = ({
   formData,
@@ -17,10 +18,13 @@ export const ResumeMetadataForm = ({
       }
       required
     />
-    <div>
-      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-        Privacy Setting
-      </label>
+    <div className="space-y-2">
+      <div className="flex justify-between items-center">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+          Privacy Setting
+        </label>
+        <TooltipIcon content="Public resumes may appear in the Public Resumes section and can be viewed by others. Private resumes are only visible to you." />
+      </div>
       <div className="mt-1 flex items-center gap-4">
         {Object.values(PrivacySettings).map((setting) => (
           <FormCard key={setting} className="p-3 flex items-center">
@@ -36,7 +40,9 @@ export const ResumeMetadataForm = ({
                 }))
               }
             />
-            <span className="ml-2 text-gray-800 dark:text-gray-200">{setting}</span>
+            <span className="ml-2 text-gray-800 dark:text-gray-200">
+              {setting}
+            </span>
           </FormCard>
         ))}
       </div>

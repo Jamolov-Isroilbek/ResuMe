@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/lib/ui/buttons/Button";
 import { AISuggestions } from "./AISuggestions";
 import { ResumeFormData } from "@/types/shared/resume";
+import { TooltipIcon } from "@/lib/ui/common/TooltipIcon";
 
 interface AIResumeSuggestionsPanelProps {
   resumeData: ResumeFormData;
@@ -26,11 +27,9 @@ const isResumeComplete = (resume: ResumeFormData): boolean => {
   return true;
 };
 
-
-
-
-
-export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> = ({ resumeData }) => {
+export const AIResumeSuggestionsPanel: React.FC<
+  AIResumeSuggestionsPanelProps
+> = ({ resumeData }) => {
   const [jobDescription, setJobDescription] = useState("");
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionKey, setSuggestionKey] = useState(0);
@@ -42,7 +41,7 @@ export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> =
 
   const handleGetSuggestions = () => {
     setShowSuggestions(true);
-    setSuggestionKey(prev => prev + 1);
+    setSuggestionKey((prev) => prev + 1);
   };
 
   console.log("\uD83D\uDDFA Panel mounted.");
@@ -51,16 +50,16 @@ export const AIResumeSuggestionsPanel: React.FC<AIResumeSuggestionsPanelProps> =
   console.log("\u2705 Final render conditions:", { showSuggestions, complete });
 
   return (
-    <div className={`ai-panel-container ${isOpen ? 'open' : ''}`}>
-      <div 
-        className="ai-panel-toggle"
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {isOpen ? '◀' : '▶'}
+    <div className={`ai-panel-container ${isOpen ? "open" : ""}`}>
+      <div className="ai-panel-toggle" onClick={() => setIsOpen(!isOpen)}>
+        {isOpen ? "◀" : "▶"}
       </div>
 
       <div className="ai-panel-content">
-        <h2 className="text-xl font-bold mb-4">AI Resume Suggestions</h2>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold">AI Resume Suggestions</h2>
+          <TooltipIcon content="If you provide only your resume, the AI will polish and improve what’s there. If you also include a job description, the AI will tailor suggestions to better match the job role and expectations." />
+        </div>
 
         {!complete && (
           <p className="text-red-500">

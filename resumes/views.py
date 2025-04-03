@@ -1,13 +1,16 @@
 from django.db.models import Sum
 from django.http import HttpResponse
+from django.conf import settings
+from django.templatetags.static import static
+import os
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from rest_framework import generics, permissions, status, filters, serializers
 from rest_framework.response import Response
-from weasyprint import HTML
+from weasyprint import HTML, CSS
 
 from .models import Resume, Education, ResumeAnalytics, WorkExperience, Skill, PersonalDetails, Award, Favorite
-from .serializers import ResumeSerializer, PersonalDetailsSerializer
+from .serializers import ResumeSerializer, PersonalDetailsSerializer, sanitize_resume_data
 from .enums import PrivacySettings, ResumeStatus
 from users.authentication import CookieJWTAuthentication
 
@@ -44,7 +47,7 @@ class PublicResumesView(generics.ListAPIView):
         return {'request': self.request}
 
 class ResumeHTMLView(generics.GenericAPIView):
-    """Renders resume as HTML template"""
+    """View resume in browser as HTML"""
     permission_classes = [permissions.AllowAny]
     authentication_classes = [CookieJWTAuthentication]
 
@@ -54,12 +57,50 @@ class ResumeHTMLView(generics.GenericAPIView):
         analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
         analytics.views += 1
         analytics.save()
-        
+
+        # Privacy check
         if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
             return Response({"error": "Not authorized"}, status=status.HTTP_403_FORBIDDEN)
-        
-        return render(request, f"resumes/{resume.template}.html", {"resume": resume})
 
+        is_owner = request.user == resume.user
+        should_anonymize = resume.is_anonymized and not is_owner
+        data = sanitize_resume_data(resume, is_anonymized=should_anonymize)
+
+        return render(request, f"resumes/{resume.template}.html", {
+            "resume": data
+        })
+
+
+class ResumePDFDownloadView(generics.GenericAPIView):
+    """Generate and return resume as downloadable PDF"""
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request, pk):
+        resume = get_object_or_404(Resume, pk=pk)
+
+        analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
+        analytics.downloads += 1
+        analytics.save()
+
+        # Authorization
+        if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
+            return Response({"error": "Not authorized"}, status=403)
+
+        is_owner = request.user == resume.user
+        data = sanitize_resume_data(resume, is_anonymized=not is_owner)
+
+        template_html = render_to_string(f"resumes/{resume.template}.html", {"resume": data})
+
+        css_path = os.path.join(settings.BASE_DIR, "resumes", "static", "resumes", "css", f"{resume.template}.css")
+
+        if not os.path.exists(css_path):
+            return Response({"error": f"CSS file not found: {css_path}"}, status=500)
+
+        pdf_file = HTML(string=template_html).write_pdf(stylesheets=[CSS(css_path)])
+
+        response = HttpResponse(pdf_file, content_type="application/pdf")
+        response["Content-Disposition"] = f'attachment; filename="{resume.title}.pdf"'
+        return response
 class ResumeListCreateView(generics.ListCreateAPIView):
     """
     API to list all resumes and create a new resume.
@@ -126,7 +167,12 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
         instance = self.get_object()
         data = request.data.copy() 
 
-        serializer = self.get_serializer(instance, data=data, partial=True)
+        serializer = ResumeSerializer(
+    instance,
+    data=data,
+    partial=True,
+    context={"request": request}
+)
         try:
             serializer.is_valid(raise_exception=True)
         except serializers.ValidationError as exc:
@@ -171,39 +217,6 @@ class ToggleFavoriteResumeView(generics.GenericAPIView):
             "is_favorited": not was_favorited,
             "resume": serializer.data
         })
-
-class ResumePDFDownloadView(generics.GenericAPIView):
-    """
-    API to generate and download a resume as a PDF.
-    """
-    permission_classes = [permissions.AllowAny]
-
-    def get(self, request, pk):
-        """
-        Generates and returns a PDF for the given resume.
-        """
-        resume = get_object_or_404(Resume, pk=pk, user=request.user)
-
-        analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
-        analytics.downloads += 1
-        analytics.save()
-
-         # Authorization check
-        if resume.privacy_setting != PrivacySettings.PUBLIC and not request.user.is_authenticated:
-            return Response({"error": "Not authorized"}, status=403)
-        if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
-            return Response({"error": "Not authorized"}, status=403)
-
-        template_name = render_to_string(f"resumes/{resume.template}.html", {"resume": resume})
-        pdf_file = HTML(string=template_name).write_pdf()
-
-
-        if not pdf_file:
-            return Response({"error": "Failed to generate PDF"}, status=500)
-
-        response = HttpResponse(pdf_file, content_type="application/pdf")
-        response["Content-Disposition"] = f'attachment; filename="{resume.title}.pdf"'
-        return response
 
 class UserStatsView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]

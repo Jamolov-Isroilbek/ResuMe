@@ -18,7 +18,8 @@ class Resume(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     resume_status = models.CharField(max_length=20, choices=ResumeStatus.choices, default=ResumeStatus.DRAFT)
     privacy_setting = models.CharField(max_length=10, choices=PrivacySettings.choices, default=PrivacySettings.PRIVATE)
-    template = models.CharField(max_length=50, default="template_classic")  
+    template = models.CharField(max_length=50, default="template_classic")
+    is_anonymized = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_at']
@@ -45,6 +46,16 @@ class Education(models.Model):
     currently_studying = models.BooleanField(default=False)
     cgpa = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
 
+    def to_dict(self):
+        return {
+            "institution": self.institution,
+            "major": self.major,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "currently_studying": self.currently_studying,
+            "cgpa": self.cgpa,
+        }
+
 class WorkExperience(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="work_experience")
     employer = models.CharField(max_length=255)
@@ -55,17 +66,43 @@ class WorkExperience(models.Model):
     currently_working = models.BooleanField(default=False)
     description = models.TextField(blank=True, null=True)
 
+    def to_dict(self):
+        return {
+            "employer": self.employer,
+            "role": self.role,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "currently_working": self.currently_working,
+            "location": self.location,
+            "description": self.description,
+        }
+
 class Skill(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="skills")
     skill_name = models.CharField(max_length=255)
     skill_type = models.CharField(max_length=50, choices=SkillType.choices, default=SkillType.OTHER)
     proficiency = models.CharField(max_length=50, blank=True, null=True)
 
+    def to_dict(self):
+        return {
+            "skill_name": self.skill_name,
+            "skill_type": self.skill_type,
+            "proficiency": self.proficiency,
+        }
+
+
 class Award(models.Model):
     resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="awards")
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     year = models.IntegerField()
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "year": self.year,
+        }
 
 class Favorite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="favorites")

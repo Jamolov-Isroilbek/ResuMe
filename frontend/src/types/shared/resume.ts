@@ -69,6 +69,7 @@ export enum ResumeStatus {
     updated_at: string;
     resume_status: ResumeStatus;
     template: string;
+    is_anonymized: boolean;
     privacy_setting: PrivacySettings;
     personal_details: PersonalDetails;
     education: Education[];
@@ -87,4 +88,5 @@ export enum ResumeStatus {
     skills: Array<Omit<Skill, 'id'>>;
     awards: Array<Omit<Award, 'id'>>;
     template: string;
+    is_anonymized: boolean;
   }
