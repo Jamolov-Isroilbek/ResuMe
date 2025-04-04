@@ -5,6 +5,8 @@ import { Loader, CustomErrorBoundary } from "@/lib/ui/common";
 import { FormSection } from "@/features/resume/components/form";
 import { AIResumeSuggestionsPanel } from "@/features/resume/components/ai-suggestions/AIResumeSuggestionsPanel";
 import { TemplateSelector } from "@/features/resume/components/templates/TemplateSelector";
+import { validateResumeData } from "@/validation/resumeValidation";
+import { toast } from "react-toastify";
 import {
   ResumeMetadataForm,
   PersonalDetailsForm,
@@ -50,7 +52,6 @@ const initialFormData: ResumeFormData = {
   work_experience: [],
   skills: [],
   awards: [],
-  
 };
 
 const transformResumeData = (apiData: Resume): ResumeFormData => ({
@@ -127,6 +128,15 @@ const CreateEditResume: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const isEditing = Boolean(id);
+
+  const sectionRefs = {
+    title: React.useRef<HTMLDivElement>(null),
+    personal_details: React.useRef<HTMLDivElement>(null),
+    education: React.useRef<HTMLDivElement>(null),
+    work_experience: React.useRef<HTMLDivElement>(null),
+    skills: React.useRef<HTMLDivElement>(null),
+  };
+
   const [formData, setFormData] =
     React.useState<ResumeFormData>(initialFormData);
   const { loading } = useAsync(async () => {
@@ -142,13 +152,48 @@ const CreateEditResume: React.FC = () => {
   const skillHandlers = useSkillHandlers(setFormData);
   const awardHandlers = useAwardHandlers(setFormData);
 
+  const getSectionFromError = (
+    errorField: string
+  ): keyof typeof sectionRefs | null => {
+    switch (errorField) {
+      case "title":
+        return "title";
+      case "personal_details":
+        return "personal_details";
+      case "education":
+        return "education";
+      case "work_experience":
+        return "work_experience";
+      case "skills":
+        return "skills";
+      default:
+        return null;
+    }
+  };
+
   const handleAction = (status: ResumeStatus) => {
     const cleanedData = sanitizeResumeData({
       ...formData,
       resume_status: status,
     });
 
-    console.log("✅ FINAL SUBMISSION DATA:", cleanedData);
+    const errors = validateResumeData(cleanedData);
+    console.log("Validation Errors:", errors);
+
+    if (errors.length > 0) {
+      const [firstError] = errors;
+
+      toast.error(firstError.message);
+
+      const sectionKey = getSectionFromError(firstError.field);
+      if (sectionKey && sectionRefs[sectionKey]) {
+        sectionRefs[sectionKey]?.current?.scrollIntoView({
+          behavior: "smooth",
+        });
+      }
+
+      return;
+    }
 
     handleSubmit(cleanedData);
   };
@@ -176,10 +221,12 @@ const CreateEditResume: React.FC = () => {
                 title="Resume Metadata"
                 tooltip="Recommended title format: Job Title – Company. This is for your reference and won't appear in the final resume."
               >
-                <ResumeMetadataForm
-                  formData={formData}
-                  setFormData={setFormData}
-                />
+                <div ref={sectionRefs.title}>
+                  <ResumeMetadataForm
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
+                </div>
               </FormSection>
 
               <FormSection
@@ -214,37 +261,45 @@ const CreateEditResume: React.FC = () => {
               </FormSection>
 
               <FormSection>
-                <PersonalDetailsForm
-                  formData={formData}
-                  setFormData={setFormData}
-                />
+                <div ref={sectionRefs.personal_details}>
+                  <PersonalDetailsForm
+                    formData={formData}
+                    setFormData={setFormData}
+                  />
+                </div>
               </FormSection>
 
               <FormSection>
-                <EducationSection
-                  education={formData.education}
-                  onAdd={educationHandlers.add}
-                  onChange={educationHandlers.handleChange}
-                  onRemove={educationHandlers.remove}
-                />
+                <div ref={sectionRefs.education}>
+                  <EducationSection
+                    education={formData.education}
+                    onAdd={educationHandlers.add}
+                    onChange={educationHandlers.handleChange}
+                    onRemove={educationHandlers.remove}
+                  />
+                </div>
               </FormSection>
 
               <FormSection>
-                <WorkExperienceSection
-                  workExperience={formData.work_experience}
-                  onAdd={workHandlers.add}
-                  onChange={workHandlers.handleChange}
-                  onRemove={workHandlers.remove}
-                />
+                <div ref={sectionRefs.work_experience}>
+                  <WorkExperienceSection
+                    workExperience={formData.work_experience}
+                    onAdd={workHandlers.add}
+                    onChange={workHandlers.handleChange}
+                    onRemove={workHandlers.remove}
+                  />
+                </div>
               </FormSection>
 
               <FormSection>
-                <SkillsSection
-                  skills={formData.skills}
-                  onAdd={skillHandlers.add}
-                  onChange={skillHandlers.handleChange}
-                  onRemove={skillHandlers.remove}
-                />
+                <div ref={sectionRefs.skills}>
+                  <SkillsSection
+                    skills={formData.skills}
+                    onAdd={skillHandlers.add}
+                    onChange={skillHandlers.handleChange}
+                    onRemove={skillHandlers.remove}
+                  />
+                </div>
               </FormSection>
 
               <FormSection>
