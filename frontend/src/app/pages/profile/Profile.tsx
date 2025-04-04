@@ -76,13 +76,17 @@ const Profile: React.FC = () => {
           {/* Profile Picture */}
           <div className="text-center">
             <img
-              src={user?.data.profile_picture || "/default-avatar.png"}
+              src={
+                `${user?.data.profile_picture}?v=${Date.now()}` ||
+                "/default.png"
+              }
               alt="Profile"
               className="w-32 h-32 rounded-full mx-auto border-4 border-white shadow-lg"
               onError={(e) => {
-                e.currentTarget.src = "/default-avatar.png";
+                e.currentTarget.src = "/defaultr.png";
               }}
             />
+
             <div className="mt-4">
               <label className="cursor-pointer inline-block text-gray-600 dark:text-gray-300">
                 Change Photo
@@ -98,7 +102,7 @@ const Profile: React.FC = () => {
 
           {/* Stats */}
           <div className="bg-gray-100 dark:bg-zinc-800 p-4 rounded-lg border dark:border-zinc-700">
-          <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
               Your Resume Statistics
             </h2>
             <ProfileStats />
@@ -114,7 +118,10 @@ const Profile: React.FC = () => {
                 type="text"
                 value={formState.username}
                 onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, username: e.target.value }))
+                  setFormState((prev) => ({
+                    ...prev,
+                    username: e.target.value,
+                  }))
                 }
                 className="mt-1 block w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
@@ -146,7 +153,10 @@ const Profile: React.FC = () => {
                 placeholder="Current Password"
                 value={formState.oldPassword}
                 onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, oldPassword: e.target.value }))
+                  setFormState((prev) => ({
+                    ...prev,
+                    oldPassword: e.target.value,
+                  }))
                 }
                 className="w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm"
               />
@@ -155,14 +165,21 @@ const Profile: React.FC = () => {
                 placeholder="New Password"
                 value={formState.newPassword}
                 onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, newPassword: e.target.value }))
+                  setFormState((prev) => ({
+                    ...prev,
+                    newPassword: e.target.value,
+                  }))
                 }
                 className="w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm"
               />
               {passwordError && (
                 <p className="text-red-500 text-sm">{passwordError}</p>
               )}
-              <Button variant="secondary" onClick={handleChangePassword} className="w-full">
+              <Button
+                variant="secondary"
+                onClick={handleChangePassword}
+                className="w-full"
+              >
                 Update Password
               </Button>
             </div>

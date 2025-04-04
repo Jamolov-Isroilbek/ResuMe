@@ -12,12 +12,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECRET_KEY = 'django-insecure-u^j+s*2dx)n*^77xptn03-h*^k-&rzfa=sza&ee_fc5jm#p9a3'
 SECRET_KEY = os.getenv('SECRET_KEY', 'fallback-secret-key')
 
+RESEND_API_KEY = os.getenv('RESEND_API_KEY')
+
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+
+FRONTEND_URL = 'http://localhost:3000'
 
 
 # Application definition

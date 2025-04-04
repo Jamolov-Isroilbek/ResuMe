@@ -10,7 +10,9 @@ import Register from "@/app/pages/auth/Register";
 import CreateEditResume from "@/app/pages/resume/CreateEditResume";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-// import { ThemeProvider } from "@/context/ThemeContext"; // ✅ make sure path matches your setup
+import EmailVerification from "./app/pages/auth/EmailVerification";
+import VerificationSuccess from "./app/pages/auth/VerificationSuccess";
+import VerificationError from "./app/pages/auth/VerificationError";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,6 +36,9 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/email-verification" element={<EmailVerification />} />
+                <Route path="/verification-success" element={<VerificationSuccess />} />
+                <Route path="/verification-error" element={<VerificationError />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/public-resumes" element={<PublicResumes />} />
                 <Route path="/profile" element={<Profile />} />

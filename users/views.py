@@ -1,13 +1,25 @@
 from rest_framework import status, generics, permissions
+from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.permissions import AllowAny
+from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.settings import api_settings
 from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes, force_str
+from django.contrib.sites.shortcuts import get_current_site
+from django.urls import reverse
+from django.conf import settings
+from django.shortcuts import redirect
+import resend
+from jwt import decode as jwt_decode
 
 from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer
 
@@ -48,6 +60,8 @@ class CookieTokenObtainPairView(TokenObtainPairView):
             )
         return response
 
+resend.api_key = settings.RESEND_API_KEY
+
 class RegisterView(generics.CreateAPIView):
     """
     API View for user registration
@@ -55,6 +69,24 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+
+    def perform_create(self, serializer):
+        user = serializer.save(is_active=False)
+        token = RefreshToken.for_user(user).access_token
+        current_site = get_current_site(self.request).domain
+        verification_link = f"http://{current_site}{reverse('email-verify')}?token={token}"
+
+        resend.Emails.send({
+            "from": "ResuMe <onboarding@resend.dev>",
+            "to": [user.email],
+            "subject": "Verify your email",
+            "html": f"<p>Click <a href='{verification_link}'>here</a> to verify your email.</p>",
+        })
+
+        return Response({
+            "email": user.email,
+            "message": "Registration successful! Please check your inbox to verify your account."
+        }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([permissions.IsAuthenticated])
@@ -93,6 +125,75 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         serializer.is_valid(raise_exception=True)
         serializer.save()  
         return Response(serializer.data)
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        token = request.query_params.get('token')
+
+        if not token:
+            return redirect(f"{settings.FRONTEND_URL}/verification-error?error=invalid_token")
+
+        try:
+            payload = AccessToken(token)
+            user_id = payload['user_id']
+            user = User.objects.get(id=user_id)
+            
+            user.is_active = True
+            user.save()
+
+            return redirect(f"{settings.FRONTEND_URL}/verification-success")
+
+        except Exception as e:
+            return redirect(f"{settings.FRONTEND_URL}/verification-error?error=verification_failed")
+        
+class ForgotPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        user = User.objects.filter(email=email).first()
+        
+        if user:
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            token = PasswordResetTokenGenerator().make_token(user)
+            reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
+
+            send_mail(
+                subject="Reset Your Password",
+                message=f"Click the link to reset your password: {reset_link}",
+                from_email="support@resumebuilder.dev",
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+
+        return Response({"message": "If this email exists, a reset link was sent."})
+
+class ResetPasswordView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        uidb64 = request.data.get("uid")
+        token = request.data.get("token")
+        password = request.data.get("password")
+        confirm = request.data.get("confirm")
+
+        if not password or password != confirm:
+            return Response({"error": "Passwords do not match"}, status=400)
+
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            return Response({"error": "Invalid token"}, status=400)
+
+        if not PasswordResetTokenGenerator().check_token(user, token):
+            return Response({"error": "Invalid or expired token"}, status=400)
+
+        user.set_password(password)
+        user.save()
+        return Response({"message": "Password has been reset successfully."})
 
 class ChangePasswordView(generics.UpdateAPIView):
     """

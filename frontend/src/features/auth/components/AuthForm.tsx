@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import { useAuth } from "@/providers/AuthProvider";
 import { Button } from "@/lib/ui/buttons/Button";
-import { useNavigate } from "react-router-dom";
-import api from "../../../lib/api/axiosClient";
+import { useAuth } from "@/providers/AuthProvider";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axiosClient from "@/lib/api/axiosClient";
 
 type AuthMode = "login" | "register";
 
@@ -32,15 +32,17 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
           ? { username: formData.username, password: formData.password }
           : formData;
 
-      const response = await api.post(endpoint, payload);
+      const response = await axiosClient.post(endpoint, payload);
 
       if (mode === "login") {
         login(response.data.access, response.data.refresh);
         navigate("/dashboard");
       } else {
-        navigate("/login", {
-          state: { success: "Registration successful! Please login." },
-        });
+        const email = response.data.email;
+        navigate("/email-verification", { state: { email } });
+        // navigate("/login", {
+        //   state: { success: "Registration successful! Check your email to verify your account." },
+        // });
       }
     } catch (err: any) {
       setFieldErrors(err.response?.data || {});
@@ -61,7 +63,6 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         {error && <p className="text-red-500 mb-4">{error}</p>}
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Form fields */}
           <div>
             <input
               type="text"
@@ -70,7 +71,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, username: e.target.value })
               }
-              className="w-full px-4 py-2 border rounded-md"
+              className="w-full px-4 py-2 border rounded-md text-black"
               required
             />
             {fieldErrors.username && (
@@ -89,7 +90,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
                 onChange={(e) =>
                   setFormData({ ...formData, email: e.target.value })
                 }
-                className="w-full px-4 py-2 border rounded-md"
+                className="w-full px-4 py-2 border rounded-md text-black"
                 required
               />
               {fieldErrors.email && (
@@ -97,6 +98,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
               )}
             </div>
           )}
+
           <div>
             <input
               type="password"
@@ -105,7 +107,7 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, password: e.target.value })
               }
-              className="w-full px-4 py-2 border rounded-md"
+              className="w-full px-4 py-2 border rounded-md text-black"
               required
             />
             {fieldErrors.password && (
@@ -119,6 +121,22 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
             {mode === "login" ? "Sign In" : "Create Account"}
           </Button>
         </form>
+
+        {mode === "login" ? (
+          <p className="text-sm text-center mt-4">
+            Don’t have an account?{" "}
+            <Link to="/register" className="text-blue-600 hover:underline">
+              Register here
+            </Link>
+          </p>
+        ) : (
+          <p className="text-sm text-center mt-4">
+            Already have an account?{" "}
+            <Link to="/login" className="text-blue-600 hover:underline">
+              Login here
+            </Link>
+          </p>
+        )}
       </div>
     </div>
   );
