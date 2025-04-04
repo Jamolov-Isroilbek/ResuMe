@@ -3,7 +3,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.settings import api_settings
@@ -14,12 +14,17 @@ from django.core.exceptions import ValidationError
 from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
+from django.utils.timezone import now
+from datetime import datetime, timedelta, timezone
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
 from django.conf import settings
 from django.shortcuts import redirect
 import resend
+from threading import Timer
 from jwt import decode as jwt_decode
+
+from users.utils import TimedTokenGenerator
 
 from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer
 
@@ -83,6 +88,14 @@ class RegisterView(generics.CreateAPIView):
             "html": f"<p>Click <a href='{verification_link}'>here</a> to verify your email.</p>",
         })
 
+        def delete_if_unverified():
+            user.refresh_from_db()
+            if not user.is_active:
+                user.delete()
+                print(f"Deleted unverified user: {user.username}")
+        
+        Timer(900, delete_if_unverified).start()
+
         return Response({
             "email": user.email,
             "message": "Registration successful! Please check your inbox to verify your account."
@@ -139,6 +152,10 @@ class VerifyEmailView(APIView):
             payload = AccessToken(token)
             user_id = payload['user_id']
             user = User.objects.get(id=user_id)
+
+            token_age = datetime.now(timezone.utc) - datetime.fromtimestamp(payload['exp'], tz=timezone.utc)
+            if token_age > timedelta(minutes=15):
+                return redirect(f"{settings.FRONTEND_URL}/verification-error?error=expired")
             
             user.is_active = True
             user.save()
@@ -160,13 +177,13 @@ class ForgotPasswordView(APIView):
             token = PasswordResetTokenGenerator().make_token(user)
             reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
-            send_mail(
-                subject="Reset Your Password",
-                message=f"Click the link to reset your password: {reset_link}",
-                from_email="support@resumebuilder.dev",
-                recipient_list=[user.email],
-                fail_silently=True,
-            )
+            resend.Emails.send({
+                "from": "ResuMe <onboarding@resend.dev>",
+                "to": [user.email],
+                "subject": "Reset Your Password",
+                "html": f"<p>Click <a href='{reset_link}'>here</a> to reset your password.</p>",
+            })
+
 
         return Response({"message": "If this email exists, a reset link was sent."})
 
@@ -188,7 +205,7 @@ class ResetPasswordView(APIView):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({"error": "Invalid token"}, status=400)
 
-        if not PasswordResetTokenGenerator().check_token(user, token):
+        if not TimedTokenGenerator().check_token_with_expiry(user, token, max_age_minutes=1):
             return Response({"error": "Invalid or expired token"}, status=400)
 
         user.set_password(password)
@@ -227,3 +244,12 @@ class ChangePasswordView(generics.UpdateAPIView):
         
         print("❌ Serializer validation failed:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request):
+        user = request.user
+        username = user.username
+        user.delete()
+        return Response({"message": f"Account '{username}' and all associated data deleted."}, status=status.HTTP_200_OK)

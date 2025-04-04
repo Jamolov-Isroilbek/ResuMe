@@ -40,9 +40,6 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
       } else {
         const email = response.data.email;
         navigate("/email-verification", { state: { email } });
-        // navigate("/login", {
-        //   state: { success: "Registration successful! Check your email to verify your account." },
-        // });
       }
     } catch (err: any) {
       setFieldErrors(err.response?.data || {});
@@ -120,6 +117,17 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
           <Button variant="primary" type="submit" className="w-full">
             {mode === "login" ? "Sign In" : "Create Account"}
           </Button>
+
+          {mode === "login" && (
+            <p className="text-sm text-center mt-3">
+              <Link
+                to="/forgot-password"
+                className="text-blue-600 hover:underline"
+              >
+                Forgot your password?
+              </Link>
+            </p>
+          )}
         </form>
 
         {mode === "login" ? (

@@ -32,6 +32,9 @@ module.exports = {
       return webpackConfig;
     },
   },
+  devServer: {
+    historyApiFallback: true,
+  },
   jest: {
     configure: {
       moduleNameMapper: {

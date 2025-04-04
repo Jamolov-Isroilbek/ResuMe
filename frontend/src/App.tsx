@@ -13,6 +13,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import EmailVerification from "./app/pages/auth/EmailVerification";
 import VerificationSuccess from "./app/pages/auth/VerificationSuccess";
 import VerificationError from "./app/pages/auth/VerificationError";
+import ForgotPassword from "./app/pages/auth/ForgotPassword";
+import ResetPassword from "./app/pages/auth/ResetPassword";
+import { Navigate } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,12 +36,15 @@ function App() {
             <div className="min-h-screen bg-white text-gray-800 dark:bg-zinc-900 dark:text-gray-100 transition-colors duration-300">
               <Navbar />
               <Routes>
+                <Route path="*" element={<Navigate to="/" />} />
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/email-verification" element={<EmailVerification />} />
                 <Route path="/verification-success" element={<VerificationSuccess />} />
                 <Route path="/verification-error" element={<VerificationError />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/public-resumes" element={<PublicResumes />} />
                 <Route path="/profile" element={<Profile />} />
