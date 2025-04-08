@@ -5,8 +5,13 @@ src/
 │   │       └── Navbar.tsx 
 │   ├── pages/
 │   │   ├── auth/
+│   │   │   ├── EmailVerification.tsx 
+│   │   │   ├── ForgotPassword.tsx 
 │   │   │   ├── Login.tsx 
-│   │   │   └── Register.tsx 
+│   │   │   ├── Register.tsx 
+│   │   │   ├── ResetPassword.tsx 
+│   │   │   ├── VerificationError.tsx 
+│   │   │   └── VerificationSuccess.tsx 
 │   │   ├── dashboard/
 │   │   │   └── Dashboard.tsx 
 │   │   ├── profile/
@@ -63,6 +68,8 @@ src/
 │       │   │    ├── PrivacySettingsSection.tsx
 │       │   │    ├── SkillsSection.tsx
 │       │   │    └── WorkExperienceSection.tsx
+│       │   ├── templates/ 
+│       │   │    └── TemplateSelector.tsx
 │       ├── constants/
 │       │   ├── resume.ts
 │       │   └── styles.ts
@@ -93,7 +100,8 @@ src/
 │   │   │   ├── Alert.tsx 
 │   │   │   ├── ErrorBoundary.tsx 
 │   │   │   ├── index.ts
-│   │   │   └── Loader.tsx 
+│   │   │   ├── Loader.tsx 
+│   │   │   └── TooltipIcon.tsx 
 │   │   └── navigation/
 │   │       ├── Pagination.tsx 
 │   │       └── Tabs.tsx 
@@ -107,6 +115,8 @@ src/
 │   └── shared/
 │          ├── api.ts (API types)
 │          └── resume.ts (Resume-specific types)
+├── validation/
+│   └── resumeValidation.ts 
 ├── App.tsx
 ├── index.tsx 
 ├── react-app-env.d.ts 

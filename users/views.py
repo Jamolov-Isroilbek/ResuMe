@@ -85,7 +85,10 @@ class RegisterView(generics.CreateAPIView):
             "from": "ResuMe <onboarding@resend.dev>",
             "to": [user.email],
             "subject": "Verify your email",
-            "html": f"<p>Click <a href='{verification_link}'>here</a> to verify your email.</p>",
+            "html":  f"""
+                <p>Click <a href='{verification_link}'>here</a> to verify your email.</p>
+                <p><strong>This link will expire in 15 minutes.</strong></p>
+            """,
         })
 
         def delete_if_unverified():
@@ -181,7 +184,10 @@ class ForgotPasswordView(APIView):
                 "from": "ResuMe <onboarding@resend.dev>",
                 "to": [user.email],
                 "subject": "Reset Your Password",
-                "html": f"<p>Click <a href='{reset_link}'>here</a> to reset your password.</p>",
+                "html": f"""
+                    <p>Click <a href='{reset_link}'>here</a> to reset your password.</p>
+                    <p><strong>This link will expire in 15 minutes.</strong></p>
+                """
             })
 
 
@@ -205,7 +211,7 @@ class ResetPasswordView(APIView):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({"error": "Invalid token"}, status=400)
 
-        if not TimedTokenGenerator().check_token_with_expiry(user, token, max_age_minutes=1):
+        if not TimedTokenGenerator().check_token_with_expiry(user, token, max_age_minutes=15):
             return Response({"error": "Invalid or expired token"}, status=400)
 
         user.set_password(password)

@@ -21,10 +21,12 @@ resumes/
 │   ├── static/
 │   |     └── resumes/
 │   |             └── css/
-│   |                   └── resume.css
+|   |                   ├── template_deedy.css
+│   |                   └── template_classic.css
 │   ├── templates/ 
 │   |     └── resumes/
-│   |             └── resume_template.html
+|   |             ├── template_deedy.html
+│   |             └── template_classic.html
 │   ├── __init__.py
 │   ├── admin.py 
 │   ├── apps.py

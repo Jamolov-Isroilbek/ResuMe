@@ -5,6 +5,9 @@ import { Button } from "@/lib/ui/buttons/Button";
 import { Loader } from "@/lib/ui/common/Loader";
 import { APIResponse } from "@/types/shared/api";
 import { ProfileStats } from "@/features/profile/ProfileStats";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
+import { InputField } from "@/features/resume/components/form";
 
 interface UserProfile {
   username: string;
@@ -21,6 +24,7 @@ const Profile: React.FC = () => {
     refresh,
   } = useAsync<APIResponse<UserProfile>>(() => api.get<UserProfile>("/me/"));
 
+  const navigate = useNavigate();
   const [passwordError, setPasswordError] = useState("");
   const [formState, setFormState] = useState({
     username: "",
@@ -44,7 +48,11 @@ const Profile: React.FC = () => {
     formData.append("email", formState.email);
     if (selectedFile) formData.append("profile_picture", selectedFile);
 
-    await api.put("/me/", formData);
+    await api.put("/me/", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
     refresh();
   };
 
@@ -66,30 +74,48 @@ const Profile: React.FC = () => {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    const confirmDelete = window.confirm(
+      "⚠️ Are you sure you want to delete your account? This action is permanent and will remove all your resumes."
+    );
+    if (!confirmDelete) return;
+
+    try {
+      await api.delete("/users/me/delete/");
+      localStorage.removeItem("access");
+      localStorage.removeItem("refresh");
+      document.cookie = "refresh=; Max-Age=0; path=/;";
+      toast.success("Account deleted successfully");
+      navigate("/");
+    } catch (error) {
+      toast.error("Failed to delete account. Please try again.");
+      console.error("Account deletion failed:", error);
+    }
+  };
+
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500">Error loading profile</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-12">
       <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-800 rounded-xl shadow-md p-6">
+        <ProfileStats />
         <form onSubmit={handleUpdateProfile} className="space-y-8">
-          {/* Profile Picture */}
-          <div className="text-center">
-            <img
-              src={
-                `${user?.data.profile_picture}?v=${Date.now()}` ||
-                "/default.png"
-              }
-              alt="Profile"
-              className="w-32 h-32 rounded-full mx-auto border-4 border-white shadow-lg"
-              onError={(e) => {
-                e.currentTarget.src = "/defaultr.png";
-              }}
-            />
-
-            <div className="mt-4">
-              <label className="cursor-pointer inline-block text-gray-600 dark:text-gray-300">
-                Change Photo
+          <div className="flex flex-col items-center gap-3">
+            <div className="relative w-32 h-32">
+              <img
+                src={
+                  `${user?.data.profile_picture}?v=${Date.now()}` ||
+                  "/default.png"
+                }
+                alt="Profile"
+                className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
+                onError={(e) => {
+                  e.currentTarget.src = "/defaultr.png";
+                }}
+              />
+              <label className="absolute bottom-0 right-0 bg-blue-600 text-white text-xs px-2 py-1 rounded-full cursor-pointer hover:bg-blue-700 transition">
+                Edit
                 <input
                   type="file"
                   onChange={handleFileChange}
@@ -98,23 +124,19 @@ const Profile: React.FC = () => {
                 />
               </label>
             </div>
-          </div>
-
-          {/* Stats */}
-          <div className="bg-gray-100 dark:bg-zinc-800 p-4 rounded-lg border dark:border-zinc-700">
-            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-white">
-              Your Resume Statistics
-            </h2>
-            <ProfileStats />
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              PNG, JPG, or JPEG – Max 5MB
+            </p>
           </div>
 
           {/* Profile Info */}
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Username
-              </label>
-              <input
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white pt-6 pb-2">
+              Account Information
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                label="Username"
                 type="text"
                 value={formState.username}
                 onChange={(e) =>
@@ -123,34 +145,29 @@ const Profile: React.FC = () => {
                     username: e.target.value,
                   }))
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                Email
-              </label>
-              <input
+              <InputField
+                label="Email"
                 type="email"
                 value={formState.email}
                 onChange={(e) =>
-                  setFormState((prev) => ({ ...prev, email: e.target.value }))
+                  setFormState((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
           </div>
 
-          {/* Password Change */}
-          <div className="pt-6 border-t border-gray-200 dark:border-zinc-700">
+          <div className="pt-10 border-t border-gray-200 dark:border-zinc-700">
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">
               Change Password
             </h3>
-            <div className="space-y-4">
-              <input
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputField
+                label="Current Password"
                 type="password"
-                placeholder="Current Password"
                 value={formState.oldPassword}
                 onChange={(e) =>
                   setFormState((prev) => ({
@@ -158,11 +175,10 @@ const Profile: React.FC = () => {
                     oldPassword: e.target.value,
                   }))
                 }
-                className="w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm"
               />
-              <input
+              <InputField
+                label="New Password"
                 type="password"
-                placeholder="New Password"
                 value={formState.newPassword}
                 onChange={(e) =>
                   setFormState((prev) => ({
@@ -170,23 +186,34 @@ const Profile: React.FC = () => {
                     newPassword: e.target.value,
                   }))
                 }
-                className="w-full rounded-md border border-gray-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white shadow-sm"
               />
-              {passwordError && (
-                <p className="text-red-500 text-sm">{passwordError}</p>
-              )}
-              <Button
-                variant="secondary"
-                onClick={handleChangePassword}
-                className="w-full"
-              >
-                Update Password
-              </Button>
             </div>
+            {passwordError && (
+              <p className="text-red-500 text-sm mt-2">{passwordError}</p>
+            )}
+            <Button
+              variant="secondary"
+              onClick={handleChangePassword}
+              className="w-full mt-4"
+            >
+              Update Password
+            </Button>
           </div>
 
-          <Button type="submit" variant="primary" className="w-full mt-6">
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full mt-6 hover:bg-blue-700 transition"
+          >
             Save Changes
+          </Button>
+
+          <Button
+            variant="danger"
+            className="w-full mt-2 hover:bg-red-700 transition"
+            onClick={handleDeleteAccount}
+          >
+            Delete Account
           </Button>
         </form>
       </div>

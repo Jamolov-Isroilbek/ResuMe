@@ -91,17 +91,21 @@ const Dashboard: React.FC = () => {
       <div className="mt-16 px-4">
         <h2 className="text-3xl font-bold mb-6">Recent Resumes</h2>
         <div className="space-y-4">
-          {resumes.map((resume) => (
-            <ResumeCard
-              key={resume.id}
-              resume={resume}
-              onView={() => navigate(`/resumes/${resume.id}/view`)}
-              onEdit={() => navigate(`/resumes/${resume.id}/edit`)}
-              onDelete={() => handleDelete(resume.id)}
-              onDownload={() => handleDownload(resume.id, resume.title)}
-              displayMode="dashboard"
-            />
-          ))}
+          {resumes.length === 0 ? (
+            <p className="text-center text-gray-600 dark:text-gray-400 mt-6 text-sm italic">
+              You haven’t created any resumes yet. Let’s build one!
+            </p>
+          ) : (
+            resumes.map((resume) => (
+              <ResumeCard
+                key={resume.id}
+                resume={resume}
+                onView={() => handleView(resume.id)}
+                onDownload={() => handleDownload(resume.id, resume.title)}
+                displayMode="dashboard"
+              />
+            ))
+          )}
         </div>
         {totalCount > 10 && (
           <div className="mt-6">
