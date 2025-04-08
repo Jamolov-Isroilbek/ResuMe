@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Navbar from "@/app/layouts/main-layout/Navbar";
-import Home from "@/app/pages/Home";
 import Dashboard from "@/app/pages/dashboard/Dashboard";
 import PublicResumes from "@/app/pages/resume/PublicResumes";
 import Profile from "@/app/pages/profile/Profile";
@@ -30,14 +29,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {/* <ThemeProvider> */}
           <Router>
-            {/* 🌙 App-wide Dark Mode Styling */}
             <div className="min-h-screen bg-white text-gray-800 dark:bg-zinc-900 dark:text-gray-100 transition-colors duration-300">
               <Navbar />
               <Routes>
                 <Route path="*" element={<Navigate to="/" />} />
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Dashboard />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/email-verification" element={<EmailVerification />} />
@@ -54,7 +51,6 @@ function App() {
               </Routes>
             </div>
           </Router>
-        {/* </ThemeProvider> */}
       </AuthProvider>
     </QueryClientProvider>
   );

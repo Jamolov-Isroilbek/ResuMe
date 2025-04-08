@@ -40,7 +40,7 @@ const Navbar = () => {
         src="/logo.png"
         alt="Logo"
         className="w-16 cursor-pointer"
-        onClick={() => navigate(isAuthenticated ? "/dashboard" : "/")}
+        onClick={() => navigate("/dashboard")}
       />
 
       {/* Mobile Menu Toggle */}
