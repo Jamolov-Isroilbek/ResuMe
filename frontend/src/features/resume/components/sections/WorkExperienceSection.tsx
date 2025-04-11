@@ -76,14 +76,14 @@ export const WorkExperienceSection: React.FC<WorkExperienceSectionProps> =
                   onYearChange={(y) =>
                     handleDateChange(index, "end_date", endDate.month, y)
                   }
-                  disabled={work.currently_working}
+                  disabled={!work.end_date}
                 />
               </div>
 
               <div className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  checked={work.currently_working}
+                  checked={!work.end_date}
                   onChange={(e) => {
                     onChange(index, "currently_working", e.target.checked);
                     onChange(
@@ -94,7 +94,7 @@ export const WorkExperienceSection: React.FC<WorkExperienceSectionProps> =
                   }}
                   className="h-4 w-4"
                 />
-                <label className="text-sm">Currently working here</label>
+                <label className="text-sm">Currently working</label>
               </div>
 
               <InputField

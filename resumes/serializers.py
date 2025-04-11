@@ -47,6 +47,24 @@ class ResumeSerializer(serializers.ModelSerializer):
     downloads_count = serializers.SerializerMethodField()
     is_anonymized = serializers.BooleanField(required=False, default=False)
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        data = self.initial_data if hasattr(self, 'initial_data') else {}
+        if data.get("resume_status") == ResumeStatus.DRAFT:
+            # Relax top-level requirements
+            self.fields["title"].required = False
+            self.fields["personal_details"].required = False
+            self.fields["education"].required = False
+            self.fields["work_experience"].required = False
+            self.fields["skills"].required = False
+
+            # Relax nested personal details
+            pd_fields = self.fields["personal_details"].fields
+            for field in pd_fields.values():
+                field.required = False
+                field.allow_blank = True
+
     class Meta:
         model = Resume
         fields = [
@@ -173,43 +191,49 @@ class ResumeSerializer(serializers.ModelSerializer):
             return obj.analytics.downloads if hasattr(obj, 'analytics') else 0
         return None
     
+    # In serializers.py - Update the validate method
     def validate(self, data):
         resume_status = data.get('resume_status')
-        existing_status = self.instance.resume_status if self.instance else None
-        
+
         # Only validate when publishing or updating a published resume
         if resume_status == ResumeStatus.PUBLISHED:
             errors = {}
-            
+
             # Check if fields are being modified
             if 'personal_details' in data and not data.get('personal_details'):
                 errors['personal_details'] = "Required for published resumes"
-                
+
             if 'education' in data and not data.get('education'):
                 errors['education'] = "At least one entry required"
-                
+
             if 'work_experience' in data and not data.get('work_experience'):
                 errors['work_experience'] = "At least one entry required"
-                
+
             if 'skills' in data and not data.get('skills'):
                 errors['skills'] = "At least one skill required"
-                
+
             # For existing published resumes, check existing data if fields not in update
-            if not data.get('personal_details') and not self.instance.personal_details:
-                errors['personal_details'] = "Required for published resumes"
-                
-            if not data.get('education') and not self.instance.education.exists():
-                errors['education'] = "At least one entry required"
-                
-            if not data.get('work_experience') and not self.instance.work_experience.exists():
-                errors['work_experience'] = "At least one entry required"
-                
-            if not data.get('skills') and not self.instance.skills.exists():
-                errors['skills'] = "At least one skill required"
-    
+            if self.instance and self.instance.resume_status == ResumeStatus.PUBLISHED:
+                if not data.get('personal_details') and not hasattr(self.instance, 'personal_details'):
+                    errors['personal_details'] = "Required for published resumes"
+
+                if not data.get('education') and not self.instance.education.exists():
+                    errors['education'] = "At least one entry required"
+
+                if not data.get('work_experience') and not self.instance.work_experience.exists():
+                    errors['work_experience'] = "At least one entry required"
+
+                if not data.get('skills') and not self.instance.skills.exists():
+                    errors['skills'] = "At least one skill required"
+
             if errors:
                 raise serializers.ValidationError(errors)
-                
+
+        # For drafts, only validate that title exists
+        elif resume_status == ResumeStatus.DRAFT:
+            if not data.get('title') and (not self.instance or not self.instance.title):
+                raise serializers.ValidationError({'title': 'Title is required even for drafts'})
+
         return data
 
     def to_internal_value(self, data):

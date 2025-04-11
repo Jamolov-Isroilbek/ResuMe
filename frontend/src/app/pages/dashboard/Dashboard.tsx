@@ -6,6 +6,7 @@ import { ResumeCard } from "@/features/resume/components/resume-card/ResumeCard"
 import { Resume } from "@/types/shared/resume";
 import { Pagination } from "@/lib/ui/navigation/Pagination";
 import { useResumeActions } from "@/features/resume/hooks/useResumeActions";
+import { useAuth } from "@/providers/AuthProvider";
 
 interface ResumeResponse {
   count: number;
@@ -21,6 +22,7 @@ const Dashboard: React.FC = () => {
   const [totalCount, setTotalCount] = useState(0);
   const navigate = useNavigate();
   const { handleView, handleDelete, handleDownload } = useResumeActions();
+  const { user } = useAuth();
 
   const fetchResumes = async (page: number) => {
     setLoading(true);
@@ -42,6 +44,11 @@ const Dashboard: React.FC = () => {
     fetchResumes(currentPage);
   }, [currentPage]);
 
+  const handleCreate = () => {
+    if (!user) navigate("/login?redirect=/create-resume");
+    else navigate("/create-resume");
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 transition-colors duration-300 text-gray-900 dark:text-gray-100">
       {/* Hero Section */}
@@ -53,7 +60,7 @@ const Dashboard: React.FC = () => {
         <Button
           variant="primary"
           className="mt-6 px-6 py-2"
-          onClick={() => navigate("/create-resume")}
+          onClick={handleCreate}
         >
           Create a New Resume
         </Button>

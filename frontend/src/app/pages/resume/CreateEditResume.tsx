@@ -177,25 +177,87 @@ const CreateEditResume: React.FC = () => {
       resume_status: status,
     });
 
-    const errors = validateResumeData(cleanedData);
-    console.log("Validation Errors:", errors);
+    if (status === ResumeStatus.PUBLISHED) {
+      const errors = validateResumeData(cleanedData);
+      console.log("Validation Errors:", errors);
 
-    if (errors.length > 0) {
-      const [firstError] = errors;
+      if (errors.length > 0) {
+        const [firstError] = errors;
+        toast.error(firstError.message);
 
-      toast.error(firstError.message);
+        const sectionKey = getSectionFromError(firstError.field);
+        if (sectionKey && sectionRefs[sectionKey]) {
+          sectionRefs[sectionKey]?.current?.scrollIntoView({
+            behavior: "smooth",
+          });
+        }
 
-      const sectionKey = getSectionFromError(firstError.field);
-      if (sectionKey && sectionRefs[sectionKey]) {
-        sectionRefs[sectionKey]?.current?.scrollIntoView({
+        return;
+      }
+    } else if (status === ResumeStatus.DRAFT) {
+      if (!cleanedData.title.trim()) {
+        toast.error("Please provide a title for your draft");
+        sectionRefs.title?.current?.scrollIntoView({
           behavior: "smooth",
         });
+        return;
       }
-
-      return;
     }
 
-    handleSubmit(cleanedData);
+    handleSubmit(cleanedData)
+      .then(() => {
+        if (status === ResumeStatus.DRAFT) {
+          toast.success("Draft saved successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } else {
+          toast.success("Resume published successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        }
+
+        navigate("/my-resumes");
+      })
+      .catch((error) => {
+        console.error("Submission error:", error);
+
+        // Extract error message from the response
+        let errorMessage = "An error occurred while saving your resume.";
+
+        if (error.response) {
+          if (error.response.data.detail) {
+            errorMessage = error.response.data.detail;
+          } else if (typeof error.response.data === "object") {
+            // Handle validation errors that return as an object
+            const firstErrorKey = Object.keys(error.response.data)[0];
+            if (firstErrorKey) {
+              const fieldError = error.response.data[firstErrorKey];
+              errorMessage = Array.isArray(fieldError)
+                ? `${firstErrorKey}: ${fieldError[0]}`
+                : `${firstErrorKey}: ${fieldError}`;
+            }
+          }
+        }
+
+        toast.error(errorMessage, {
+          position: "top-right",
+          autoClose: 5000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      });
   };
 
   const handleCancel = () => {

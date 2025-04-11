@@ -74,15 +74,12 @@ export const useResumeSubmission = (id?: string) => {
   const handleSubmit = useCallback(
     async (formData: ResumeFormData) => {
       try {
-        await submit(formData);
+        const response = await submit(formData);
         navigate("/my-resumes");
+        return response;
       } catch (error: any) {
         console.error("Submission failed:", error.response?.data);
-        alert(
-          `Failed to save: ${
-            error.response?.data?.detail || "Check console for details"
-          }`
-        );
+        throw error;
       }
     },
     [submit, navigate]
