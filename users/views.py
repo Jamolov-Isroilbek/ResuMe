@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken, AccessToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.settings import api_settings
+from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.password_validation import validate_password
@@ -26,43 +27,49 @@ from jwt import decode as jwt_decode
 
 from users.utils import TimedTokenGenerator
 
-from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer
+from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer
 
 User = get_user_model()
 
 class CookieTokenObtainPairView(TokenObtainPairView):
+    serializer_class = CustomTokenObtainPairSerializer
     """
-    Custom view that sets JWT tokens in HttpOnly cookies.
+    Custom login view that blocks unverified users and sets JWT tokens in HttpOnly cookies.
     """
-
     def post(self, request, *args, **kwargs):
-        # Get the underlying Django HttpRequest if the request is a DRF Request
-        django_request = request._request if hasattr(request, '_request') else request
-        
-        # Call the original TokenObtainPairView with the underlying request
-        token_view = TokenObtainPairView.as_view()
-        response = token_view(django_request, *args, **kwargs)
-        
+        username = request.data.get("username")
+        password = request.data.get("password")
+
+        user = authenticate(request, username=username, password=password)
+
+        if user is None:
+            raise AuthenticationFailed("Invalid username or password.")
+
+        if not user.is_active:
+            raise AuthenticationFailed("Please verify your email before logging in.")
+
+        # Proceed with original token generation
+        response = super().post(request, *args, **kwargs)
+
         if response.status_code == 200:
             data = response.data
-            # Set access token in secure HttpOnly cookie.
             response.set_cookie(
                 key="access",
                 value=data["access"],
                 httponly=True,
-                secure=False,  # Change to True with HTTPS in production.
+                secure=False,  # Set to True in production
                 samesite="Lax",
                 max_age=int(api_settings.ACCESS_TOKEN_LIFETIME.total_seconds()),
             )
-            # Set refresh token similarly.
             response.set_cookie(
                 key="refresh",
                 value=data["refresh"],
                 httponly=True,
-                secure=False,
+                secure=False,  # Set to True in production
                 samesite="Lax",
                 max_age=int(api_settings.REFRESH_TOKEN_LIFETIME.total_seconds()),
             )
+
         return response
 
 resend.api_key = settings.RESEND_API_KEY
@@ -76,32 +83,39 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
     def perform_create(self, serializer):
-        user = serializer.save(is_active=False)
+
+        user = serializer.save(is_active=True)
+
         token = RefreshToken.for_user(user).access_token
         current_site = get_current_site(self.request).domain
         verification_link = f"http://{current_site}{reverse('email-verify')}?token={token}"
-
-        resend.Emails.send({
-            "from": "ResuMe <onboarding@resend.dev>",
-            "to": [user.email],
-            "subject": "Verify your email",
-            "html":  f"""
-                <p>Click <a href='{verification_link}'>here</a> to verify your email.</p>
-                <p><strong>This link will expire in 15 minutes.</strong></p>
-            """,
-        })
-
-        def delete_if_unverified():
-            user.refresh_from_db()
-            if not user.is_active:
-                user.delete()
-                print(f"Deleted unverified user: {user.username}")
         
-        Timer(900, delete_if_unverified).start()
+        try:
+            # Send email only for your demo email
+            response = resend.Emails.send({
+                "from": "ResuMe <onboarding@resend.dev>",
+                "to": [user.email],
+                "subject": "Verify your email",
+                "html": f"""
+                    <p>Click <a href='{verification_link}'>here</a> to verify your email.</p>
+                    <p><strong>This link will expire in 15 minutes.</strong></p>
+                """
+            })
+            print(f"Email sent successfully: {response}")
+        except Exception as e:
+            print(f"Error sending email: {str(e)}")
+        
+        # def delete_if_unverified():
+        #     user.refresh_from_db()
+        #     if not user.is_active:
+        #         user.delete()
+        #         print(f"Deleted unverified user: {user.username}")
+        
+        # Timer(900, delete_if_unverified).start()
 
         return Response({
             "email": user.email,
-            "message": "Registration successful! Please check your inbox to verify your account."
+            "message": "Registration successful! "
         }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])

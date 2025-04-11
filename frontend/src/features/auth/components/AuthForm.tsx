@@ -42,12 +42,15 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
         navigate("/email-verification", { state: { email } });
       }
     } catch (err: any) {
-      setFieldErrors(err.response?.data || {});
-      setError(
-        err.response?.data?.detail ||
-          err.response?.data?.non_field_errors?.[0] ||
-          "An error occurred"
-      );
+      const errorData = err.response?.data;
+      setFieldErrors(errorData || {});
+      const generalError =
+        errorData?.detail ||
+        errorData?.non_field_errors?.[0] ||
+        (!errorData?.username && !errorData?.email && !errorData?.password
+          ? "Something went wrong. Please try again."
+          : "");
+      setError(generalError);
     }
   };
 
@@ -68,7 +71,9 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
               onChange={(e) =>
                 setFormData({ ...formData, username: e.target.value })
               }
-              className="w-full px-4 py-2 border rounded-md text-black"
+              className={`w-full px-4 py-2 border rounded-md ${
+                fieldErrors.username ? "border-red-500" : "border-gray-300"
+              } text-black`}
               required
             />
             {fieldErrors.username && (
@@ -107,11 +112,15 @@ export const AuthForm = ({ mode }: AuthFormProps) => {
               className="w-full px-4 py-2 border rounded-md text-black"
               required
             />
-            {fieldErrors.password && (
-              <p className="text-red-500 text-sm mt-1">
-                {fieldErrors.password}
-              </p>
-            )}
+            {Array.isArray(fieldErrors.password) &&
+              fieldErrors.password.length > 0 && (
+                <ul className="text-red-500 text-sm mt-1 list-disc list-inside space-y-1">
+                  {fieldErrors.password.map((msg, idx) => (
+                    <li key={idx}>{msg}</li>
+                  ))}
+                </ul>
+              )}
+
           </div>
 
           <Button variant="primary" type="submit" className="w-full">
