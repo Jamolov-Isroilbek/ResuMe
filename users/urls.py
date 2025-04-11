@@ -9,7 +9,8 @@ from .views import (
     VerifyEmailView,
     ForgotPasswordView,
     ResetPasswordView,
-    CookieTokenObtainPairView
+    CookieTokenObtainPairView,
+    guest_login,
 )
 
 urlpatterns = [
@@ -23,5 +24,5 @@ urlpatterns = [
     path("auth/forgot-password/", ForgotPasswordView.as_view(), name="forgot-password"),
     path("auth/reset-password/", ResetPasswordView.as_view(), name="reset-password"),
     path("users/me/delete/", DeleteAccountView.as_view(), name="delete-account"),
-
+    path('auth/guest/', guest_login, name='guest-login')
 ]

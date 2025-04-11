@@ -16,6 +16,12 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.utils.timezone import now
+from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from .models import GuestUser
+import uuid
+import datetime
 from datetime import datetime, timedelta, timezone
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -137,6 +143,17 @@ def logout_view(request):
     except Exception as e:
         return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
     
+@require_POST
+def guest_login(request):
+    expiration = timezone.now() + datetime.timedelta(hours=24)
+    token = str(uuid.uuid4())
+    guest_user = GuestUser.objects.create(token=token, expires_at=expiration)
+    return JsonResponse({
+        "guest_id": guest_user.id,
+        "guest_token": guest_user.token,
+        "expires_at": guest_user.expires_at.isoformat()
+    })
+
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
     API for retrieving and updating user profile details.
