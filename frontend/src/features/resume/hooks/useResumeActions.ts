@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import api from "@/lib/api/axiosClient";
 import { toast } from "react-toastify";
+import { Resume } from "@/types/shared/resume";
 
 export const useResumeActions = (refetchResumes?: () => void) => {
   const navigate = useNavigate();
@@ -65,15 +66,10 @@ export const useResumeActions = (refetchResumes?: () => void) => {
     );
   };
 
-  const handleFavorite = async (id: number) => {
-    try {
-      await api.post(`/resumes/${id}/favorite/`);
-      toast.success("Resume favorite status toggled");
-      refetchResumes?.();
-    } catch (error) {
-      toast.error("Failed to toggle favorite");
-    }
-  };
+  const handleFavorite = async (resumeId: number): Promise<Resume> => {
+    const response = await api.post(`/resumes/${resumeId}/favorite/`);
+    return response.data.resume;
+  };  
 
   return {
     handleView,

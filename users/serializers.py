@@ -50,7 +50,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_profile_picture(self, obj):
         request = self.context.get('request')
         if obj.profile_picture:
+            print("📸 Serving custom profile picture:", obj.profile_picture.url)
             return request.build_absolute_uri(obj.profile_picture.url) if request else obj.profile_picture.url
+        print("📎 Serving default profile picture")
         return request.build_absolute_uri("/media/profile_pics/default.png")
 
 class ChangePasswordSerializer(serializers.Serializer):

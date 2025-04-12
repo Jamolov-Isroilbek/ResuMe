@@ -3,7 +3,7 @@ from django.core.validators import URLValidator
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.contrib.auth import get_user_model
-from users.models import User, GuestUser
+from users.models import User
 from .enums import ResumeStatus, PrivacySettings, SkillType
 
 User = get_user_model()
@@ -13,7 +13,6 @@ class Resume(models.Model):
     Represents a Resume linked to a User
     """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='resumes', null=True)
-    guest_user = models.ForeignKey(GuestUser, on_delete=models.CASCADE, related_name='guest_resumes', null=True)
     title = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -129,6 +128,7 @@ class ResumeAnalytics(models.Model):
 
     def __str__(self):
         return f"Analytics for {self.resume.title}"
+        
 
 # Add signals to auto-create analytics
 @receiver(post_save, sender=Resume)

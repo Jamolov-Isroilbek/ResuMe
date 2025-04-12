@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { useAuth } from "@/providers/AuthProvider";
 import { Loader } from "@/lib/ui/common/Loader";
 import { Resume, ResumeStatus, PrivacySettings } from "@/types/shared/resume";
@@ -23,9 +23,14 @@ const PublicResumes: React.FC = () => {
     isLoading,
     error,
     refresh: refreshResumes,
+    toggleFavoriteInState,
   } = usePublicResumes(sortOption);
   const { handleView, handleDownload, handleShare, handleFavorite } =
     useResumeActions();
+  
+  const handleToggleFavorite = useCallback((resumeId: number, updatedResume: Resume) => {
+    toggleFavoriteInState(resumeId, updatedResume);
+  }, [toggleFavoriteInState]);
 
   const filteredResumes =
     publicResumes?.filter((resume: Resume) => {
@@ -70,6 +75,7 @@ const PublicResumes: React.FC = () => {
           resumes={filteredResumes}
           currentUserId={currentUser?.id}
           refreshResumes={refreshResumes}
+          toggleFavoriteInState={handleToggleFavorite}
         />
       ) : (
         <p className="text-center text-gray-500 dark:text-gray-400 mt-8">

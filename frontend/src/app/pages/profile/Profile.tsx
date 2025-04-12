@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import api from "@/lib/api/axiosClient";
 import { useAsync } from "@/lib/hooks/useAsync";
 import { Button } from "@/lib/ui/buttons/Button";
@@ -33,27 +33,89 @@ const Profile: React.FC = () => {
     newPassword: "",
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user?.data) {
+      setFormState(prevState => ({
+        ...prevState,
+        username: user.data.username || "",
+        email: user.data.email || "",
+        oldPassword: "",
+        newPassword: "",
+      }));
+    }
+  }, [user?.data]);
+  
+  // Clean up object URLs to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (previewUrl && previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(previewUrl);
+      }
+    };
+  }, [previewUrl]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
       setSelectedFile(files[0]);
+      
+      // Create a preview URL for immediate display
+      const objectUrl = URL.createObjectURL(files[0]);
+      setPreviewUrl(objectUrl);
     }
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("username", formState.username);
-    formData.append("email", formState.email);
-    if (selectedFile) formData.append("profile_picture", selectedFile);
-
-    await api.put("/me/", formData, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-    refresh();
+    setIsSubmitting(true);
+    
+    try {
+      const formData = new FormData();
+      
+      // Only append if values are different from current user data
+      if (formState.username !== user?.data.username) {
+        formData.append("username", formState.username);
+      }
+      
+      if (formState.email !== user?.data.email) {
+        formData.append("email", formState.email);
+      }
+      
+      // Only append file if selected
+      if (selectedFile) {
+        formData.append("profile_picture", selectedFile);
+      }
+      
+      // Only make the request if there are changes
+      if (formData.has("username") || formData.has("email") || formData.has("profile_picture")) {
+        await api.put("/me/", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        
+        toast.success("Profile updated successfully");
+        
+        // Don't reset the preview until we've confirmed the update succeeded
+        // The preview will continue to show until the refresh completes
+        
+        // Refresh user data in the background
+        refresh();
+      } else {
+        toast.info("No changes to save");
+      }
+    } catch (error: any) {
+      console.error("Error updating profile:", error);
+      toast.error(error.response?.data?.detail || "Failed to update profile");
+      // If upload failed, revert to the original image
+      setPreviewUrl(null);
+    } finally {
+      setIsSubmitting(false);
+      setSelectedFile(null);
+    }
   };
 
   const handleChangePassword = async () => {
@@ -69,8 +131,10 @@ const Profile: React.FC = () => {
       });
       setFormState((prev) => ({ ...prev, oldPassword: "", newPassword: "" }));
       setPasswordError("");
+      toast.success("Password updated successfully");
     } catch (err: any) {
       setPasswordError(err.response?.data?.detail || "Password update failed");
+      toast.error("Password update failed");
     }
   };
 
@@ -96,6 +160,10 @@ const Profile: React.FC = () => {
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500">Error loading profile</div>;
 
+  // Use the preview URL if available, otherwise use the profile picture from the user data
+  const profilePicUrl = previewUrl || 
+    (user?.data.profile_picture ? `${user.data.profile_picture}?t=${Date.now()}` : "/default.png");
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-12">
       <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-800 rounded-xl shadow-md p-6">
@@ -104,14 +172,11 @@ const Profile: React.FC = () => {
           <div className="flex flex-col items-center gap-3">
             <div className="relative w-32 h-32">
               <img
-                src={
-                  `${user?.data.profile_picture}?v=${Date.now()}` ||
-                  "/default.png"
-                }
+                src={profilePicUrl}
                 alt="Profile"
                 className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
                 onError={(e) => {
-                  e.currentTarget.src = "/defaultr.png";
+                  e.currentTarget.src = "/default.png";
                 }}
               />
               <label className="absolute bottom-0 right-0 bg-blue-600 text-white text-xs px-2 py-1 rounded-full cursor-pointer hover:bg-blue-700 transition">
@@ -127,6 +192,11 @@ const Profile: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">
               PNG, JPG, or JPEG – Max 5MB
             </p>
+            {selectedFile && (
+              <p className="text-sm text-green-500">
+                Selected: {selectedFile.name}
+              </p>
+            )}
           </div>
 
           {/* Profile Info */}
@@ -204,8 +274,9 @@ const Profile: React.FC = () => {
             type="submit"
             variant="primary"
             className="w-full mt-6 hover:bg-blue-700 transition"
+            disabled={isSubmitting}
           >
-            Save Changes
+            {isSubmitting ? "Saving..." : "Save Changes"}
           </Button>
 
           <Button

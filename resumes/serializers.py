@@ -52,18 +52,7 @@ class ResumeSerializer(serializers.ModelSerializer):
 
         data = self.initial_data if hasattr(self, 'initial_data') else {}
         if data.get("resume_status") == ResumeStatus.DRAFT:
-            # Relax top-level requirements
-            self.fields["title"].required = False
-            self.fields["personal_details"].required = False
-            self.fields["education"].required = False
-            self.fields["work_experience"].required = False
-            self.fields["skills"].required = False
-
-            # Relax nested personal details
-            pd_fields = self.fields["personal_details"].fields
-            for field in pd_fields.values():
-                field.required = False
-                field.allow_blank = True
+            self.fields 
 
     class Meta:
         model = Resume
@@ -262,6 +251,7 @@ class ResumeSerializer(serializers.ModelSerializer):
         PersonalDetails.objects.create(resume=resume, **personal_details_data)
         Education.objects.bulk_create([Education(resume=resume, **edu) for edu in education_data])
         WorkExperience.objects.bulk_create([WorkExperience(resume=resume, **work) for work in work_experience_data])
+        Skill.objects.bulk_create([Skill(resume=resume, **skill) for skill in skills_data])
 
         # Handle optional awards
         if awards_data:
@@ -269,10 +259,6 @@ class ResumeSerializer(serializers.ModelSerializer):
         return resume
 
     def update(self, instance, validated_data):
-        print("VALIDATED DATA:", validated_data)
-        print("SETTING is_anonymized to:", validated_data.get("is_anonymized"))
-
-
         # Update simple fields
         instance.title = validated_data.get('title', instance.title)
         instance.resume_status = validated_data.get('resume_status', instance.resume_status)
@@ -280,9 +266,6 @@ class ResumeSerializer(serializers.ModelSerializer):
         instance.template = validated_data.get('template', instance.template)
         instance.is_anonymized = validated_data.get('is_anonymized', instance.is_anonymized)
         instance.save()
-
-        print("INSTANCE VALUE:", instance.is_anonymized)
-
 
         # Update personal details
         personal_details_data = validated_data.get('personal_details', {})

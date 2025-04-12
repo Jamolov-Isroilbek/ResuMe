@@ -6,6 +6,7 @@ type InputElement = HTMLInputElement | HTMLTextAreaElement;
 interface InputFieldProps {
   label: string;
   value: string | number;
+  hideLabel?: boolean;
   onChange: (e: React.ChangeEvent<InputElement>) => void;
   type?: React.HTMLInputTypeAttribute;
   as?: "input" | "textarea";
@@ -19,15 +20,20 @@ interface InputFieldProps {
 }
 
 export const InputField = React.forwardRef<InputElement, InputFieldProps>(
-  ({ label, as = "input", className = "", ...props }, ref) => {
+  (
+    { label, as = "input", className = "", hideLabel = false, ...props },
+    ref
+  ) => {
     const Element = as;
 
     return (
       <div className="space-y-1">
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-          {label}
-          {props.required && <span className="text-red-500 ml-1">*</span>}
-        </label>
+        {!hideLabel && (
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+            {label}
+            {props.required && <span className="text-red-500 ml-1">*</span>}
+          </label>
+        )}
         <Element
           ref={ref as any}
           className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-zinc-700 text-black dark:text-white ${

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import axios from "axios";
+import api from "@/lib/api/axiosClient"; 
 import { Resume } from "@/types/shared/resume";
 
 export const usePublicResumes = (sortOption: string) => {
@@ -11,7 +11,7 @@ export const usePublicResumes = (sortOption: string) => {
   const fetchResumes = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await axios.get("http://localhost:8000/api/public-resumes/", {
+      const response = await api.get("http://localhost:8000/api/public-resumes/", {
         params: { sort: sortOption },
         withCredentials: true, // Ensure cookies are sent if needed
       });
@@ -26,9 +26,24 @@ export const usePublicResumes = (sortOption: string) => {
     }
   }, [sortOption]);
 
+  const toggleFavoriteInState = useCallback((resumeId: number, updatedResume: Resume) => {
+    setPublicResumes(prev => 
+      prev.map(resume => 
+        resume.id === resumeId ? updatedResume : resume
+      )
+    );
+  }, []);
+
   useEffect(() => {
     fetchResumes();
   }, [fetchResumes]);
 
-  return { publicResumes, count, isLoading, error, refresh: fetchResumes };
+  return { 
+    publicResumes, 
+    count, 
+    isLoading, 
+    error, 
+    refresh: fetchResumes,
+    toggleFavoriteInState,
+   };
 };

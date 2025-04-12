@@ -12,15 +12,9 @@ from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
-from django.utils.timezone import now
 from django.utils import timezone
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from .models import GuestUser
-import uuid
 import datetime
 from datetime import datetime, timedelta, timezone
 from django.contrib.sites.shortcuts import get_current_site
@@ -29,8 +23,12 @@ from django.conf import settings
 from django.shortcuts import redirect
 import resend
 from threading import Timer
-from jwt import decode as jwt_decode
 
+from sympy import Sum
+
+from resumes.enums import PrivacySettings
+from resumes.models import Favorite, Resume, ResumeAnalytics
+from users.authentication import CookieJWTAuthentication
 from users.utils import TimedTokenGenerator
 
 from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer
@@ -142,17 +140,6 @@ def logout_view(request):
         return Response({"message": "Logged out successfully"}, status=status.HTTP_200_OK)
     except Exception as e:
         return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
-    
-@require_POST
-def guest_login(request):
-    expiration = timezone.now() + datetime.timedelta(hours=24)
-    token = str(uuid.uuid4())
-    guest_user = GuestUser.objects.create(token=token, expires_at=expiration)
-    return JsonResponse({
-        "guest_id": guest_user.id,
-        "guest_token": guest_user.token,
-        "expires_at": guest_user.expires_at.isoformat()
-    })
 
 class UserProfileView(generics.RetrieveUpdateAPIView):
     """
@@ -167,11 +154,41 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
         
     def update(self, request, *args, **kwargs):
         user = self.get_object()
-        serializer = self.get_serializer(user, data=request.data, partial=True)
+        profile_picture = request.FILES.get("profile_picture")
 
+        serializer = self.get_serializer(user, data=request.data, partial=True, context={"request": request})
         serializer.is_valid(raise_exception=True)
-        serializer.save()  
-        return Response(serializer.data)
+        
+        # Manually update profile_picture
+        if profile_picture:
+            user.profile_picture = profile_picture
+        
+        user.username = serializer.validated_data.get("username", user.username)
+        user.email = serializer.validated_data.get("email", user.email)
+        user.save()
+        
+        return Response(self.get_serializer(user).data)
+
+
+class UserStatsView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [CookieJWTAuthentication]
+    
+    def get(self, request):
+        user = request.user
+        public_resumes = Resume.objects.filter(user=user, privacy_setting=PrivacySettings.PUBLIC)
+        analytics = ResumeAnalytics.objects.filter(resume__in=public_resumes)
+
+        total_views = analytics.aggregate(total=Sum("views"))["total"] or 0
+        total_downloads = analytics.aggregate(total=Sum("downloads"))["total"] or 0
+        total_favorites = Favorite.objects.filter(resume__in=public_resumes).exclude(user=user).count()
+
+        return Response({
+            "views": total_views,
+            "downloads": total_downloads,
+            "favorites": total_favorites
+        })
+
 
 class VerifyEmailView(APIView):
     permission_classes = [AllowAny]

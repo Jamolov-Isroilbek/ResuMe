@@ -1,14 +1,11 @@
 from django.db.models import Sum
 from django.http import HttpResponse
 from django.conf import settings
-from django.templatetags.static import static
 import os
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
-from pydantic import ValidationError
 from rest_framework import generics, permissions, status, filters, serializers
 from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from weasyprint import HTML, CSS
 
@@ -16,7 +13,6 @@ from .models import Resume, Education, ResumeAnalytics, WorkExperience, Skill, P
 from .serializers import ResumeSerializer, PersonalDetailsSerializer, sanitize_resume_data
 from .enums import PrivacySettings, ResumeStatus
 from users.authentication import CookieJWTAuthentication
-from users.models import GuestUser
 
 class ResumeStatsView(generics.RetrieveAPIView):
     """
@@ -37,14 +33,23 @@ class PublicResumesView(generics.ListAPIView):
     """
     API to list public resumes only.
     """
-    queryset = Resume.objects.filter(
-        privacy_setting=PrivacySettings.PUBLIC
-    ).select_related('analytics')
+
     serializer_class = ResumeSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['created_at', 'updated_at', 'title', 'user__username']
     ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = Resume.objects.filter(
+            privacy_setting=PrivacySettings.PUBLIC
+        ).select_related('analytics')
+
+        # If user is authenticated, exclude their own resumes
+        if self.request.user.is_authenticated:
+            queryset = queryset.exclude(user=self.request.user)
+
+        return queryset
 
     def get_serializer_context(self):
         return {'request': self.request}
@@ -57,9 +62,13 @@ class ResumeHTMLView(generics.GenericAPIView):
     def get(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
 
-        analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
-        analytics.views += 1
-        analytics.save()
+        # print("Authenticated user:", request.user)
+        # print("Resume owner:", resume.user)
+
+        if request.user != resume.user:
+            analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
+            analytics.views += 1
+            analytics.save()
 
         # Privacy check
         if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
@@ -81,9 +90,10 @@ class ResumePDFDownloadView(generics.GenericAPIView):
     def get(self, request, pk):
         resume = get_object_or_404(Resume, pk=pk)
 
-        analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
-        analytics.downloads += 1
-        analytics.save()
+        if request.user != resume.user:
+            analytics, _ = ResumeAnalytics.objects.get_or_create(resume=resume)
+            analytics.downloads += 1
+            analytics.save()
 
         # Authorization
         if resume.privacy_setting == PrivacySettings.PRIVATE and resume.user != request.user:
@@ -120,45 +130,10 @@ class ResumeListCreateView(generics.ListCreateAPIView):
         return super().create(request, *args, **kwargs)
 
     def get_queryset(self):
-        user = self.request.user
-        token = self.request.headers.get('Authorization', '')
-
-        # Check if user is authenticated (registered user)
-        if user and user.is_authenticated:
-            return Resume.objects.filter(user=user)
-
-        # Handle Guest Users
-        if token.startswith("Bearer "):
-            guest_token = token.replace("Bearer ", "").strip()
-            try:
-                guest_user = GuestUser.objects.get(token=guest_token)
-            except GuestUser.DoesNotExist:
-                return Resume.objects.none()
-
-            return Resume.objects.filter(guest_user=guest_user)
-
-        return Resume.objects.none()
+        return Resume.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
-        user = self.request.user
-        token = self.request.headers.get('Authorization', '')
-
-        if user and user.is_authenticated:
-            serializer.save(user=user)
-        elif token.startswith("Bearer "):
-            guest_token = token.replace("Bearer ", "").strip()
-            try:
-                guest_user = GuestUser.objects.get(token=guest_token)
-            except GuestUser.DoesNotExist:
-                raise PermissionDenied("Invalid guest token.")
-            guest_resume_count = Resume.objects.filter(guest_user=guest_user).count()
-            if guest_resume_count >= 3:
-                raise ValidationError(
-                    "You have reached the maximum number of guest resumes. Please log in or register to create more resumes."
-                )
-            serializer.save(guest_user=guest_user)
-        else:
-            raise PermissionDenied("Unauthorized")
+        serializer.save(user=self.request.user)
         
     def perform_update(self, serializer):
         serializer.save(user=self.request.user)
@@ -209,11 +184,12 @@ class ResumeDetailView(generics.RetrieveUpdateDestroyAPIView):
         data = request.data.copy() 
 
         serializer = ResumeSerializer(
-    instance,
-    data=data,
-    partial=True,
-    context={"request": request}
-)
+            instance,
+            data=data,
+            partial=True,
+            context={"request": request}
+        )
+
         try:
             serializer.is_valid(raise_exception=True)
         except serializers.ValidationError as exc:
@@ -275,7 +251,7 @@ class UserStatsView(generics.GenericAPIView):
         
         total_favorites = Favorite.objects.filter(
             resume__user=user
-        ).count()
+        ).exclude(user=user).count()
 
         return Response({
             'views': total_views,
