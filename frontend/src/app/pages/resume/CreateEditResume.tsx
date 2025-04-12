@@ -32,6 +32,8 @@ import {
   PrivacySettings,
   Resume,
 } from "@/types/shared/resume";
+import { Button } from "@/lib/ui/buttons/Button";
+import ToggleSwitch from "@/lib/ui/ToggleSwitch";
 
 const initialFormData: ResumeFormData = {
   title: "",
@@ -171,6 +173,16 @@ const CreateEditResume: React.FC = () => {
     }
   };
 
+  const handleClearForm = () => {
+    if (
+      window.confirm(
+        "Are you sure want to clear the form? All unsaved data will be lost."
+      )
+    ) {
+      setFormData(initialFormData);
+    }
+  };
+
   const handleAction = (status: ResumeStatus) => {
     const cleanedData = sanitizeResumeData({
       ...formData,
@@ -292,25 +304,6 @@ const CreateEditResume: React.FC = () => {
               </FormSection>
 
               <FormSection
-                title="Anonymization"
-                tooltip="If checked, personal details (like your name and contact info) will be hidden from public resumes. This applies only to resumes marked as 'Public'."
-              >
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_anonymized}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        is_anonymized: e.target.checked,
-                      }))
-                    }
-                  />
-                  Anonymize this resume in public
-                </label>
-              </FormSection>
-
-              <FormSection
                 title="Choose Resume Template"
                 tooltip="Choose a predefined design layout for your resume."
               >
@@ -374,13 +367,21 @@ const CreateEditResume: React.FC = () => {
               </FormSection>
 
               <FormSection>
-                <FormActions
-                  isEditing={isEditing}
-                  status={formData.resume_status}
-                  onSubmit={() => handleAction(ResumeStatus.PUBLISHED)}
-                  onSaveDraft={() => handleAction(ResumeStatus.DRAFT)}
-                  onCancel={handleCancel}
-                />
+                <div className="flex items-center justify-between gap-2 mt-4">
+                  {/* Left side */}
+                  <Button variant="danger" onClick={handleClearForm}>
+                    Clear Form
+                  </Button>
+
+                  {/* Right side */}
+                  <FormActions
+                    isEditing={isEditing}
+                    status={formData.resume_status}
+                    onSubmit={() => handleAction(ResumeStatus.PUBLISHED)}
+                    onSaveDraft={() => handleAction(ResumeStatus.DRAFT)}
+                    onCancel={handleCancel}
+                  />
+                </div>
               </FormSection>
             </form>
           </CustomErrorBoundary>
