@@ -306,4 +306,9 @@ class DeleteAccountView(APIView):
         user = request.user
         username = user.username
         user.delete()
-        return Response({"message": f"Account '{username}' and all associated data deleted."}, status=status.HTTP_200_OK)
+        response = Response({"message": f"Account '{username}' and all associated data deleted."}, status=status.HTTP_200_OK)
+    
+        # Clear the authentication cookies
+        response.delete_cookie("access")
+        response.delete_cookie("refresh")
+        return response

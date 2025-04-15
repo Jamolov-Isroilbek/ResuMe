@@ -76,7 +76,7 @@ export const AIResumeSuggestionsPanel: React.FC<
               <textarea
                 value={jobDescription}
                 onChange={(e) => setJobDescription(e.target.value)}
-                className="w-full border rounded-md p-2"
+                className="w-full border rounded-md p-2 dark:bg-gray-800 dark:text-white"
                 rows={4}
               />
             </div>
