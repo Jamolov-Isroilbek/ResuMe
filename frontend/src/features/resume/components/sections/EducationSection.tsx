@@ -59,7 +59,7 @@ export const EducationSection: React.FC<EducationSectionProps> = React.memo(
                   label="Major"
                   value={edu.major || ""}
                   onChange={(e) => onChange(index, "major", e.target.value)}
-                  placeholder="e.g., Computer Science"
+                  placeholder="e.g., BSc. Computer Science"
                 />
                 <InputField
                   label="CGPA"
@@ -68,8 +68,8 @@ export const EducationSection: React.FC<EducationSectionProps> = React.memo(
                   type="number"
                   step={0.01}
                   min={0}
-                  max={4}
-                  placeholder="4.0"
+                  max={5}
+                  placeholder="5.0"
                 />
               </div>
 

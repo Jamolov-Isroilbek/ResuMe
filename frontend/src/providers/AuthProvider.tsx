@@ -4,14 +4,12 @@ import api from '@/lib/api/axiosClient';
 export interface AuthUser {
   id: number;
   username: string;
-  isGuest?: boolean;
 }
 
 interface AuthContextType {
   user: null | AuthUser;
   isAuthenticated: boolean;
   login: (access: string, refresh: string) => void;
-  guestLogin: (guestToken: string) => void;
   logout: () => void;
   loading: boolean;
 }
@@ -46,11 +44,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(response.data);
   };
 
-  const guestLogin = (guestToken: string) => {
-    localStorage.setItem('guest_token', guestToken);
-    setUser({ id: 0, username: "Guest", isGuest: true });
-  }
-
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('refresh_token');
@@ -63,7 +56,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         user,
         isAuthenticated: !!user,
         login,
-        guestLogin,
         logout,
         loading
       }}
