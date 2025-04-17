@@ -119,24 +119,30 @@ const Profile: React.FC = () => {
   };
 
   const handleChangePassword = async () => {
+    if (!formState.oldPassword || !formState.newPassword) {
+      setPasswordError("Both fields are required");
+      return;
+    }
     try {
-      if (!formState.oldPassword || !formState.newPassword) {
-        setPasswordError("Both fields are required");
-        return;
-      }
-
       await api.put("/change-password/", {
         old_password: formState.oldPassword,
         new_password: formState.newPassword,
       });
-      setFormState((prev) => ({ ...prev, oldPassword: "", newPassword: "" }));
+      setFormState(prev => ({ ...prev, oldPassword: "", newPassword: "" }));
       setPasswordError("");
       toast.success("Password updated successfully");
     } catch (err: any) {
-      setPasswordError(err.response?.data?.detail || "Password update failed");
-      toast.error("Password update failed");
+      const data = err.response?.data || {};
+      const message =
+        data.old_password ||
+        (Array.isArray(data.new_password) ? data.new_password.join(", ") : data.new_password) ||
+        data.detail ||
+        "Password update failed";
+      setPasswordError(message);
+      toast.error(message);
     }
   };
+  
 
   const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm(
@@ -263,6 +269,7 @@ const Profile: React.FC = () => {
             )}
             <Button
               variant="secondary"
+              type="button"
               onClick={handleChangePassword}
               className="w-full mt-4"
             >
