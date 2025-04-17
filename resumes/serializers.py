@@ -1,10 +1,15 @@
+import re
 from rest_framework import serializers
-from .models import Resume, PersonalDetails, Education, WorkExperience, Skill, Award 
+from .models import Project, Resume, PersonalDetails, Education, WorkExperience, Skill, Award 
 from django.contrib.auth import get_user_model
 from .enums import PrivacySettings, ResumeStatus
 
 User = get_user_model()
 class PersonalDetailsSerializer(serializers.ModelSerializer):
+    first_name = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=False, allow_blank=True)
+    email = serializers.EmailField(required=False, allow_blank=True)
+    phone = serializers.CharField(required=False, allow_blank=True)
     class Meta:
         model = PersonalDetails
         fields = '__all__'
@@ -21,6 +26,13 @@ class WorkExperienceSerializer(serializers.ModelSerializer):
         model = WorkExperience
         fields = '__all__'
         extra_kwargs = {'resume': {'required': False}}
+
+class ProjectSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Project
+        fields = '__all__'
+        extra_kwargs = {'resume': {'required': False}}
+
 
 class SkillSerializer(serializers.ModelSerializer):
     class Meta:
@@ -39,6 +51,7 @@ class ResumeSerializer(serializers.ModelSerializer):
     personal_details = PersonalDetailsSerializer()
     education = EducationSerializer(many=True)
     work_experience = WorkExperienceSerializer(many=True)
+    projects = ProjectSerializer(many=True, required=False)
     skills = SkillSerializer(many=True)
     awards = AwardSerializer(many=True, required=False)
     favorite_count = serializers.SerializerMethodField()
@@ -69,6 +82,7 @@ class ResumeSerializer(serializers.ModelSerializer):
             "personal_details", 
             "education", 
             "work_experience", 
+            "projects",
             "skills", 
             "awards",
             "favorite_count",
@@ -136,6 +150,18 @@ class ResumeSerializer(serializers.ModelSerializer):
             }
             for work in obj.work_experience.all()
         ]
+    
+    def get_projects(self, obj):
+        return [
+            {
+                "title": project.title,
+                "description": project.description,
+                "technologies": project.technologies,
+                "start_date": project.start_date,
+                "end_date": project.end_date,
+            }
+            for project in obj.projects.all()
+        ]
 
     def get_skills(self, obj):
         return [
@@ -182,47 +208,62 @@ class ResumeSerializer(serializers.ModelSerializer):
     
     # In serializers.py - Update the validate method
     def validate(self, data):
-        resume_status = data.get('resume_status')
-
+        resume_status = data.get('resume_status', getattr(self.instance, 'resume_status', ResumeStatus.DRAFT))
+    
+        # For drafts, only validate that title exists
+        if resume_status == ResumeStatus.DRAFT:
+            if not data.get('title') and (not self.instance or not self.instance.title):
+                raise serializers.ValidationError({'title': 'Title is required even for drafts'})
+            return data
+    
         # Only validate when publishing or updating a published resume
         if resume_status == ResumeStatus.PUBLISHED:
             errors = {}
-
-            # Check if fields are being modified
-            if 'personal_details' in data and not data.get('personal_details'):
+    
+            # Check personal details
+            if 'personal_details' in data:
+                personal_details = data.get('personal_details', {})
+                if not personal_details or not personal_details.get('first_name') or not personal_details.get('last_name') or not personal_details.get('email') or not personal_details.get('phone'):
+                    errors['personal_details'] = "Complete personal details are required for published resumes"
+                elif not re.match(r'^\S+@\S+\.\S+$', personal_details.get('email', '')):
+                    errors['personal_details'] = "A valid email address is required"
+                elif not re.match(r'^\+?\d{7,15}$', personal_details.get('phone', '')):
+                    errors['personal_details'] = "A valid phone number is required"
+            elif not self.instance or not hasattr(self.instance, 'personal_details'):
                 errors['personal_details'] = "Required for published resumes"
-
+    
+            # Check education
             if 'education' in data and not data.get('education'):
-                errors['education'] = "At least one entry required"
-
-            if 'work_experience' in data and not data.get('work_experience'):
-                errors['work_experience'] = "At least one entry required"
-
+                errors['education'] = "At least one education entry is required"
+            elif not self.instance or not self.instance.education.exists():
+                errors['education'] = "At least one education entry is required"
+    
+            # Check if there's at least one work experience or project
+            has_work_experience = False
+            has_projects = False
+            
+            if 'work_experience' in data:
+                has_work_experience = bool(data.get('work_experience'))
+            elif self.instance and self.instance.work_experience.exists():
+                has_work_experience = True
+                
+            if 'projects' in data:
+                has_projects = bool(data.get('projects'))
+            elif self.instance and self.instance.projects.exists():
+                has_projects = True
+                
+            if not has_work_experience and not has_projects:
+                errors['experience'] = "At least one work experience or project entry is required"
+    
+            # Check skills
             if 'skills' in data and not data.get('skills'):
-                errors['skills'] = "At least one skill required"
-
-            # For existing published resumes, check existing data if fields not in update
-            if self.instance and self.instance.resume_status == ResumeStatus.PUBLISHED:
-                if not data.get('personal_details') and not hasattr(self.instance, 'personal_details'):
-                    errors['personal_details'] = "Required for published resumes"
-
-                if not data.get('education') and not self.instance.education.exists():
-                    errors['education'] = "At least one entry required"
-
-                if not data.get('work_experience') and not self.instance.work_experience.exists():
-                    errors['work_experience'] = "At least one entry required"
-
-                if not data.get('skills') and not self.instance.skills.exists():
-                    errors['skills'] = "At least one skill required"
-
+                errors['skills'] = "At least one skill is required"
+            elif not self.instance or not self.instance.skills.exists():
+                errors['skills'] = "At least one skill is required"
+    
             if errors:
                 raise serializers.ValidationError(errors)
-
-        # For drafts, only validate that title exists
-        elif resume_status == ResumeStatus.DRAFT:
-            if not data.get('title') and (not self.instance or not self.instance.title):
-                raise serializers.ValidationError({'title': 'Title is required even for drafts'})
-
+    
         return data
 
     def to_internal_value(self, data):
@@ -244,6 +285,7 @@ class ResumeSerializer(serializers.ModelSerializer):
                 
         # Optional fields
         awards_data = validated_data.pop('awards', [])
+        projects_data = validated_data.pop('projects', [])
 
         resume = Resume.objects.create(**validated_data)
         
@@ -253,7 +295,9 @@ class ResumeSerializer(serializers.ModelSerializer):
         WorkExperience.objects.bulk_create([WorkExperience(resume=resume, **work) for work in work_experience_data])
         Skill.objects.bulk_create([Skill(resume=resume, **skill) for skill in skills_data])
 
-        # Handle optional awards
+        if projects_data:
+            Project.objects.bulk_create([Project(resume=resume, **project) for project in projects_data])
+
         if awards_data:
             Award.objects.bulk_create([Award(resume=resume, **award) for award in awards_data])
         return resume
@@ -280,6 +324,8 @@ class ResumeSerializer(serializers.ModelSerializer):
             self.update_related_objects(instance, 'education', Education, validated_data.get('education', []))
         if 'work_experience' in validated_data:
             self.update_related_objects(instance, 'work_experience', WorkExperience, validated_data.get('work_experience', []))
+        if 'projects' in validated_data:
+            self.update_related_objects(instance, 'projects', Project, validated_data.get('projects', []))
         if 'skills' in validated_data:
             self.update_related_objects(instance, 'skills', Skill, validated_data.get('skills', []))
         if 'awards' in validated_data:
@@ -313,6 +359,7 @@ def sanitize_resume_data(resume, is_anonymized=False):
         },
         "education": [edu.to_dict() for edu in resume.education.all()],
         "work_experience": [exp.to_dict() for exp in resume.work_experience.all()],
+        "projects": [project.to_dict() for project in resume.projects.all()],
         "skills": [skill.to_dict() for skill in resume.skills.all()],
         "awards": [award.to_dict() for award in resume.awards.all()],
     }

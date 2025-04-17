@@ -46,6 +46,15 @@ export enum ResumeStatus {
     description?: string;
   }
   
+  export interface Project {
+    title: string;
+    description: string;
+    technologies?: string;
+    start_date?: string;
+    end_date?: string;
+    currently_working?: boolean;
+  }
+
   export interface Skill {
     skill_name: string;
     skill_type: SkillType;
@@ -74,6 +83,7 @@ export enum ResumeStatus {
     personal_details: PersonalDetails;
     education: Education[];
     work_experience: WorkExperience[];
+    projects: Project[]
     skills: Skill[];
     awards: Award[];
     favorite_count?: number;
@@ -85,6 +95,7 @@ export enum ResumeStatus {
   export interface ResumeFormData extends Omit<Resume, 'id' | 'created_at' | 'updated_at' | 'user'> {
     education: Array<Omit<Education, 'id'>>;
     work_experience: Array<Omit<WorkExperience, 'id'>>;
+    projects: Array<Omit<Project, 'id'>>;
     skills: Array<Omit<Skill, 'id'>>;
     awards: Array<Omit<Award, 'id'>>;
     template: string;

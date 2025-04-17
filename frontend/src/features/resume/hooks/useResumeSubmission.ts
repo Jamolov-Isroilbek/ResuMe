@@ -40,6 +40,14 @@ export const useResumeSubmission = (id?: string) => {
         location: work.location || null,
         description: work.description || null,
       })),
+      projects: data.projects.map((project) => ({
+        title: project.title,
+        description: project.description || null,
+        technologies: project.technologies || null,
+        start_date: formatDate(project.start_date),
+        end_date: project.currently_working ? null : formatDate(project.end_date),
+        currently_working: project.currently_working,
+      })),
       skills: data.skills.map((skill) => ({
         skill_name: skill.skill_name,
         skill_type: skill.skill_type,

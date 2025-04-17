@@ -8,138 +8,148 @@ interface ValidationError {
 export const validateResumeData = (data: ResumeFormData): ValidationError[] => {
   const errors: ValidationError[] = [];
 
-  if (data.resume_status === ResumeStatus.PUBLISHED) {
-    // === Resume Metadata ===
-    if (!data.title.trim()) {
-      errors.push({
-        field: "title",
-        message: "Resume title is required.",
-      });
-    }
+  // For all resumes (draft or published), title is required
+  if (!data.title.trim()) {
+    errors.push({
+      field: "title",
+      message: data.resume_status === ResumeStatus.PUBLISHED
+        ? "Resume title is required."
+        : "Resume title is required even for drafts",
+    });
+  }
+  
+  // If not PUBLISHED, only validate title
+  if (data.resume_status !== ResumeStatus.PUBLISHED) {
+    return errors;
+  }
 
-    // === Personal Details ===
-    const { first_name, last_name, email, phone } = data.personal_details;
+  // === Personal Details (required for PUBLISHED only) ===
+  const { first_name, last_name, email, phone } = data.personal_details;
 
-    if (!data.personal_details.first_name.trim()) {
-      errors.push({
-        field: "personal_details",
-        message: "First name is required",
-      });
-    }
+  if (!first_name?.trim()) {
+    errors.push({
+      field: "personal_details",
+      message: "First name is required",
+    });
+  }
 
-    if (!data.personal_details.last_name.trim()) {
-      errors.push({
-        field: "personal_details",
-        message: "Last name is required",
-      });
-    }
+  if (!last_name?.trim()) {
+    errors.push({
+      field: "personal_details",
+      message: "Last name is required",
+    });
+  }
 
-    if (!data.personal_details.email.trim()) {
-      errors.push({
-        field: "personal_details",
-        message: "Email is required",
-      });
-    }
+  if (!email?.trim()) {
+    errors.push({
+      field: "personal_details",
+      message: "Email is required",
+    });
+  } else if (!/^\S+@\S+\.\S+$/.test(email)) {
+    errors.push({
+      field: "personal_details",
+      message: "A valid email address is required.",
+    });
+  }
 
-    if (!data.personal_details.phone.trim()) {
-      errors.push({
-        field: "personal_details",
-        message: "Phone number is required",
-      });
-    }
+  if (!phone?.trim()) {
+    errors.push({
+      field: "personal_details",
+      message: "Phone number is required",
+    });
+  } else if (!/^\+?\d{7,15}$/.test(phone)) {
+    errors.push({
+      field: "personal_details",
+      message: "A valid phone number is required.",
+    });
+  }
 
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
-      errors.push({
-        field: "personal_details",
-        message: "A valid email address is required.",
-      });
-    }
+  // === Education (required for PUBLISHED only) ===
+  if (!data.education || data.education.length === 0) {
+    errors.push({
+      field: "education",
+      message: "At least one education entry is required",
+    });
+  } else {
+    data.education.forEach((edu, index) => {
+      if (!edu.institution?.trim()) {
+        errors.push({
+          field: "education",
+          message: `Education entry ${index + 1} is missing the institution name.`,
+        });
+      }
+      if (!edu.start_date?.trim()) {
+        errors.push({
+          field: "education",
+          message: `Education entry ${index + 1} is missing the start date.`,
+        });
+      }
+      if (!edu.major?.trim()) {
+        errors.push({
+          field: "education",
+          message: `Education entry ${index + 1} is missing the major.`,
+        });
+      }
+    });
+  }
 
-    if (!phone || !/^\+?\d{7,15}$/.test(phone)) {
-      errors.push({
-        field: "personal_details",
-        message: "A valid phone number is required.",
-      });
-    }
+  // === Work Experience OR Projects (at least one required for PUBLISHED) ===
+  const hasWorkExperience = data.work_experience && data.work_experience.length > 0;
+  const hasProjects = data.projects && data.projects.length > 0;
+  
+  if (!hasWorkExperience && !hasProjects) {
+    errors.push({
+      field: "experience",
+      message: "At least one work experience or project entry is required",
+    });
+  }
+  
+  if (hasWorkExperience) {
+    data.work_experience.forEach((work, index) => {
+      if (!work.employer?.trim()) {
+        errors.push({
+          field: "work_experience",
+          message: `Work experience entry ${index + 1} is missing the employer name.`,
+        });
+      }
+      if (!work.role?.trim()) {
+        errors.push({
+          field: "work_experience",
+          message: `Work experience entry ${index + 1} is missing the role.`,
+        });
+      }
+      if (!work.start_date?.trim()) {
+        errors.push({
+          field: "work_experience",
+          message: `Work experience entry ${index + 1} is missing the start date.`,
+        });
+      }
+    });
+  }
+  
+  if (hasProjects) {
+    data.projects.forEach((project, index) => {
+      if (!project.title?.trim()) {
+        errors.push({
+          field: "projects",
+          message: `Project entry ${index + 1} is missing the title.`,
+        });
+      }
+      if (!project.start_date?.trim()) {
+        errors.push({
+          field: "projects",
+          message: `Project entry ${index + 1} is missing the start date.`,
+        });
+      }
+    });
+  }
 
-    // === Education ===
-    if (data.education.length === 0) {
-      errors.push({
-        field: "education",
-        message: "At least one education entry is required",
-      });
-    } else {
-      data.education.forEach((edu, index) => {
-        if (!edu.institution?.trim()) {
-          errors.push({
-            field: "education",
-            message: `Education entry ${
-              index + 1
-            } is missing the institution name.`,
-          });
-        }
-        if (!edu.start_date?.trim()) {
-          errors.push({
-            field: "education",
-            message: `Education entry ${index + 1} is missing the start date.`,
-          });
-        }
-        if (!edu.major?.trim()) {
-          errors.push({
-            field: "education",
-            message: `Education entry ${index + 1} is missing the major.`,
-          });
-        }
-      });
-    }
-
-    // === Work Experience ===
-    if (data.work_experience.length === 0) {
-      errors.push({
-        field: "work_experience",
-        message: "At least one work experience entry is required",
-      });
-    } else {
-      data.work_experience.forEach((work, index) => {
-        if (!work.employer?.trim()) {
-          errors.push({
-            field: "work_experience",
-            message: `Work experience entry ${
-              index + 1
-            } is missing the employer name.`,
-          });
-        }
-        if (!work.role?.trim()) {
-          errors.push({
-            field: "work_experience",
-            message: `Work experience entry ${index + 1} is missing the role.`,
-          });
-        }
-        if (!work.start_date?.trim()) {
-          errors.push({
-            field: "work_experience",
-            message: `Work experience entry ${
-              index + 1
-            } is missing the start date.`,
-          });
-        }
-      });
-    }
-
-    // === Skills ===
-    if (data.skills.length === 0) {
-      errors.push({
-        field: "skills",
-        message: "At least one skill is required",
-      });
-    }
-  } else if (data.resume_status === ResumeStatus.DRAFT) {
-    if (!data.title.trim()) {
-      errors.push({
-        field: "title",
-        message: "Resume title is required even for drafts",
-      });
-    }
+  // === Skills (required for PUBLISHED only) ===
+  if (!data.skills || data.skills.length === 0) {
+    errors.push({
+      field: "skills",
+      message: "At least one skill is required",
+    });
   }
 
   return errors;

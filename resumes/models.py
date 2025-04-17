@@ -1,3 +1,4 @@
+import datetime
 from django.db import models, migrations
 from django.core.validators import URLValidator
 from django.db.models.signals import post_save
@@ -75,6 +76,25 @@ class WorkExperience(models.Model):
             "currently_working": self.currently_working,
             "location": self.location,
             "description": self.description,
+        }
+    
+class Project(models.Model):
+    resume = models.ForeignKey(Resume, on_delete=models.CASCADE, related_name="projects")
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    technologies = models.TextField(blank=True, null=True)
+    start_date = models.DateField(default=datetime.date.today)
+    end_date = models.DateField(null=True, blank=True)
+    currently_working = models.BooleanField(default=False)
+    
+    def to_dict(self):
+        return {
+            "title": self.title,
+            "description": self.description,
+            "technologies": self.technologies,
+            "start_date": self.start_date,
+            "end_date": self.end_date,
+            "currently_working": self.currently_working,
         }
 
 class Skill(models.Model):

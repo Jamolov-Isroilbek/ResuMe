@@ -15,12 +15,14 @@ import {
 import {
   EducationSection,
   WorkExperienceSection,
+  ProjectsSection,
   SkillsSection,
   AwardsSection,
 } from "@/features/resume/components/sections";
 import {
   useEducationHandlers,
   useWorkExperienceHandlers,
+  useProjectHandlers,
   useSkillHandlers,
   useAwardHandlers,
   useResumeSubmission,
@@ -33,7 +35,6 @@ import {
   Resume,
 } from "@/types/shared/resume";
 import { Button } from "@/lib/ui/buttons/Button";
-import ToggleSwitch from "@/lib/ui/ToggleSwitch";
 
 const initialFormData: ResumeFormData = {
   title: "",
@@ -52,6 +53,7 @@ const initialFormData: ResumeFormData = {
   },
   education: [],
   work_experience: [],
+  projects: [],
   skills: [],
   awards: [],
 };
@@ -79,6 +81,14 @@ const transformResumeData = (apiData: Resume): ResumeFormData => ({
     end_date: work.currently_working ? undefined : work.end_date,
     currently_working: work.currently_working,
     description: work.description,
+  })),
+  projects: apiData.projects.map((project) => ({
+    title: project.title,
+    description: project.description,
+    technologies: project.technologies,
+    start_date: project.start_date,
+    end_date: project.end_date,
+    currently_working: project.currently_working,
   })),
   skills: apiData.skills.map((skill) => ({
     skill_name: skill.skill_name,
@@ -112,6 +122,14 @@ const sanitizeResumeData = (data: ResumeFormData): ResumeFormData => ({
     currently_working: work.currently_working,
     description: work.description,
   })),
+  projects: data.projects.map((project) => ({
+    title: project.title,
+    description: project.description,
+    technologies: project.technologies,
+    start_date: project.start_date,
+    end_date: project.end_date,
+    currently_working: project.currently_working,
+  })),
   skills: data.skills
     .filter((skill) => skill.skill_name?.trim() && skill.skill_type?.trim())
     .map((skill) => ({
@@ -136,11 +154,19 @@ const CreateEditResume: React.FC = () => {
     personal_details: React.useRef<HTMLDivElement>(null),
     education: React.useRef<HTMLDivElement>(null),
     work_experience: React.useRef<HTMLDivElement>(null),
+    projects: React.useRef<HTMLDivElement>(null),
     skills: React.useRef<HTMLDivElement>(null),
   };
 
   const [formData, setFormData] =
     React.useState<ResumeFormData>(initialFormData);
+
+  const [showWorkExperienceSection, setShowWorkExperienceSection] =
+    React.useState<boolean>(false);
+
+  const [showProjectsSection, setShowProjectsSection] =
+    React.useState<boolean>(false);
+
   const { loading } = useAsync(async () => {
     if (id) {
       const response = await api.get<Resume>(`/resumes/${id}/`);
@@ -151,6 +177,7 @@ const CreateEditResume: React.FC = () => {
   const { handleSubmit } = useResumeSubmission(id);
   const educationHandlers = useEducationHandlers(setFormData);
   const workHandlers = useWorkExperienceHandlers(setFormData);
+  const projectHandlers = useProjectHandlers(setFormData);
   const skillHandlers = useSkillHandlers(setFormData);
   const awardHandlers = useAwardHandlers(setFormData);
 
@@ -166,8 +193,14 @@ const CreateEditResume: React.FC = () => {
         return "education";
       case "work_experience":
         return "work_experience";
+      case "projects":
+        return "projects";
       case "skills":
         return "skills";
+      case "experience":
+        return formData.work_experience.length > 0
+          ? "work_experience"
+          : "projects";
       default:
         return null;
     }
@@ -222,19 +255,11 @@ const CreateEditResume: React.FC = () => {
           toast.success("Draft saved successfully!", {
             position: "top-right",
             autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
           });
         } else {
           toast.success("Resume published successfully!", {
             position: "top-right",
             autoClose: 3000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
           });
         }
 
@@ -264,10 +289,6 @@ const CreateEditResume: React.FC = () => {
         toast.error(errorMessage, {
           position: "top-right",
           autoClose: 5000,
-          hideProgressBar: false,
-          closeOnClick: true,
-          pauseOnHover: true,
-          draggable: true,
         });
       });
   };
@@ -279,6 +300,18 @@ const CreateEditResume: React.FC = () => {
     if (confirmSave) handleAction(ResumeStatus.DRAFT);
     else navigate("/my-resumes");
   };
+
+  React.useEffect(() => {
+    if (formData.work_experience && formData.work_experience.length > 0) {
+      setShowWorkExperienceSection(true);
+    }
+  }, [formData.work_experience]);
+
+  React.useEffect(() => {
+    if (formData.projects && formData.projects.length > 0) {
+      setShowProjectsSection(true);
+    }
+  }, [formData.projects]);
 
   if (loading) return <Loader />;
 
@@ -335,16 +368,63 @@ const CreateEditResume: React.FC = () => {
                 </div>
               </FormSection>
 
-              <FormSection>
-                <div ref={sectionRefs.work_experience}>
-                  <WorkExperienceSection
-                    workExperience={formData.work_experience}
-                    onAdd={workHandlers.add}
-                    onChange={workHandlers.handleChange}
-                    onRemove={workHandlers.remove}
-                  />
-                </div>
-              </FormSection>
+              {/* Toggle Buttons for Experience Types */}
+              <div className="flex gap-4 justify-center my-6">
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowWorkExperienceSection(true);
+                    if (formData.work_experience.length === 0) {
+                      workHandlers.add();
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  Work Experience
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    setShowProjectsSection(true);
+                    if (formData.projects.length === 0) {
+                      projectHandlers.add();
+                    }
+                  }}
+                  className="flex-1"
+                >
+                  Projects
+                </Button>
+              </div>
+              <p className="text-center text-sm text-gray-500 mb-4">
+                At least one experience section is required.
+              </p>
+
+              {showWorkExperienceSection && (
+                <FormSection>
+                  <div ref={sectionRefs.work_experience}>
+                    <WorkExperienceSection
+                      workExperience={formData.work_experience}
+                      onAdd={workHandlers.add}
+                      onChange={workHandlers.handleChange}
+                      onRemove={workHandlers.remove}
+                    />
+                  </div>
+                </FormSection>
+              )}
+
+              {showProjectsSection && (
+                <FormSection>
+                  <div ref={sectionRefs.projects}>
+                    <ProjectsSection
+                      projects={formData.projects}
+                      onAdd={projectHandlers.add}
+                      onChange={projectHandlers.handleChange}
+                      onRemove={projectHandlers.remove}
+                      isRequired={!formData.work_experience.length}
+                    />
+                  </div>
+                </FormSection>
+              )}
 
               <FormSection>
                 <div ref={sectionRefs.skills}>

@@ -5,3 +5,4 @@ export * from './SkillsSection';
 export * from './AwardsSection';
 export * from './PersonalDetails';
 export * from './PrivacySettingsSection';
+export * from './ProjectsSection';
