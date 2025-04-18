@@ -1,18 +1,36 @@
-/* static/resumes/css/resume.css */
+/* === 1) Global A4 + screen setup === */
 @page {
   size: A4;
-  margin: 2cm;
+  margin: 2cm;              /* your existing PDF margins */
 }
 
+/* reset and grey background around the sheet */
+html, body {
+  margin: 0;
+  padding: 0;
+  background-color: #eeeeee;
+  overflow: auto;           /* only scroll if viewport < A4 */
+}
+
+/* === 2) Turn your body into a fixed‑size A4 sheet === */
 body {
+  /* exactly A4 on screen */
+  width: 210mm;
+  min-height: 297mm;
+
+  /* center it and allow scroll above/below */
+  margin: 20px auto;
+  padding: 20mm;            /* match your 2 cm @page margin */
+
+  /* “paper” styling */
+  background-color: #ffffff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+
+  /* typography & color – leave these as you had them */
   font-family: "Charter", serif;
   line-height: 1.4;
   color: #2c3e50;
-  max-width: 210mm;
-  margin: 0 auto;
-  padding: 20px;
 }
-
 .resume-header {
   text-align: center;
   margin-bottom: 1.5rem;
@@ -28,9 +46,8 @@ body {
 
 .contact-info {
   display: flex;
-  justify-content: center;
   flex-wrap: wrap;
-  gap: 1rem;
+  justify-content: center;
   font-size: 0.9rem;
 }
 
@@ -38,6 +55,11 @@ body {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  margin-right: 1rem;
+}
+
+.contact-item:last-child {
+  margin-right: 0;
 }
 
 .contact-item a {
@@ -91,6 +113,12 @@ body {
   margin: 0.3rem 0;
 }
 
+.entry-details .technologies {
+  margin-top: 0.5rem;
+  font-size: 0.9rem;
+  color: #444;
+}
+
 .skills-container {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -142,20 +170,16 @@ body {
 }
 
 @media print {
+  html, body {
+    background: none;
+    overflow: visible;
+  }
   body {
-    padding: 0;
-    font-size: 10pt;
-  }
-
-  .resume-header h1 {
-    font-size: 24pt;
-  }
-
-  .contact-info {
-    font-size: 8pt;
-  }
-
-  .resume-section h2 {
-    font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;    /* let @page’s 2 cm margin apply */
+    width: auto !important;
+    min-height: auto !important;
+    box-shadow: none !important;
+    background: #fff !important;
   }
 }

@@ -1,32 +1,77 @@
-/* template_deedy.css */
-body {
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+/* =========================================
+   template_deedy.css
+   ========================================= */
+
+/* 1) A4 page size for screen preview & PDF */
+@page {
+  size: A4 portrait;
   margin: 0;
-  padding: 0;
-  background-color: #ffffff;
-  color: #2c3e50;
 }
 
+/* 2) Full‑width sheet on screen (scrollable) */
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #eeeeee;
+  overflow: auto;
+}
+
+/* 3) Centered A4 sheet */
 .resume-container {
-  display: flex;
-  flex-direction: row-reverse;
-  padding: 2rem;
-  max-width: 1200px;
-  margin: auto;
-  gap: 3rem;
+  position: relative;
+  width: 210mm;
+  /* min-height: 297mm; */
+  margin: 20px auto;               /* on screen */
+  background: transparent;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  overflow: hidden;                /* contain floats */
+  height: auto;
+}
+
+/* draw a full‑height left‑column background */
+.resume-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 35%;               /* match your sidebar width */
+  height: 100%;             /* stretch the entire container height */
+  background-color: #f9f9f9;
+  z-index: -1;              /* sit behind the actual column content */
+}
+
+/* 5) Clear the floats */
+.resume-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 35%;             /* right at the sidebar’s edge */
+  width: 1px;            /* or 2px to match your design */
+  height: 100%;          /* matches container’s auto height on screen */
+  background: #ddd;
+  z-index: 0;
+}
+
+
+.right-column {
+  float: left;
+  width: 35%;
+  box-sizing: border-box;
+  padding: 20mm 10mm 20mm 20mm;
+  /* background removed, divider is in ::after */
 }
 
 .left-column {
-  flex: 2;
+  float: right;
+  width: 65%;                       /* main content width */
+  box-sizing: border-box;
+  padding: 20mm 20mm 20mm 10mm;
 }
 
-.right-column {
-  flex: 1;
-  background-color: #f9f9f9;
-  padding: 1.5rem;
-  border-left: 2px solid #ddd;
-}
+.resume-container::after { clear: both; }
 
+/* 7) Your existing typography & section styling */
+/* — drop these in below unchanged — */
 .name {
   font-size: 2rem;
   font-weight: bold;
@@ -82,32 +127,31 @@ body {
   list-style-type: disc;
 }
 
-.skill-group ul,
-.entry-details ul {
-  margin-top: 0.3rem;
-}
+/* …and any other rules you already have… */
 
-.skill-group ul li,
-.entry-details ul li {
-  font-size: 0.9rem;
-  margin-bottom: 0.2rem;
-}
+/* 8) Print tweaks — only strip the screen‐only bits */
+@media print {
+  html, body {
+    background: none;
+    overflow: visible;
+  }
 
-.skill-group strong {
-  color: #333;
-  display: inline-block;
-  margin-top: 0.6rem;
-}
+  .resume-container {
+    margin: 0 !important;
+    width: 210mm  !important;
+    height: 297mm !important;  /* EXACT A4 height for PDF */
+    box-shadow: none !important;
+    background: #fff !important;
+  }
 
-.tools {
-  font-size: 0.9rem;
-  color: #555;
-  font-style: italic;
-  margin-top: 0.3rem;
-}
+  .resume-container::before,
+  .resume-container::after {
+    height: 297mm !important;  /* run both the gray & the divider to page bottom */
+  }
 
-.location {
-  font-size: 0.85rem;
-  color: #666;
-  margin-bottom: 0.3rem;
+  /* make sure all your colors actually print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
 }

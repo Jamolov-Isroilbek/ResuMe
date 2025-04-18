@@ -8,6 +8,8 @@ from rest_framework import generics, permissions, status, filters, serializers
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from weasyprint import HTML, CSS
+from django.contrib.staticfiles.finders import find as find_static
+import base64
 
 from .models import Resume, Education, ResumeAnalytics, WorkExperience, Skill, PersonalDetails, Award, Favorite
 from .serializers import ResumeSerializer, PersonalDetailsSerializer, sanitize_resume_data
@@ -102,14 +104,29 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         is_owner = request.user == resume.user
         data = sanitize_resume_data(resume, is_anonymized=not is_owner)
 
-        template_html = render_to_string(f"resumes/{resume.template}.html", {"resume": data})
+        img_path = resume.user.profile_picture.path
+        with open(img_path, "rb") as img_file:
+            profile_image = base64.b64encode(img_file.read()).decode()
 
-        css_path = os.path.join(settings.BASE_DIR, "resumes", "static", "resumes", "css", f"{resume.template}.css")
+        html_string = render_to_string(
+             f"resumes/{resume.template}.html",
+             {"resume": data, "profile_image": profile_image},
+             request=request
+         )
 
-        if not os.path.exists(css_path):
+        css_path = find_static(f"resumes/css/{resume.template}.css")
+        if not css_path or not os.path.exists(css_path):
             return Response({"error": f"CSS file not found: {css_path}"}, status=500)
+        
+        base_url = f"file://{settings.BASE_DIR}"
 
-        pdf_file = HTML(string=template_html).write_pdf(stylesheets=[CSS(css_path)])
+        pdf_file = HTML(
+            string=html_string,
+            base_url=base_url
+        ).write_pdf(
+            stylesheets=[CSS(filename=css_path)],
+            presentational_hints=True,
+        )
 
         response = HttpResponse(pdf_file, content_type="application/pdf")
         response["Content-Disposition"] = f'attachment; filename="{resume.title}.pdf"'

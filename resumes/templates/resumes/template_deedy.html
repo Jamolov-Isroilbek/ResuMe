@@ -1,61 +1,165 @@
 <!DOCTYPE html>
-{% load static %}
+{% load static tech_filters %}
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>{{ resume.title }}</title>
-  <link rel="stylesheet" href="{% static 'resumes/css/template_deedy.css' %}">
+  <link rel="stylesheet" href="{% static 'resumes/css/template_deedy.css' %}" />
+  <link rel="stylesheet" 
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
+
 <body>
   <div class="resume-container">
-    <!-- LEFT COLUMN: Main Sections -->
+    <!-- LEFT COLUMN -->
     <div class="left-column">
-      <h1 class="name">{{ resume.personal_details.first_name }} {{ resume.personal_details.last_name }}</h1>
+      <h1 class="name">
+        {{ resume.personal_details.first_name }}
+        {{ resume.personal_details.last_name }}
+      </h1>
+
       <div class="contact">
-        {% if resume.personal_details.email %}<span>{{ resume.personal_details.email }}</span>{% endif %}
-        {% if resume.personal_details.phone %}<span>{{ resume.personal_details.phone }}</span>{% endif %}
+        {% if resume.personal_details.email %}
+        <span>{{ resume.personal_details.email }}</span>
+        {% endif %} {% if resume.personal_details.phone %}
+        <span>{{ resume.personal_details.phone }}</span>
+        {% endif %}
+        {# Optional website link #}
+        {% if resume.personal_details.website %}
+        <span>
+          <a href="{{ resume.personal_details.website }}" target="_blank" rel="noopener">
+            Website
+          </a>
+        </span>
+        {% endif %}
+
+        {# GitHub / LinkedIn #}
+        {% if resume.personal_details.github %}
+        <span>
+          <a href="{{ resume.personal_details.github }}" target="_blank" rel="noopener">
+            GitHub
+          </a>
+          </a>
+        </span>
+        {% endif %}
+
+        {% if resume.personal_details.linkedin %}
+        <span>
+          <a href="{{ resume.personal_details.linkedin }}" target="_blank" rel="noopener">
+            LinkedIn
+          </a>
+        </span>
+        {% endif %}
       </div>
 
-      <!-- Experience Section -->
+      <!-- Experience -->
       <section class="resume-section">
         <h2>Experience</h2>
         {% for work in resume.work_experience %}
         <div class="entry">
           <div class="entry-header">
-            <strong>{{ work.role }}</strong> - {{ work.employer }}
-            <span class="date">{{ work.start_date|date:"M Y" }} – {% if work.end_date %}{{ work.end_date|date:"M Y" }}{% else %}Present{% endif %}</span>
+            <span class="role-company">
+              <strong>{{ work.role }}</strong> – {{ work.employer }}
+            </span>
+            <span class="date">
+              {{ work.start_date|date:"M Y" }} 
+              – 
+              {% if work.end_date %} 
+              {{ work.end_date|date:"M Y" }} 
+              {% else %} 
+              Present 
+              {% endif %}
+            </span>
           </div>
           <div class="entry-details">
+            {% if work.location %}
             <div class="location">{{ work.location }}</div>
+            {% endif %} {% if work.description_list %}
             <ul>
-              {% for item in work.description_list %}<li>{{ item }}</li>{% endfor %}
+              {% for item in work.description_list %}
+              <li>{{ item }}</li>
+              {% endfor %}
             </ul>
+
+            {% elif work.description %}
+            <ul>
+              {% for line in work.description|split_lines %}
+              <li>{{ line }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
           </div>
         </div>
         {% endfor %}
       </section>
+
+      {% if resume.projects %}
+      <section class="resume-section">
+        <h2>Projects</h2>
+        {% for project in resume.projects %}
+        <div class="entry">
+          <div class="entry-header">
+            <strong>{{ project.title }}</strong>
+            <span class="date">
+              {{ project.start_date|date:"M Y" }}
+              {% if project.end_date %}
+              – {{ project.end_date|date:"M Y" }}
+              {% else %}
+              – Present
+              {% endif %}
+            </span>
+          </div>
+          <div class="entry-details">
+            {% if project.description %}
+            <p>{{ project.description }}</p>
+            {% endif %}
+
+            {% if project.technologies %}
+            <div class="tools">
+              <strong>Technologies:</strong>
+              {% for tech in project.technologies|split_technologies %}
+              <span class="badge">{{ tech }}</span>{% if not forloop.last %},
+              {% endif %} {% endfor %}
+            </div>
+            {% endif %}
+          </div>
+        </div>
+        {% endfor %}
+      </section>
+      {% endif %}
     </div>
 
-    <!-- RIGHT COLUMN: Sidebar Sections -->
+    <!-- RIGHT COLUMN -->
     <div class="right-column">
-      <!-- Education Section -->
+      <!-- Education -->
       <section class="resume-section">
         <h2>Education</h2>
         {% for edu in resume.education %}
         <div class="entry">
           <div class="entry-header">
             <strong>{{ edu.institution }}</strong>
-            <span class="date">{{ edu.start_date|date:"Y" }} – {% if edu.end_date %}{{ edu.end_date|date:"Y" }}{% else %}Present{% endif %}</span>
+            <span class="date">
+              {{ edu.start_date|date:"Y" }}
+              –
+              {% if edu.end_date %}
+              {{ edu.end_date|date:"Y" }}
+              {% else %}
+              Present
+              {% endif %}
+            </span>
           </div>
           <div class="entry-details">
             <div>{{ edu.major }}</div>
-            {% if edu.cgpa %}<div>CGPA: {{ edu.cgpa }}</div>{% endif %}
+            {% if edu.cgpa %}
+            <div>CGPA: {{ edu.cgpa }}</div>
+            {% endif %}
           </div>
         </div>
         {% endfor %}
       </section>
 
-      <!-- Skills Section -->
+      <!-- Skills -->
       <section class="resume-section">
         <h2>Skills</h2>
         {% regroup resume.skills by skill_type as skill_groups %}
@@ -71,12 +175,12 @@
         {% endfor %}
       </section>
 
-      <!-- Awards Section -->
+      <!-- Awards -->
       <section class="resume-section">
-        <h2>Awards & Certificates</h2>
+        <h2>Awards &amp; Certificates</h2>
         {% for award in resume.awards %}
         <div class="entry">
-          <strong>{{ award.name }}</strong> - {{ award.year }}
+          <strong>{{ award.name }}</strong> – {{ award.year }}
           <div>{{ award.description }}</div>
         </div>
         {% endfor %}
@@ -84,4 +188,5 @@
     </div>
   </div>
 </body>
+
 </html>

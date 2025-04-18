@@ -5,7 +5,7 @@ import { Loader, CustomErrorBoundary } from "@/lib/ui/common";
 import { FormSection } from "@/features/resume/components/form";
 import { AIResumeSuggestionsPanel } from "@/features/resume/components/ai-suggestions/AIResumeSuggestionsPanel";
 import { TemplateSelector } from "@/features/resume/components/templates/TemplateSelector";
-import { validateResumeData } from "@/validation/resumeValidation";
+import { validateResumeData, flattenErrors } from "@/validation/resumeValidation";
 import { toast } from "react-toastify";
 import {
   ResumeMetadataForm,
@@ -266,27 +266,18 @@ const CreateEditResume: React.FC = () => {
         navigate("/my-resumes");
       })
       .catch((error) => {
-        console.error("Submission error:", error);
-
-        // Extract error message from the response
-        let errorMessage = "An error occurred while saving your resume.";
-
-        if (error.response) {
-          if (error.response.data.detail) {
-            errorMessage = error.response.data.detail;
-          } else if (typeof error.response.data === "object") {
-            // Handle validation errors that return as an object
-            const firstErrorKey = Object.keys(error.response.data)[0];
-            if (firstErrorKey) {
-              const fieldError = error.response.data[firstErrorKey];
-              errorMessage = Array.isArray(fieldError)
-                ? `${firstErrorKey}: ${fieldError[0]}`
-                : `${firstErrorKey}: ${fieldError}`;
-            }
-          }
+        const data = error.response?.data;
+        let messages: string[] = [];
+    
+        if (typeof data === "string") {
+          messages = [data];
+        } else if (data?.detail) {
+          messages = [data.detail];
+        } else if (typeof data === "object") {
+          messages = flattenErrors(data);
         }
-
-        toast.error(errorMessage, {
+    
+        toast.error(messages.join("\n") || "An error occurred while saving your resume.", {
           position: "top-right",
           autoClose: 5000,
         });
