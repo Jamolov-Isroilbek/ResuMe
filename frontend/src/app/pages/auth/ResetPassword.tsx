@@ -51,6 +51,7 @@ const ResetPassword = () => {
         uid,
         token,
         password,
+        confirm,
       });
 
       setSuccess(true);
