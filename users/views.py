@@ -9,13 +9,13 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework.exceptions import AuthenticationFailed
 from django.contrib.auth import get_user_model, authenticate
-from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.utils import timezone
 import datetime
+from django.contrib.auth.tokens import default_token_generator
 from datetime import datetime, timedelta, timezone
 from django.contrib.sites.shortcuts import get_current_site
 from django.urls import reverse
@@ -29,7 +29,7 @@ from sympy import Sum
 from resumes.enums import PrivacySettings
 from resumes.models import Favorite, Resume, ResumeAnalytics
 from users.authentication import CookieJWTAuthentication
-from users.utils import TimedTokenGenerator
+# from users.utils import TimedTokenGenerator
 
 from .serializers import RegisterSerializer, UserProfileSerializer, ChangePasswordSerializer, CustomTokenObtainPairSerializer
 
@@ -225,7 +225,7 @@ class ForgotPasswordView(APIView):
         
         if user:
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            token = PasswordResetTokenGenerator().make_token(user)
+            token = default_token_generator.make_token(user)
             reset_link = f"{settings.FRONTEND_URL}/reset-password?uid={uid}&token={token}"
 
             resend.Emails.send({
@@ -259,7 +259,7 @@ class ResetPasswordView(APIView):
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
             return Response({"error": "Invalid token"}, status=400)
 
-        if not TimedTokenGenerator().check_token_with_expiry(user, token, max_age_minutes=15):
+        if not default_token_generator.check_token(user, token):
             return Response({"error": "Invalid or expired token"}, status=400)
 
         user.set_password(password)
@@ -312,3 +312,22 @@ class DeleteAccountView(APIView):
         response.delete_cookie("access")
         response.delete_cookie("refresh")
         return response
+
+class CheckResetTokenView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        uidb64 = request.data.get("uid")
+        token  = request.data.get("token")
+        print("👉 Incoming UIDB64:", uidb64)
+        print("👉 Incoming token:", token)
+        try:
+            uid  = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except Exception:
+            return Response({"detail":"Invalid link"}, status=400)
+
+        if not default_token_generator.check_token(user, token):
+            return Response({"detail":"Expired or invalid"}, status=400)
+
+        return Response(status=200)

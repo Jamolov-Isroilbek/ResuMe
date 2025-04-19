@@ -161,6 +161,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 # STATIC_URL = "/static/"
 # STATICFILES_DIRS = [ BASE_DIR / "resumes" / "static" ]
 
+PASSWORD_RESET_TIMEOUT = 900
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {
