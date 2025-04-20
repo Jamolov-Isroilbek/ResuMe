@@ -5,8 +5,10 @@ import { ResumeFormData } from "@/types/shared/resume";
 
 interface SuggestionItem {
   section: string;
-  original: any;
-  ai_feedback: string;
+  entry_name: string;
+  original: string;
+  issues: string[];
+  suggestion: string;
 }
 
 interface AISuggestionsProps {
@@ -14,23 +16,37 @@ interface AISuggestionsProps {
   jobDescription?: string;
 }
 
-export const AISuggestions: React.FC<AISuggestionsProps> = ({ resumeData, jobDescription }) => {
-  const [suggestions, setSuggestions] = useState<SuggestionItem[] | Record<string, any>>([]);
+export const AISuggestions: React.FC<AISuggestionsProps> = ({
+  resumeData,
+  jobDescription,
+}) => {
+  const [data, setData] = useState<SuggestionItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [expandedIndices, setExpandedIndices] = useState<Record<number, boolean>>({});
+
+  // Track which sections and entries are open
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
+  const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchSuggestions = async () => {
       try {
-        const response = await axios.post("/nlp/ai-suggestions/", {
+        console.log("📤 Sending resume data for suggestions:", resumeData);
+        const res = await axios.post("/nlp/ai-suggestions/", {
           resume: resumeData,
           job_description: jobDescription || "",
         });
+        console.log("📥 Received AI suggestions:", res.data);
+        setData(res.data.suggestions || []);
 
-        setSuggestions(response.data);
-      } catch (err: any) {
-        console.error("❌ Failed to fetch suggestions", err);
+        // Initialize all sections as open by default
+        const sections: Record<string, boolean> = {};
+        res.data.suggestions.forEach((item: SuggestionItem) => {
+          sections[item.section] = true;
+        });
+        setOpenSections(sections);
+      } catch (e) {
+        console.error("❌ Error fetching AI suggestions:", e);
         setError("Failed to fetch AI suggestions.");
       } finally {
         setLoading(false);
@@ -40,80 +56,148 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({ resumeData, jobDes
     fetchSuggestions();
   }, [resumeData, jobDescription]);
 
-  const toggleExpand = (index: number) => {
-    setExpandedIndices((prev) => ({ ...prev, [index]: !prev[index] }));
+  const toggleSection = (section: string) => {
+    setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  if (loading) return <p className="text-blue-500">⏳ Generating suggestions...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  const toggleEntry = (entryId: string) => {
+    setOpenEntries((prev) => ({ ...prev, [entryId]: !prev[entryId] }));
+  };
+
+  // Format entry title based on section type
+  // const formatEntryTitle = (item: SuggestionItem) => {
+  //   if (item.section === "work_experience") {
+  //     // For work experience, try to extract company and role
+  //     const parts = item.entry_name.split(" at ");
+  //     if (parts.length > 1) {
+  //       return (
+  //         <div className="ai-entry-name">
+  //           {parts[1]}
+  //           <span className="ai-entry-role">{parts[0]}</span>
+  //         </div>
+  //       );
+  //     }
+  //   }
+  //   return <div className="ai-entry-name">{item.entry_name}</div>;
+  // };
+
+  const formatEntryTitle = (item: SuggestionItem) => (
+    <div className="ai-entry-name">{item.entry_name}</div>
+  );
+
+  const MAX_ORIGINAL_LEN = 100;
+
+  if (loading)
+    return (
+      <p className="mt-6 text-center text-blue-500">
+        ⏳ Generating AI suggestions...
+      </p>
+    );
+  if (error) return <p className="mt-6 text-center text-red-500">{error}</p>;
+  if (data.length === 0)
+    return <p className="mt-6 text-center">No suggestions available.</p>;
+
+  // Group by section
+  const bySection: Record<string, SuggestionItem[]> = {};
+  data.forEach((item) => {
+    bySection[item.section] = bySection[item.section] || [];
+    bySection[item.section].push(item);
+  });
 
   return (
-    <div className="space-y-4 mt-4">
-      {Array.isArray(suggestions) ? (
-        suggestions.map((item, idx) => (
+    <div className="mt-6">
+      {Object.entries(bySection).map(([section, items]) => (
+        <div key={section} className="ai-section-card">
+          {/* Section Header */}
           <div
-            key={idx}
-            className="bg-white border-l-4 border-blue-500 p-4 rounded shadow-sm"
+            className={`ai-section-header ${
+              openSections[section] ? "open" : ""
+            }`}
+            onClick={() => toggleSection(section)}
           >
-            <div
-              className="flex justify-between items-center cursor-pointer mb-2"
-              onClick={() => toggleExpand(idx)}
-            >
-              <h3 className="font-semibold text-blue-600 capitalize">
-                {item.section.replace(/_/g, " ")}
-              </h3>
-              <span className="text-gray-400 text-sm">
-                {expandedIndices[idx] ? "⬆" : "⬇"}
-              </span>
-            </div>
+            {section
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (c) => c.toUpperCase())}
+          </div>
 
-            {expandedIndices[idx] && (
-              <div className="text-sm text-gray-800 space-y-2">
-                {item.original && (
-                  <div>
-                    <strong className="text-gray-700">📝 Original:</strong>
-                    <pre className="bg-gray-50 p-2 rounded text-xs whitespace-pre-wrap">
-                      {JSON.stringify(item.original, null, 2)}
-                    </pre>
-                  </div>
-                )}
-
-                {item.ai_feedback && (
-                  <div>
-                    <strong className="text-gray-700">💡 Feedback & Suggestion:</strong>
-                    <div className="bg-blue-50 p-2 rounded whitespace-pre-wrap">
-                      {item.ai_feedback.replace(/\n/g, "\n• ")}
+          {/* Section Content */}
+          {openSections[section] && (
+            <div className="ai-section-content">
+              {items.map((item, idx) => {
+                const entryId = `${section}-${item.entry_name}-${idx}`;
+                return (
+                  <div key={entryId} className="ai-entry">
+                    {/* Entry Header */}
+                    <div
+                      className="ai-entry-header"
+                      onClick={() => toggleEntry(entryId)}
+                    >
+                      {formatEntryTitle(item)}
+                      <span
+                        className={`ai-entry-toggle ${
+                          openEntries[entryId] ? "open" : ""
+                        }`}
+                      >
+                        ▼
+                      </span>
                     </div>
+
+                    {/* Entry Content */}
+                    {openEntries[entryId] && (
+                      <div className="ai-entry-content">
+                        {/* Original Text */}
+                        <div className="ai-entry-section">
+                          {item.issues.length === 0 && !item.suggestion && (
+                            <div className="ai-approved">
+                              ✓ Looks great as is
+                            </div>
+                          )}
+                          <div className="ai-entry-section-label">
+                            Original:
+                          </div>
+                          <div className="ai-original-text">
+                            {item.original.length > MAX_ORIGINAL_LEN
+                              ? `${item.original.slice(0, MAX_ORIGINAL_LEN)}…`
+                              : item.original}
+                          </div>
+                        </div>
+
+                        {/* Feedback/Issues */}
+                        {item.issues && item.issues.length > 0 && (
+                          <div className="ai-entry-section">
+                            <div className="ai-entry-section-label">
+                              Feedback:
+                            </div>
+                            <ul className="ai-feedback-list">
+                              {item.issues.map((issue, i) => (
+                                <li key={i} className="ai-feedback-item">
+                                  {issue}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Suggestion */}
+                        {item.suggestion && (
+                          <div className="ai-entry-section">
+                            <div className="ai-entry-section-label">
+                              Suggestion:
+                            </div>
+                            <div className="ai-suggestion">
+                              {item.suggestion}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
-        ))
-      ) : (
-        Object.entries(suggestions).map(([key, value], index) => (
-          <div
-            key={index}
-            className="bg-white p-4 shadow rounded border-l-4 border-blue-500"
-          >
-            <div className="flex justify-between items-center cursor-pointer mb-2" onClick={() => toggleExpand(index)}>
-              <h3 className="text-lg font-bold capitalize">
-                {key.replace(/_/g, " ")}
-              </h3>
-              <span className="text-gray-400 text-sm">
-                {expandedIndices[index] ? "⬆" : "⬇"}
-              </span>
+                );
+              })}
             </div>
-            {expandedIndices[index] && (
-              <p className="text-gray-700 whitespace-pre-line">
-                {typeof value === "string"
-                  ? value
-                  : JSON.stringify(value, null, 2)}
-              </p>
-            )}
-          </div>
-        ))
-      )}
+          )}
+        </div>
+      ))}
     </div>
   );
 };
