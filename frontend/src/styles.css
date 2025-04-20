@@ -325,3 +325,12 @@ body {
   align-items: center;
   gap: 0.25rem;
 }
+
+.ai-entry-header span.match-badge {
+  font-size: 0.7rem;
+  border-radius: 4px;
+  padding: 2px 6px;
+  background: hsl(var(--ai-card-header-bg) / 0.15);
+  color: hsl(var(--ai-card-header-bg));
+  margin-left: 0.5rem;
+}

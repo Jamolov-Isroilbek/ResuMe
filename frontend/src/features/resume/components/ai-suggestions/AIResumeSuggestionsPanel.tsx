@@ -21,7 +21,8 @@ const isResumeComplete = (resume: ResumeFormData): boolean => {
   )
     return false;
   if (!resume.education || resume.education.length === 0) return false;
-  if (!resume.work_experience || resume.work_experience.length === 0) return false;
+  if (!resume.work_experience || resume.work_experience.length === 0)
+    return false;
   if (!resume.skills || resume.skills.length === 0) return false;
   return true;
 };
@@ -50,12 +51,21 @@ export const AIResumeSuggestionsPanel: React.FC<
       <div className="ai-panel-content">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">AI Resume Suggestions</h2>
-          <TooltipIcon content="If you provide only your resume, the AI will polish and improve what's there. If you also include a job description, the AI will tailor suggestions to better match the job role and expectations." />
+          <TooltipIcon
+            content={
+              "• Resume only → the AI polishes each section.\n" +
+              "• Resume + job description → the AI tailors suggestions AND shows a match rating " +
+              "(Poor ▸ Fair ▸ Good ▸ Excellent) beside each entry."
+            }
+          />{" "}
         </div>
 
         {!complete && (
           <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
-            <p>Please complete all required resume fields to enable AI suggestions.</p>
+            <p>
+              Please complete all required resume fields to enable AI
+              suggestions.
+            </p>
           </div>
         )}
 
@@ -73,12 +83,14 @@ export const AIResumeSuggestionsPanel: React.FC<
               />
             </div>
 
-            <Button 
-              variant="primary" 
+            <Button
+              variant="primary"
               onClick={handleGetSuggestions}
               className="w-full py-2"
             >
-              {showSuggestions ? "Regenerate Suggestions" : "Generate Suggestions"}
+              {showSuggestions
+                ? "Regenerate Suggestions"
+                : "Generate Suggestions"}
             </Button>
           </>
         )}

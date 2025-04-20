@@ -9,6 +9,7 @@ interface SuggestionItem {
   original: string;
   issues: string[];
   suggestion: string;
+  match?: string;
 }
 
 interface AISuggestionsProps {
@@ -64,23 +65,6 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
     setOpenEntries((prev) => ({ ...prev, [entryId]: !prev[entryId] }));
   };
 
-  // Format entry title based on section type
-  // const formatEntryTitle = (item: SuggestionItem) => {
-  //   if (item.section === "work_experience") {
-  //     // For work experience, try to extract company and role
-  //     const parts = item.entry_name.split(" at ");
-  //     if (parts.length > 1) {
-  //       return (
-  //         <div className="ai-entry-name">
-  //           {parts[1]}
-  //           <span className="ai-entry-role">{parts[0]}</span>
-  //         </div>
-  //       );
-  //     }
-  //   }
-  //   return <div className="ai-entry-name">{item.entry_name}</div>;
-  // };
-
   const formatEntryTitle = (item: SuggestionItem) => (
     <div className="ai-entry-name">{item.entry_name}</div>
   );
@@ -127,12 +111,16 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                 const entryId = `${section}-${item.entry_name}-${idx}`;
                 return (
                   <div key={entryId} className="ai-entry">
-                    {/* Entry Header */}
                     <div
                       className="ai-entry-header"
                       onClick={() => toggleEntry(entryId)}
                     >
                       {formatEntryTitle(item)}
+                      {item.match && (
+                        <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">
+                          {item.match}
+                        </span>
+                      )}
                       <span
                         className={`ai-entry-toggle ${
                           openEntries[entryId] ? "open" : ""

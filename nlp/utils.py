@@ -118,7 +118,25 @@ def generate_resume_suggestions(resume_data: dict, job_description: str = "") ->
             else:
                 prompt = re.sub(r"{{#if JOB_DESCRIPTION}}.*?{{/if}}", "", prompt, flags=re.S)
 
-            # call GPT
+            if job_description:
+                score_prompt = (
+        f"{prompts['global_instruction']}\n\n"
+        "Rate how WELL the following resume snippet matches the job "
+        "description on a 1‑4 scale, where 4=Excellent, 3=Good, 2=Fair, 1=Poor.\n\n"
+        f"Snippet:\n{original_text}\n\n"
+        f"Job description:\n{job_description[:500]}\n\n"
+        "Respond with ONLY the number."
+    )
+                score_raw = call_openai(score_prompt).strip()
+                try:
+                    score_int = int(re.findall(r"[1-4]", score_raw)[0])
+                except (IndexError, ValueError):
+                    score_int = 2   # default to Fair
+                match_map = {4: "Excellent", 3: "Good", 2: "Fair", 1: "Poor"}
+                match_level = match_map[score_int]
+            else:
+                match_level = None
+           
             raw = call_openai(prompt)
 
             clean = raw.strip()
@@ -183,7 +201,8 @@ def generate_resume_suggestions(resume_data: dict, job_description: str = "") ->
                 "entry_name": _extract_entry_name(section, entry),
                 "original":   original_text,
                 "issues":     issues,
-                "suggestion": suggestion_text
+                "suggestion": suggestion_text,
+                "match": match_level,
             })
 
     print(f"Generated {len(suggestions)} suggestions")
