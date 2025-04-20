@@ -112,22 +112,26 @@ export const AISuggestions: React.FC<AISuggestionsProps> = ({
                 return (
                   <div key={entryId} className="ai-entry">
                     <div
-                      className="ai-entry-header"
+                      className="ai-entry-header justify-between"
                       onClick={() => toggleEntry(entryId)}
                     >
                       {formatEntryTitle(item)}
-                      {item.match && (
-                        <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">
-                          {item.match}
+                      <div className="flex items-center gap-2">
+                         {item.match && (
+      <span className="mr-2 text-xs font-semibold px-2 py-0.5 rounded
+                       bg-blue-600/20 text-blue-700 dark:text-blue-300">
+        {item.match}
+      </span>
+    )}
+                        <span
+                          className={`ai-entry-toggle ${
+                            openEntries[entryId] ? "open" : ""
+                          }`}
+                        >
+                          ▼
                         </span>
-                      )}
-                      <span
-                        className={`ai-entry-toggle ${
-                          openEntries[entryId] ? "open" : ""
-                        }`}
-                      >
-                        ▼
-                      </span>
+                      </div>
+
                     </div>
 
                     {/* Entry Content */}

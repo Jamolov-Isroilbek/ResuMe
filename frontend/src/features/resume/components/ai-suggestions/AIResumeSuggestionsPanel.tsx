@@ -34,6 +34,26 @@ export const AIResumeSuggestionsPanel: React.FC<
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestionKey, setSuggestionKey] = useState(0);
   const [isOpen, setIsOpen] = useState(false);
+  const [panelWidth, setPanelWidth] = useState(400); // px
+  const minW = 300,
+    maxW = 650;
+
+  // ─── drag handler ──────────────────────────────────────────
+  const startDrag = (e: React.MouseEvent<HTMLDivElement>) => {
+    const startX = e.clientX;
+    const startW = panelWidth;
+    const onMove = (ev: MouseEvent) => {
+      const delta = startX - ev.clientX; // drag to left → wider
+      let newW = Math.min(maxW, Math.max(minW, startW + delta));
+      setPanelWidth(newW);
+    };
+    const onUp = () => {
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("mouseup", onUp);
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+  };
 
   const complete = isResumeComplete(resumeData);
 
@@ -43,10 +63,22 @@ export const AIResumeSuggestionsPanel: React.FC<
   };
 
   return (
-    <div className={`ai-panel-container ${isOpen ? "open" : ""}`}>
+    <div
+      className={`ai-panel-container ${isOpen ? "open" : ""}`}
+      style={{ width: `${panelWidth}px` }}
+    >
       <div className="ai-panel-toggle" onClick={() => setIsOpen(!isOpen)}>
         <span>{isOpen ? "◀" : "▶"}</span>
       </div>
+
+      {/* resize grip – visible only when open */}
+      {isOpen && (
+        <div
+          className="resize-grip"
+          onMouseDown={startDrag}
+          title="Drag to resize"
+        />
+      )}
 
       <div className="ai-panel-content">
         <div className="flex justify-between items-center mb-4">

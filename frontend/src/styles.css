@@ -334,3 +334,35 @@ body {
   color: hsl(var(--ai-card-header-bg));
   margin-left: 0.5rem;
 }
+
+/* grip bar */
+.resize-grip {
+  position: absolute;
+  left: -4px;               /* sits just outside the panel */
+  top: 0;
+  width: 8px;
+  height: 100%;
+  cursor: ew-resize;
+  z-index: 110;
+}
+
+.resize-grip:hover {
+  background: hsl(var(--ai-card-header-bg) / 0.2);
+}
+
+.match-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  /* light‑theme colors */
+  background: hsl(var(--ai-card-header-bg) / 0.15);
+  color: hsl(var(--ai-card-header-bg));
+}
+
+.dark .match-badge {
+  /* darker row needs brighter badge */
+  background: hsl(var(--ai-card-header-bg) / 0.35);
+  color: white;
+}

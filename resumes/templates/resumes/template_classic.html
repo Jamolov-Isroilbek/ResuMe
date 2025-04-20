@@ -177,7 +177,12 @@
           <h4>{{ group.grouper }}</h4>
           <ul>
             {% for skill in group.list %}
-            <li>{{ skill.skill_name }}</li>
+            <li>
+              {{ skill.skill_name }}
+              {% if skill.proficiency %}
+              <span class="proficiency">({{ skill.proficiency }})</span>
+              {% endif %}
+            </li>
             {% endfor %}
           </ul>
         </div>
@@ -186,6 +191,7 @@
     </section>
 
     <!-- Awards Section -->
+    {% if resume.awards %}
     <section class="resume-section">
       <h2>Awards & Certificates</h2>
       {% for award in resume.awards %}
@@ -202,6 +208,7 @@
       </div>
       {% endfor %}
     </section>
+    {% endif %}
 
   </main>
 

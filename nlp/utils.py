@@ -120,13 +120,21 @@ def generate_resume_suggestions(resume_data: dict, job_description: str = "") ->
 
             if job_description:
                 score_prompt = (
-        f"{prompts['global_instruction']}\n\n"
-        "Rate how WELL the following resume snippet matches the job "
-        "description on a 1‑4 scale, where 4=Excellent, 3=Good, 2=Fair, 1=Poor.\n\n"
-        f"Snippet:\n{original_text}\n\n"
-        f"Job description:\n{job_description[:500]}\n\n"
-        "Respond with ONLY the number."
-    )
+                    "You are a strict hiring assistant.\n"
+                    "Job description:\n"
+                    f"{job_description[:800]}\n\n"
+                    "Resume snippet:\n"
+                    f"{original_text}\n\n"
+                    "Evaluate RELEVANCE ONLY (skills, tools, domain). "
+                    "Ignore generic soft skills and general achievements.\n"
+                    "Score:\n"
+                    "  4 = Excellent (≥3 strong overlaps)\n"
+                    "  3 = Good      (2 clear overlaps)\n"
+                    "  2 = Fair      (1 weak overlap)\n"
+                    "  1 = Poor      (no real overlap)\n"
+                    "Return JSON: {\"score\": <1‑4>, \"reason\": \"one sentence why\"}"
+                )
+                
                 score_raw = call_openai(score_prompt).strip()
                 try:
                     score_int = int(re.findall(r"[1-4]", score_raw)[0])

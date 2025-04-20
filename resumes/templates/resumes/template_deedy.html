@@ -6,8 +6,7 @@
   <meta charset="UTF-8" />
   <title>{{ resume.title }}</title>
   <link rel="stylesheet" href="{% static 'resumes/css/template_deedy.css' %}" />
-  <link rel="stylesheet" 
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 
 <body>
@@ -63,12 +62,12 @@
               <strong>{{ work.role }}</strong> – {{ work.employer }}
             </span>
             <span class="date">
-              {{ work.start_date|date:"M Y" }} 
-              – 
-              {% if work.end_date %} 
-              {{ work.end_date|date:"M Y" }} 
-              {% else %} 
-              Present 
+              {{ work.start_date|date:"M Y" }}
+              –
+              {% if work.end_date %}
+              {{ work.end_date|date:"M Y" }}
+              {% else %}
+              Present
               {% endif %}
             </span>
           </div>
@@ -168,7 +167,12 @@
           <strong>{{ group.grouper }}:</strong>
           <ul>
             {% for skill in group.list %}
-            <li>{{ skill.skill_name }}</li>
+            <li>
+              {{ skill.skill_name }}
+              {% if skill.proficiency %}
+              <small class="proficiency">({{ skill.proficiency }})</small>
+              {% endif %}
+            </li>
             {% endfor %}
           </ul>
         </div>
@@ -176,6 +180,7 @@
       </section>
 
       <!-- Awards -->
+      {% if resume.awards %}
       <section class="resume-section">
         <h2>Awards &amp; Certificates</h2>
         {% for award in resume.awards %}
@@ -185,6 +190,7 @@
         </div>
         {% endfor %}
       </section>
+      {% endif %}
     </div>
   </div>
 </body>
