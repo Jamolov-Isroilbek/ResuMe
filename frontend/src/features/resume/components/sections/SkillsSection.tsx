@@ -74,8 +74,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = React.memo(
               </select>
             </div>
 
-            {/* Remove Button */}
-            {skills.length > 1 && (
+
               <button
                 type="button"
                 onClick={() => onRemove(index)}
@@ -84,7 +83,7 @@ export const SkillsSection: React.FC<SkillsSectionProps> = React.memo(
               >
                 ❌
               </button>
-            )}
+            
           </div>
         ))}
 

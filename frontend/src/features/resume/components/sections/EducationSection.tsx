@@ -101,30 +101,30 @@ export const EducationSection: React.FC<EducationSectionProps> = React.memo(
               </div>
 
               <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={!edu.end_date}
-                    onChange={(e) => {
-                      onChange(
-                        index,
-                        "end_date",
-                        e.target.checked ? undefined : new Date().toISOString()
-                      );
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <label className="text-sm">Currently Studying</label>
-                </div>
+                <input
+                  type="checkbox"
+                  checked={!edu.end_date}
+                  onChange={(e) => {
+                    onChange(
+                      index,
+                      "end_date",
+                      e.target.checked ? undefined : new Date().toISOString()
+                    );
+                  }}
+                  className="h-4 w-4"
+                />
+                <label className="text-sm">Currently Studying</label>
+              </div>
 
-              {education.length > 1 && (
+              <div className="flex justify-end">
                 <Button
                   variant="danger"
-                  size="sm"
                   onClick={() => onRemove(index)}
+                  size="sm"
                 >
-                  Remove Education
+                  Remove Work Experience
                 </Button>
-              )}
+              </div>
             </div>
           );
         })}
