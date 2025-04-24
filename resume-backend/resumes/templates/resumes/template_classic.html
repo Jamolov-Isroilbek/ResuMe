@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+{% load static tech_filters %}
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ resume.title }}</title>
+  <link rel="stylesheet" href="{% static 'resumes/css/template_classic.css' %}?v=2" />
+</head>
+
+<body>
+  <header class="resume-header">
+    <h1>
+      {{ resume.personal_details.first_name }} {{ resume.personal_details.last_name }}
+    </h1>
+    <div class="contact-info">
+
+      {% if resume.personal_details.website %}
+      <div class="contact-item">
+        <i class="fas fa-globe"></i>
+        <a href="{{ resume.personal_details.website }}" target="_blank" rel="noopener">
+          Website
+        </a>
+      </div>
+      {% endif %}
+
+      <div class="contact-item">
+        <i class="fas fa-envelope"></i>
+        <a href="mailto:{{ resume.personal_details.email }}">
+          {{ resume.personal_details.email }}
+        </a>
+      </div>
+
+      <div class="contact-item">
+        <i class="fas fa-phone"></i>
+        {{ resume.personal_details.phone }}
+      </div>
+
+      {% if resume.personal_details.github %}
+      <div class="contact-item">
+        <i class="fab fa-github"></i>
+        <a href="{{ resume.personal_details.github }}" target="_blank" rel="noopener">
+          GitHub
+        </a>
+      </div>
+      {% endif %}
+
+      {% if resume.personal_details.linkedin %}
+      <div class="contact-item">
+        <i class="fab fa-linkedin"></i>
+        <a href="{{ resume.personal_details.linkedin }}" target="_blank" rel="noopener">
+          LinkedIn
+        </a>
+      </div>
+      {% endif %}
+
+
+    </div>
+  </header>
+
+  <main class="resume-content">
+
+    <!-- Education Section -->
+    <section class="resume-section">
+      <h2>Education</h2>
+      {% for edu in resume.education %}
+      <div class="section-entry">
+        <div class="entry-header">
+          <h3>{{ edu.institution }}</h3>
+          <div class="entry-date">
+            {{ edu.start_date|date:"M Y" }}
+            {% if edu.end_date %}
+            &ndash; {{ edu.end_date|date:"M Y" }}
+            {% else %}
+            &ndash; Present
+            {% endif %}
+          </div>
+        </div>
+        <div class="entry-details">
+          {% if edu.major %}
+          <p class="major">{{ edu.major }}</p>
+          {% endif %}
+          {% if edu.cgpa %}
+          <p class="cgpa">CGPA: {{ edu.cgpa }}</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+
+    <!-- Work Experience Section -->
+    <section class="resume-section">
+      <h2>Experience</h2>
+      {% for work in resume.work_experience %}
+      <div class="section-entry">
+        <div class="entry-header">
+          <span class="role-company">
+            <strong>{{ work.role }}</strong>&nbsp;&ndash;&nbsp;
+            <span class="employer">{{ work.employer }}</span>
+          </span>
+          <div class="entry-date">
+            {{ work.start_date|date:"M Y" }}
+            {% if work.end_date %}
+            &ndash; {{ work.end_date|date:"M Y" }}
+            {% else %}
+            &ndash; Present
+            {% endif %}
+          </div>
+        </div>
+        <div class="entry-details">
+          {% if work.location %}
+          <p class="location">{{ work.location }}</p>
+          {% endif %}
+          {% if work.description_list %}
+          <ul class="description-list">
+            {% for item in work.description_list %}
+            <li>{{ item }}</li>
+            {% endfor %}
+          </ul>
+
+          {# 2) Otherwise split the raw text on newlines #}
+          {% elif work.description %}
+          <ul class="description-list">
+            {% for line in work.description|split_lines %}
+            <li>{{ line }}</li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+
+    {% if resume.projects %}
+    <!-- Projects Section -->
+    <section class="resume-section">
+      <h2>Projects</h2>
+      {% for project in resume.projects %}
+      <div class="section-entry">
+        <div class="entry-header">
+          <h3>{{ project.title }}</h3>
+          <div class="entry-date">
+            {{ project.start_date|date:"M Y" }}
+            {% if project.end_date %}
+            &ndash; {{ project.end_date|date:"M Y" }}
+            {% else %}
+            &ndash; Present
+            {% endif %}
+          </div>
+        </div>
+        <div class="entry-details">
+          {% if project.description %}
+          <p>{{ project.description }}</p>
+          {% endif %}
+
+          {% if project.technologies %}
+          <div class="technologies">
+            <strong>Technologies:</strong>
+            {% for tech in project.technologies|split_technologies %}
+            <span class="badge">{{ tech }}</span>{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <!-- Skills Section -->
+    <section class="resume-section">
+      <h2>Skills</h2>
+      <div class="skills-container">
+        {% regroup resume.skills by skill_type as skill_groups %}
+        {% for group in skill_groups %}
+        <div class="skill-group">
+          <h4>{{ group.grouper }}</h4>
+          <ul>
+            {% for skill in group.list %}
+            <li>
+              {{ skill.skill_name }}
+              {% if skill.proficiency %}
+              <span class="proficiency">({{ skill.proficiency }})</span>
+              {% endif %}
+            </li>
+            {% endfor %}
+          </ul>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+
+    <!-- Awards Section -->
+    {% if resume.awards %}
+    <section class="resume-section">
+      <h2>Awards & Certificates</h2>
+      {% for award in resume.awards %}
+      <div class="section-entry">
+        <div class="entry-header">
+          <h3>{{ award.name }}</h3>
+          <div class="entry-date">{{ award.year }}</div>
+        </div>
+        {% if award.description %}
+        <div class="entry-details">
+          <p>{{ award.description }}</p>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+  </main>
+
+  <script src="https://kit.fontawesome.com/your-kit-code.js" crossorigin="anonymous"></script>
+</body>
+
+</html>
