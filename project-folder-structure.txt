@@ -1,0 +1,15 @@
+resume-backend/
+|
+resume-frontend/
+|
+.gitignore
+|
+backend-folder-structure.txt
+|
+frontend-folder-structure.txt
+|
+LICENSE
+|
+project-folder-structure
+|
+README.md

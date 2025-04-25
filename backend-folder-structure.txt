@@ -1,50 +1,56 @@
-frontend/
-|
-media/
-|
-resume_project/
-│   ├── __init__.py
-│   ├── asgi.py 
-│   ├── settings.py
-│   ├── urls.py 
-│   └── wsgi.py
-nlp/
-│   ├── __init__.py
-│   ├── admin.py
-│   ├── apps.py
-│   ├── models.py 
-│   ├── prompts.json
-│   ├── urls.py
-│   ├── utils.py 
-│   └── views.py
-resumes/
-│   ├── static/
-│   |     └── resumes/
-│   |             └── css/
-|   |                   ├── template_deedy.css
-│   |                   └── template_classic.css
-│   ├── templates/ 
-│   |     └── resumes/
-|   |             ├── template_deedy.html
-│   |             └── template_classic.html
-│   ├── __init__.py
-│   ├── admin.py 
-│   ├── apps.py
-│   ├── enums.py 
-│   ├── models.py
-│   ├── serializers.py 
-│   ├── tests.py
-│   ├── urls.py 
-│   ├── utils.py 
-│   └── views.py
-users/
-    ├── __init__.py
-    ├── admin.py 
-    ├── apps.py
-    ├── authentication.py 
-    ├── models.py
-    ├── serializers.py 
-    ├── tests.py
-    ├── urls.py 
-    ├── utils.py 
-    └── views.py
+resume-backend/
+    ├──media/
+    |
+    resume_project/
+    │   ├── __init__.py
+    │   ├── asgi.py 
+    │   ├── settings.py
+    │   ├── urls.py 
+    │   └── wsgi.py
+    nlp/
+    │   ├── __init__.py
+    │   ├── admin.py
+    │   ├── apps.py
+    │   ├── models.py 
+    │   ├── prompts.json
+    │   ├── urls.py
+    │   ├── utils.py 
+    │   └── views.py
+    resumes/
+    │   ├── static/
+    │   |     └── resumes/
+    │   |             └── css/
+    |   |                   ├── template_deedy.css
+    │   |                   └── template_classic.css
+    │   ├── templates/ 
+    │   |     └── resumes/
+    |   |             ├── template_deedy.html
+    │   |             └── template_classic.html
+    │   ├── __init__.py
+    │   ├── admin.py 
+    │   ├── apps.py
+    │   ├── enums.py 
+    │   ├── models.py
+    │   ├── serializers.py 
+    │   ├── tests.py
+    │   ├── urls.py 
+    │   ├── utils.py 
+    │   └── views.py
+    users/
+    │   ├── __init__.py
+    │   ├── admin.py 
+    │   ├── apps.py
+    │   ├── authentication.py 
+    │   ├── models.py
+    │   ├── serializers.py 
+    │   ├── tests.py
+    │   ├── urls.py 
+    │   ├── utils.py 
+    │   └── views.py
+    .env
+    |
+    manage.py
+    |
+    pytest.ini
+    |
+    requirements.txt

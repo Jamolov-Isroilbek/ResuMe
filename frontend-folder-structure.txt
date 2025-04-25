@@ -1,123 +1,147 @@
-src/
-├── app/
-│   ├── layouts/
-│   │   └── main-layout/
-│   │       └── Navbar.tsx 
-│   ├── pages/
-│   │   ├── auth/
-│   │   │   ├── EmailVerification.tsx 
-│   │   │   ├── ForgotPassword.tsx 
-│   │   │   ├── Login.tsx 
-│   │   │   ├── Register.tsx 
-│   │   │   ├── ResetPassword.tsx 
-│   │   │   ├── VerificationError.tsx 
-│   │   │   └── VerificationSuccess.tsx 
-│   │   ├── dashboard/
-│   │   │   └── Dashboard.tsx 
-│   │   ├── profile/
-│   │   │   └── Profile.tsx 
-│   │   ├── resume/
-│   │   │   ├── CreateEditResume.tsx
-│   │   │   ├── MyResumes.tsx 
-│   │   │   └── PublicResumes.tsx 
-│   │   └── Home.tsx
-├── context/
-│   ├── ThemeContext.tsx
-|   └── ThemeToggle.tsx
-├── features/
-│   ├── auth/
-│   │   └── components/
-│   │       └── AuthForm.tsx 
-│   ├── profile/
-│   │   └── hooks/
-│   │   │   └── useUserStats.ts
-│   │   └── ProfileStats.tsx 
-│   └── resume/
-│       ├── components/
-│       │   ├── ai-suggestions/ 
-│       │   │    ├── AISuggestions.tsx
-│       │   │    └── AIResumeSuggestions.tsx
-│       │   ├── form/ 
-│       │   │    ├── DateSelect.tsx
-│       │   │    ├── FormCard.tsx
-│       │   │    ├── FormSection.tsx
-│       │   │    ├── index.ts
-│       │   │    ├── InputField.tsx
-│       │   │    └── RadioGroup.tsx
-│       │   ├── public-resumes/ 
-│       │   │    ├── PublicResumesHeader.tsx
-│       │   │    ├── PublicResumesList.tsx
-│       │   │    └── PublicResumesTabs.tsx
-│       │   ├── resume-card/ 
-│       │   │    ├── ActionMenu.tsx
-│       │   │    ├── ResumeActions.tsx
-│       │   │    └── ResumeCard.tsx
-│       │   ├── resume-form/ 
-│       │   │    ├── index.ts
-│       │   │    └── ResumeForm.tsx
-│       │   ├── resume-list/ 
-│       │   │    └── ResumeList.tsx
-│       │   ├── resume-tabs/ 
-│       │   │    └── ResumeTabs.tsx
-│       │   ├── resume-header/ 
-│       │   │    └── ResumesHeader.tsx
-│       │   └── sections/ 
-│       │   │    ├── AwardsSection.tsx
-│       │   │    ├── EducationSection.tsx
-│       │   │    ├── index.ts
-│       │   │    ├── PrivacySettingsSection.tsx
-│       │   │    ├── SkillsSection.tsx
-│       │   │    └── WorkExperienceSection.tsx
-│       │   ├── templates/ 
-│       │   │    └── TemplateSelector.tsx
-│       ├── constants/
-│       │   ├── resume.ts
-│       │   └── styles.ts
-│       └── hooks/
-│           ├── index.ts 
-│           ├── useAwardHandlers.ts 
-│           ├── useEducationHandlers.ts 
-│           ├── useFilteredResumes.ts 
-│           ├── usePublicResumes.ts 
-│           ├── useResumeActions.ts 
-│           ├── useResumeFavorites.ts 
-│           ├── useResumes.ts 
-│           ├── useResumeSubmissions.ts 
-│           ├── useSectionHandlers.ts 
-│           ├── useSkillHandlers.ts 
-│           └── useWorkExperienceHandlers.ts 
-├── lib/
-│   ├── api/
-│   │   ├── axiosClient.ts
-│   │   └── endpoints.ts 
-│   ├── hooks/
-│   │   └── useAsync.ts 
-│   ├── ui/
-│   │   ├── buttons/
-│   │   │   ├── Button.tsx
-│   │   │   └── SortingDropdown.tsx 
-│   │   ├── common/
-│   │   │   ├── Alert.tsx 
-│   │   │   ├── ErrorBoundary.tsx 
-│   │   │   ├── index.ts
-│   │   │   ├── Loader.tsx 
-│   │   │   └── TooltipIcon.tsx 
-│   │   └── navigation/
-│   │       ├── Pagination.tsx 
-│   │       └── Tabs.tsx 
-│   └── utils/
-│       ├── dateUtils.ts 
-│       ├── helpers.ts 
-│       └── orderingMapping.ts 
-├── providers/
-│   └── AuthProvider.tsx 
-├── types/
-│   └── shared/
-│          ├── api.ts (API types)
-│          └── resume.ts (Resume-specific types)
-├── validation/
-│   └── resumeValidation.ts 
-├── App.tsx
-├── index.tsx 
-├── react-app-env.d.ts 
-└── styles.css 
+resume-frontend/
+    │
+    node_modules/
+    |
+    public/
+    |
+    src/
+    │   ├── app/
+    │   │   ├── layouts/
+    │   │   │   └── main-layout/
+    │   │   │       └── Navbar.tsx 
+    │   │   ├── pages/
+    │   │   │   ├── auth/
+    │   │   │   │   ├── EmailVerification.tsx 
+    │   │   │   │   ├── ForgotPassword.tsx 
+    │   │   │   │   ├── Login.tsx 
+    │   │   │   │   ├── Register.tsx 
+    │   │   │   │   ├── ResetPassword.tsx 
+    │   │   │   │   ├── VerificationError.tsx 
+    │   │   │   │   └── VerificationSuccess.tsx 
+    │   │   │   ├── dashboard/
+    │   │   │   │   └── Dashboard.tsx 
+    │   │   │   ├── profile/
+    │   │   │   │   └── Profile.tsx 
+    │   │   │   ├── resume/
+    │   │   │   │   ├── CreateEditResume.tsx
+    │   │   │   │   ├── MyResumes.tsx 
+    │   │   │   │   └── PublicResumes.tsx 
+    │   │   │   └── Home.tsx
+    │   ├── context/
+    │   │   ├── ThemeContext.tsx
+    │   |   └── ThemeToggle.tsx
+    │   ├── features/
+    │   │   ├── auth/
+    │   │   │   └── components/
+    │   │   │       └── AuthForm.tsx 
+    │   │   ├── profile/
+    │   │   │   └── hooks/
+    │   │   │   │   └── useUserStats.ts
+    │   │   │   └── ProfileStats.tsx 
+    │   │   └── resume/
+    │   │       ├── components/
+    │   │       │   ├── ai-suggestions/ 
+    │   │       │   │    ├── AISuggestions.tsx
+    │   │       │   │    └── AIResumeSuggestions.tsx
+    │   │       │   ├── form/ 
+    │   │       │   │    ├── DateSelect.tsx
+    │   │       │   │    ├── FormCard.tsx
+    │   │       │   │    ├── FormSection.tsx
+    │   │       │   │    ├── index.ts
+    │   │       │   │    ├── InputField.tsx
+    │   │       │   │    └── RadioGroup.tsx
+    │   │       │   ├── public-resumes/ 
+    │   │       │   │    ├── PublicResumesHeader.tsx
+    │   │       │   │    ├── PublicResumesList.tsx
+    │   │       │   │    └── PublicResumesTabs.tsx
+    │   │       │   ├── resume-card/ 
+    │   │       │   │    ├── ActionMenu.tsx
+    │   │       │   │    ├── ResumeActions.tsx
+    │   │       │   │    └── ResumeCard.tsx
+    │   │       │   ├── resume-form/ 
+    │   │       │   │    ├── index.ts
+    │   │       │   │    └── ResumeForm.tsx
+    │   │       │   ├── resume-list/ 
+    │   │       │   │    └── ResumeList.tsx
+    │   │       │   ├── resume-tabs/ 
+    │   │       │   │    └── ResumeTabs.tsx
+    │   │       │   ├── resume-header/ 
+    │   │       │   │    └── ResumesHeader.tsx
+    │   │       │   └── sections/ 
+    │   │       │   │    ├── AwardsSection.tsx
+    │   │       │   │    ├── EducationSection.tsx
+    │   │       │   │    ├── index.ts
+    │   │       │   │    ├── PrivacySettingsSection.tsx
+    │   │       │   │    ├── SkillsSection.tsx
+    │   │       │   │    └── WorkExperienceSection.tsx
+    │   │       │   ├── templates/ 
+    │   │       │   │    └── TemplateSelector.tsx
+    │   │       ├── constants/
+    │   │       │   ├── resume.ts
+    │   │       │   └── styles.ts
+    │   │       └── hooks/
+    │   │           ├── index.ts 
+    │   │           ├── useAwardHandlers.ts 
+    │   │           ├── useEducationHandlers.ts 
+    │   │           ├── useFilteredResumes.ts 
+    │   │           ├── usePublicResumes.ts 
+    │   │           ├── useResumeActions.ts 
+    │   │           ├── useResumeFavorites.ts 
+    │   │           ├── useResumes.ts 
+    │   │           ├── useResumeSubmissions.ts 
+    │   │           ├── useSectionHandlers.ts 
+    │   │           ├── useSkillHandlers.ts 
+    │   │           └── useWorkExperienceHandlers.ts 
+    │   ├── lib/
+    │   │   ├── api/
+    │   │   │   ├── axiosClient.ts
+    │   │   │   └── endpoints.ts 
+    │   │   ├── hooks/
+    │   │   │   └── useAsync.ts 
+    │   │   ├── ui/
+    │   │   │   ├── buttons/
+    │   │   │   │   ├── Button.tsx
+    │   │   │   │   └── SortingDropdown.tsx 
+    │   │   │   ├── common/
+    │   │   │   │   ├── Alert.tsx 
+    │   │   │   │   ├── ErrorBoundary.tsx 
+    │   │   │   │   ├── index.ts
+    │   │   │   │   ├── Loader.tsx 
+    │   │   │   │   └── TooltipIcon.tsx 
+    │   │   │   └── navigation/
+    │   │   │       ├── Pagination.tsx 
+    │   │   │       └── Tabs.tsx 
+    │   │   └── utils/
+    │   │       ├── dateUtils.ts 
+    │   │       ├── helpers.ts 
+    │   │       └── orderingMapping.ts 
+    │   ├── providers/
+    │   │   └── AuthProvider.tsx 
+    │   ├── types/
+    │   │   └── shared/
+    │   │          ├── api.ts (API types)
+    │   │          └── resume.ts (Resume-specific types)
+    │   ├── validation/
+    │   │   └── resumeValidation.ts 
+    │   ├── App.tsx
+    │   ├── index.tsx 
+    │   ├── react-app-env.d.ts 
+    │   └── styles.css 
+    │
+    .env
+    |
+    .gitignore
+    |
+    craco.config.js
+    |
+    package-lock.json
+    |
+    package.json
+    |
+    postcss.config.js
+    |
+    README.md
+    |
+    tailwind.config.js
+    |
+    tsconfig.json
