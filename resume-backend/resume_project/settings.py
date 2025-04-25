@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'corsheaders',
     
     # Local apps
+    'health',
     'users',
     'resumes',
     'nlp',
