@@ -36,6 +36,8 @@ const Profile: React.FC = () => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const DEFAULT_AVATAR = '/profile_pics/default.png'
+
   useEffect(() => {
     if (user?.data) {
       setFormState(prevState => ({
@@ -166,10 +168,11 @@ const Profile: React.FC = () => {
   if (loading) return <Loader />;
   if (error) return <div className="text-red-500">Error loading profile</div>;
 
-  // Use the preview URL if available, otherwise use the profile picture from the user data
   const profilePicUrl = previewUrl || 
-    (user?.data.profile_picture ? `${user.data.profile_picture}?t=${Date.now()}` : "/default.png");
-
+  (user?.data.profile_picture ? 
+    `${process.env.REACT_APP_MEDIA_URL}/${user.data.profile_picture.split('/media/')[1]}` 
+    : DEFAULT_AVATAR);
+  
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-900 py-12">
       <div className="max-w-2xl mx-auto bg-white dark:bg-zinc-800 rounded-xl shadow-md p-6">
@@ -182,7 +185,7 @@ const Profile: React.FC = () => {
                 alt="Profile"
                 className="w-32 h-32 object-cover rounded-full border-4 border-white shadow-md"
                 onError={(e) => {
-                  e.currentTarget.src = "/default.png";
+                  e.currentTarget.src = DEFAULT_AVATAR;
                 }}
               />
               <label className="absolute bottom-0 right-0 bg-blue-600 text-white text-xs px-2 py-1 rounded-full cursor-pointer hover:bg-blue-700 transition">

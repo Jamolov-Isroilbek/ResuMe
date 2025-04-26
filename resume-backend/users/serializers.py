@@ -3,6 +3,7 @@ from django.contrib.auth.password_validation import validate_password
 from .models import User
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework.exceptions import AuthenticationFailed
+from resume_project import settings
 
 class RegisterSerializer(serializers.ModelSerializer):
     """
@@ -53,7 +54,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
             print("📸 Serving custom profile picture:", obj.profile_picture.url)
             return request.build_absolute_uri(obj.profile_picture.url) if request else obj.profile_picture.url
         print("📎 Serving default profile picture")
-        return request.build_absolute_uri("/media/profile_pics/default.png")
+        return request.build_absolute_uri(f"{settings.STATIC_URL}resumes/profile_pics/default.png") if request else ""
 
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
