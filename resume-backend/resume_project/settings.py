@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt', # JWT Authentication
     'rest_framework_simplejwt.token_blacklist', # Required for token blacklisting
     'corsheaders',
+    'drf_yasg',
     
     # Local apps
     'health',

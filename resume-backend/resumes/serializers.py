@@ -217,52 +217,48 @@ class ResumeSerializer(serializers.ModelSerializer):
             return data
     
         # Only validate when publishing or updating a published resume
-        if resume_status == ResumeStatus.PUBLISHED:
-            errors = {}
-    
-            # Check personal details
-            if 'personal_details' in data:
-                personal_details = data.get('personal_details', {})
-                if not personal_details or not personal_details.get('first_name') or not personal_details.get('last_name') or not personal_details.get('email') or not personal_details.get('phone'):
-                    errors['personal_details'] = "Complete personal details are required for published resumes"
-                elif not re.match(r'^\S+@\S+\.\S+$', personal_details.get('email', '')):
-                    errors['personal_details'] = "A valid email address is required"
-                elif not re.match(r'^\+?\d{7,15}$', personal_details.get('phone', '')):
-                    errors['personal_details'] = "A valid phone number is required"
-            elif not self.instance or not hasattr(self.instance, 'personal_details'):
-                errors['personal_details'] = "Required for published resumes"
-    
-            # Check education
-            if 'education' in data and not data.get('education'):
-                errors['education'] = "At least one education entry is required"
-            elif not self.instance or not self.instance.education.exists():
-                errors['education'] = "At least one education entry is required"
-    
-            # Check if there's at least one work experience or project
-            has_work_experience = False
-            has_projects = False
+        # if resume_status == ResumeStatus.PUBLISHED:
+        errors = {}
+
+        # Check personal details
+        if 'personal_details' in data:
+            personal_details = data.get('personal_details', {})
+            if not personal_details or not personal_details.get('first_name') or not personal_details.get('last_name') or not personal_details.get('email') or not personal_details.get('phone'):
+                errors['personal_details'] = "Complete personal details are required for published resumes"
+            elif not re.match(r'^\S+@\S+\.\S+$', personal_details.get('email', '')):
+                errors['personal_details'] = "A valid email address is required"
+            elif not re.match(r'^\+?\d{7,15}$', personal_details.get('phone', '')):
+                errors['personal_details'] = "A valid phone number is required"
+        elif not self.instance or not hasattr(self.instance, 'personal_details'):
+            errors['personal_details'] = "Required for published resumes"
+
+        # Check education
+        if not data.get('education'):
+            errors['education'] = "At least one education entry is required"
+
+        # Check if there's at least one work experience or project
+        has_work_experience = False
+        has_projects = False
+        
+        if 'work_experience' in data:
+            has_work_experience = bool(data.get('work_experience'))
+        elif self.instance and self.instance.work_experience.exists():
+            has_work_experience = True
             
-            if 'work_experience' in data:
-                has_work_experience = bool(data.get('work_experience'))
-            elif self.instance and self.instance.work_experience.exists():
-                has_work_experience = True
-                
-            if 'projects' in data:
-                has_projects = bool(data.get('projects'))
-            elif self.instance and self.instance.projects.exists():
-                has_projects = True
-                
-            if not has_work_experience and not has_projects:
-                errors['experience'] = "At least one work experience or project entry is required"
-    
-            # Check skills
-            if 'skills' in data and not data.get('skills'):
-                errors['skills'] = "At least one skill is required"
-            elif not self.instance or not self.instance.skills.exists():
-                errors['skills'] = "At least one skill is required"
-    
-            if errors:
-                raise serializers.ValidationError(errors)
+        if 'projects' in data:
+            has_projects = bool(data.get('projects'))
+        elif self.instance and self.instance.projects.exists():
+            has_projects = True
+            
+        if not has_work_experience and not has_projects:
+            errors['experience'] = "At least one work experience or project entry is required"
+
+        # Check skills
+        if not data.get('skills'):
+            errors['skills'] = "At least one skill is required"
+
+        if errors:
+            raise serializers.ValidationError(errors)
     
         return data
 
