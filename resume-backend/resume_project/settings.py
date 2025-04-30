@@ -50,6 +50,8 @@ INSTALLED_APPS = [
 
 AUTH_USER_MODEL = 'users.User'
 
+SWAGGER_USE_COMPAT_RENDERERS = False
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.IsAuthenticated',
