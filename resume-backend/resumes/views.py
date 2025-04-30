@@ -104,9 +104,7 @@ class ResumePDFDownloadView(generics.GenericAPIView):
         is_owner = request.user == resume.user
         data = sanitize_resume_data(resume, is_anonymized=not is_owner)
 
-        img_path = resume.user.profile_picture.path
-        with open(img_path, "rb") as img_file:
-            profile_image = base64.b64encode(img_file.read()).decode()
+        profile_image = None
 
         html_string = render_to_string(
              f"resumes/{resume.template}.html",
