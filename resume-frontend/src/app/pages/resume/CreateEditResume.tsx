@@ -362,6 +362,7 @@ const CreateEditResume: React.FC = () => {
               {/* Toggle Buttons for Experience Types */}
               <div className="flex gap-4 justify-center my-6">
                 <Button
+                  type="button"
                   variant="secondary"
                   onClick={() => {
                     setShowWorkExperienceSection(true);
@@ -374,6 +375,7 @@ const CreateEditResume: React.FC = () => {
                   Work Experience
                 </Button>
                 <Button
+                  type="button"
                   variant="secondary"
                   onClick={() => {
                     setShowProjectsSection(true);

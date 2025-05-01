@@ -112,6 +112,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = React.memo(
               />
               <div className="flex justify-end">
                 <Button
+                  type="button"
                   variant="danger"
                   onClick={() => onRemove(index)}
                   size="sm"
@@ -124,7 +125,7 @@ export const ProjectsSection: React.FC<ProjectsSectionProps> = React.memo(
         })}
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={onAdd} className="flex-1">
+          <Button type="button" variant="secondary" onClick={onAdd} className="flex-1">
             Add Project
           </Button>
         </div>

@@ -40,14 +40,14 @@ export const AwardsSection: React.FC<AwardsSectionProps> = React.memo(
           />
 
           <div className="flex justify-end">
-            <Button variant="danger" onClick={() => onRemove(index)} size="sm">
-              Remove Work Experience
+            <Button type="button" variant="danger" onClick={() => onRemove(index)} size="sm">
+              Remove Award
             </Button>
           </div>
         </div>
       ))}
 
-      <Button variant="secondary" onClick={onAdd}>
+      <Button type="button" variant="secondary" onClick={onAdd}>
         Add Award
       </Button>
     </div>

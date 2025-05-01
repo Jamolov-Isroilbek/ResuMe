@@ -118,17 +118,18 @@ export const EducationSection: React.FC<EducationSectionProps> = React.memo(
 
               <div className="flex justify-end">
                 <Button
+                  type="button"
                   variant="danger"
                   onClick={() => onRemove(index)}
                   size="sm"
                 >
-                  Remove Work Experience
+                  Remove Education
                 </Button>
               </div>
             </div>
           );
         })}
-        <Button variant="secondary" onClick={onAdd}>
+        <Button type="button" variant="secondary" onClick={onAdd}>
           Add Education
         </Button>
       </div>

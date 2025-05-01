@@ -113,6 +113,7 @@ export const WorkExperienceSection: React.FC<WorkExperienceSectionProps> =
               />
               <div className="flex justify-end">
                 <Button
+                type="button"
                   variant="danger"
                   onClick={() => onRemove(index)}
                   size="sm"
@@ -125,7 +126,7 @@ export const WorkExperienceSection: React.FC<WorkExperienceSectionProps> =
         })}
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={onAdd} className="flex-1">
+          <Button type="button" variant="secondary" onClick={onAdd} className="flex-1">
             Add Work Experience
           </Button>
         </div>
