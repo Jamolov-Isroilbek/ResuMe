@@ -206,61 +206,76 @@ class ResumeSerializer(serializers.ModelSerializer):
             return obj.analytics.downloads if hasattr(obj, 'analytics') else 0
         return None
     
-    # In serializers.py - Update the validate method
     def validate(self, data):
-        resume_status = data.get('resume_status', getattr(self.instance, 'resume_status', ResumeStatus.DRAFT))
+        # 1) Determine the target status (incoming or current)
+        resume_status = data.get(
+            'resume_status',
+            getattr(self.instance, 'resume_status', ResumeStatus.DRAFT)
+        )
     
-        # For drafts, only validate that title exists
+        # 2) Drafts only need a title
         if resume_status == ResumeStatus.DRAFT:
             if not data.get('title') and (not self.instance or not self.instance.title):
-                raise serializers.ValidationError({'title': 'Title is required even for drafts'})
+                raise serializers.ValidationError({
+                    'title': 'Title is required even for drafts'
+                })
             return data
     
-        # Only validate when publishing or updating a published resume
-        # if resume_status == ResumeStatus.PUBLISHED:
+        # 3) Any non-published state skips full validation (includes ARCHIVED)
+        if resume_status != ResumeStatus.PUBLISHED:
+            return data
+    
+        # 4) Full validation for PUBLISHED
         errors = {}
-
-        # Check personal details
+    
+        # 4a) Personal details
         if 'personal_details' in data:
-            personal_details = data.get('personal_details', {})
-            if not personal_details or not personal_details.get('first_name') or not personal_details.get('last_name') or not personal_details.get('email') or not personal_details.get('phone'):
-                errors['personal_details'] = "Complete personal details are required for published resumes"
-            elif not re.match(r'^\S+@\S+\.\S+$', personal_details.get('email', '')):
-                errors['personal_details'] = "A valid email address is required"
-            elif not re.match(r'^\+?\d{7,15}$', personal_details.get('phone', '')):
-                errors['personal_details'] = "A valid phone number is required"
-        elif not self.instance or not hasattr(self.instance, 'personal_details'):
+            pd = data['personal_details']
+            missing = [k for k in ('first_name', 'last_name', 'email', 'phone') if not pd.get(k)]
+            if missing:
+                errors['personal_details'] = (
+                    "Complete personal details are required for published resumes"
+                )
+            else:
+                if not re.match(r'^\S+@\S+\.\S+$', pd['email']):
+                    errors['personal_details'] = "A valid email address is required"
+                elif not re.match(r'^\+?\d{7,15}$', pd['phone']):
+                    errors['personal_details'] = "A valid phone number is required"
+        elif not (self.instance and hasattr(self.instance, 'personal_details')):
             errors['personal_details'] = "Required for published resumes"
-
-        # Check education
-        if not data.get('education'):
+    
+        # 4b) Education (either in payload or already on the instance)
+        has_education = bool(data.get('education')) or (
+            self.instance and self.instance.education.exists()
+        )
+        if not has_education:
             errors['education'] = "At least one education entry is required"
-
-        # Check if there's at least one work experience or project
-        has_work_experience = False
-        has_projects = False
-        
-        if 'work_experience' in data:
-            has_work_experience = bool(data.get('work_experience'))
-        elif self.instance and self.instance.work_experience.exists():
-            has_work_experience = True
-            
-        if 'projects' in data:
-            has_projects = bool(data.get('projects'))
-        elif self.instance and self.instance.projects.exists():
-            has_projects = True
-            
-        if not has_work_experience and not has_projects:
-            errors['experience'] = "At least one work experience or project entry is required"
-
-        # Check skills
-        if not data.get('skills'):
+    
+        # 4c) Work experience OR projects
+        has_work = bool(data.get('work_experience')) or (
+            self.instance and self.instance.work_experience.exists()
+        )
+        has_proj = bool(data.get('projects')) or (
+            self.instance and self.instance.projects.exists()
+        )
+        if not (has_work or has_proj):
+            errors['experience'] = (
+                "At least one work experience or project entry is required"
+            )
+    
+        # 4d) Skills (either in payload or already on the instance)
+        has_skills = bool(data.get('skills')) or (
+            self.instance and self.instance.skills.exists()
+        )
+        if not has_skills:
             errors['skills'] = "At least one skill is required"
-
+    
+        # 5) If any errors were collected, raise them together
         if errors:
             raise serializers.ValidationError(errors)
     
         return data
+
 
     def to_internal_value(self, data):
         internal = super().to_internal_value(data)
