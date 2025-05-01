@@ -1,18 +1,24 @@
 import { useState, useEffect, useCallback } from "react";
 import api from "@/lib/api/axiosClient"; 
 import { Resume } from "@/types/shared/resume";
+import { defaultOrderingMapping } from "@/lib/utils/orderingMapping";
 
 export const usePublicResumes = (sortOption: string) => {
   const [publicResumes, setPublicResumes] = useState<Resume[]>([]);
   const [count, setCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    pageSize: 10
+  });
 
   const fetchResumes = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await api.get("http://localhost:8000/api/public-resumes/", {
-        params: { sort: sortOption },
+        params: { ordering: defaultOrderingMapping[sortOption] || "-created_at",
+        },
         withCredentials: true, // Ensure cookies are sent if needed
       });
       // If pagination is enabled, response.data will have "results" and "count"

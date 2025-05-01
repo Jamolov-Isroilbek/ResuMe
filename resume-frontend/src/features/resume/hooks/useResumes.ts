@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api/axiosClient';
 import { Resume } from '@/types/shared/resume';
+import { defaultOrderingMapping } from '@/lib/utils/orderingMapping';
 
 interface ResumeListResponse {
   count: number;
@@ -17,7 +18,7 @@ interface ApiError {
   };
 }
 
-export const useResumes = () => {
+export const useResumes = (sortOption: string) => {
   const [resumes, setResumes] = useState<Resume[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,7 @@ export const useResumes = () => {
     try {
       setLoading(true);
       const response = await api.get<ResumeListResponse>('/resumes/', {
-        params: { page: pagination.page, page_size: pagination.pageSize }
+        params: { page: pagination.page, page_size: pagination.pageSize, ordering: defaultOrderingMapping[sortOption] || "-created_at" }
       });
       setResumes(response.data.results);
     } catch (err) {
